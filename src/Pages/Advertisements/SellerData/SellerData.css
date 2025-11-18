@@ -1,0 +1,61 @@
+.sellerData_container {
+    max-width: 875px;
+    margin: auto;
+    margin-top: 20px;
+    text-align: center;
+    padding: 20px;
+    background-color: var(--color);
+    border-radius: 12px;
+    border: 1px solid #DBDBDB;
+    color: var(--header-color);
+    margin-bottom: 20px;
+}
+
+.sellerData_header h3 {
+    font-size: 16px;
+    margin-bottom: 5px;
+    text-align: start;
+}
+
+.sellerData_header p {
+    text-align: start;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.messages {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: start;
+    margin-top: 20px;
+}
+.messages .text {
+    color: var(--header-color);
+}
+.messages .message_item {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    margin-top: 10px;
+}
+.web_message, .phone_message {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+}
+
+.messages .switch .slider {
+    display: flex;
+    margin-top: 3px;
+}
+
+@media (max-width: 540px) {
+    .messages .text p {
+        font-size: 12px;
+    }
+}

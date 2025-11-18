@@ -1,0 +1,230 @@
+.register-container {
+  background-color: #f1f1f1;
+  width: 100%;
+  height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.register-box {
+  background-color: var(--color);
+  border-radius: 12px;
+  max-width: 95%;
+  display: flex;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.register-image {
+  background-color: #f1f1f1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.register-image img {
+  width: 80%;
+  height: auto;
+}
+
+.register-content {
+  flex: 1;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.register-content h2 {
+  font-size: 24px;
+  margin-bottom: 10px;
+  text-align: right;
+}
+
+.register-content p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+  text-align: right;
+  line-height: 1.6;
+}
+
+
+/* ---------------- form -------------- */
+/* ---------------- form -------------- */
+.register_form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  position: relative;
+}
+
+.register_form .name_input,
+.register_form .email_input,
+.register_form .phone_input,
+.register_form .two_password .password_input,
+.register_form .two_password .confirmPassword_input {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0px;
+}
+
+.register_form .name_input label,
+.register_form .email_input label,
+.register_form .phone_input label,
+.register_form .two_password .password_input label,
+.register_form .two_password .confirmPassword_input label {
+  margin: 0px;
+  position: relative;
+}
+
+.register_form .name_input label .error_message,
+.register_form .email_input label .error_message,
+.register_form .phone_input label .error_message,
+.register_form .two_password .password_input label .error_message,
+.register_form .two_password .confirmPassword_input label .error_message {
+  color: red;
+  font-size: 12px;
+  position: absolute;
+  top: 50%;
+  left: 0px;
+  transform: translateY(-50%);
+}
+
+.register_form .name_input .input_container,
+.register_form .email_input .input_container,
+.register_form .phone_input .input_container,
+.register_form .two_password .password_input .password_input_container,
+.register_form .two_password .confirmPassword_input .password_input_container {
+  margin: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  position: relative;
+}
+
+.register_form .name_input .input_container input,
+.register_form .email_input .input_container input,
+.register_form .phone_input .input_container input,
+.register_form .two_password .password_input .password_input_container input,
+.register_form .two_password .confirmPassword_input .password_input_container input {
+  width: 100%;
+  border: 2px solid var(--border-color);
+  border-radius: 5px;
+  padding: 10px;
+  padding-inline-start: 35px;
+  outline: none;
+}
+.register_form .two_password .password_input .password_input_container input,
+.register_form .two_password .confirmPassword_input .password_input_container input {
+  padding-inline-start: 10px;
+}
+
+.register_form .name_input .input_container input::placeholder,
+.register_form .email_input .input_container input::placeholder,
+.register_form .phone_input .input_container input::placeholder,
+.register_form .two_password .password_input .password_input_container input::placeholder,
+.register_form .two_password .confirmPassword_input .password_input_container input::placeholder {
+  color: #727272;
+  font-size: var(--font-size-sm);
+}
+
+.register_form .name_input .input_container input:focus,
+.register_form .email_input .input_container input:focus,
+.register_form .phone_input .input_container input:focus,
+.register_form .two_password .password_input .password_input_container input:focus,
+.register_form .two_password .confirmPassword_input .password_input_container input:focus {
+  border: 2px solid var(--main-color);
+}
+
+.register_form .name_input .input_container img,
+.register_form .email_input .input_container img,
+.register_form .phone_input .input_container img {
+  width: 24px;
+  height: 24px;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.register-content .register_form .two_password .password_input .password_input_container .eye_password_icon,
+.register_form .two_password .confirmPassword_input .password_input_container .eye_icon {
+  color: #2C3E50;
+  width: 24px;
+  height: 24px;
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.two_password {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.regis_button {
+  background-color: var(--main-color);
+  color: var(--color);
+  border: none;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.regis_button:hover {
+  background-color: var(--hover-color);
+}
+.register_form .error_general {
+  width: 100%;
+  color: red;
+  text-align: center;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.register-footer {
+  margin: auto;
+  margin-top: 25px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.register-footer a {
+  color: var(--main-color);
+  text-decoration: none;
+}
+
+.register-footer a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 746px) {
+  .register-content {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .register-image {
+    display: none;
+  }
+
+  .two_password {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .two_password {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}

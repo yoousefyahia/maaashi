@@ -1,0 +1,289 @@
+.Sidebar_Dashboard {
+  width: 260px;
+  background-color: var(--color);
+  border-right: 1px solid #e6e6e6;
+  height: 100vh;
+  padding: 20px 15px;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 99999;
+  transition: all 0.3s ease;
+}
+.Sidebar_Dashboard_item {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.Sidebar_Dashboard_profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.profile_img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid var(--main-color);
+  object-fit: cover;
+}
+.profile_text h2 {
+  font-size: 13px;
+  color: #888;
+  margin: 0;
+  text-align: right;
+}
+.profile_text h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 2px 0 0;
+  color: #2c3e50;
+  text-align: right;
+}
+.profile_btn {
+  width: 100%;
+  background-color: transparent;
+  color: #2c3e50;
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid var(--main-color);
+  cursor: pointer;
+  transition: 0.3s;
+  margin-top: 10px;
+}
+.profile_btn:hover {
+  background-color: var(--hover-color);
+  color: var(--color);
+}
+.Sidebar_Dashboard_links {
+  margin: 15px 0;
+}
+.Sidebar_Dashboard_link a.active {
+  background-color: #aaffee40;
+}
+.Sidebar_Dashboard_link li {
+  margin-bottom: 6px;
+}
+.Sidebar_Dashboard_link a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #333;
+  font-size: 15px;
+  transition: all 0.3s;
+  text-decoration: none;
+}
+.Sidebar_Dashboard_link a svg {
+  font-size: 18px;
+  color: var(--main-color);
+  min-width: 20px;
+}
+.Sidebar_Dashboard_link a:hover {
+  background-color: #aaffee40;
+  color: #2c3e50;
+  font-weight: 500;
+}
+.linkToMaaashi {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--main-color);
+  color: white;
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 15px;
+}
+.linkToMaaashi:hover {
+  color: white;
+}
+
+.linkToMaaashi img {
+display: none;
+}
+.logout_btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  background-color: transparent;
+  border: 1px solid var(--main-color);
+  color: #2c3e50;
+  padding: 10px;
+  font-size: 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: 0.3s;
+}
+.logout_btn svg {
+  font-size: 18px;
+}
+.logout_btn:hover {
+  background-color: var(--main-color);
+  color: var(--color);
+}
+/* تنسيق تاجيد تسجيل الخروج */
+.confirm_overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(2px);
+}
+.confirm_box {
+  background-color: var(--color);
+  padding: 35px 25px;
+  border-radius: 16px;
+  text-align: center;
+  max-width: 380px;
+  width: 90%;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+  animation: scaleIn 0.3s ease;
+  position: relative;
+}
+.icon_confirm {
+  font-size: 45px;
+  margin-bottom: 15px;
+  background-color: #aaffee80;
+  color: var(--main-color);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  padding: 10px;
+}
+.confirm_box_title {
+  color: #222;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+.confirm_box_par {
+  color: #555;
+  font-size: 14px;
+  margin-bottom: 25px;
+}
+.confirm_actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cancel_btn_confirm,
+.confirm_btn {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  transition: 0.35s;
+}
+.cancel_btn_confirm {
+  background-color: transparent;
+  border: 1px solid #FF4D4D;
+  color: #FF4D4D;
+}
+.cancel_btn_confirm:hover {
+  background-color: #FF4D4D;
+  color: var(--color);
+}
+.confirm_btn {
+  background-color: var(--main-color);
+  color: var(--color);
+}
+/* حركة دخول خفيفة */
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.error_message {
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* 🎯 التصميم الريسبونسف */
+@media (max-width: 768px) {
+  .profile_img {
+    width: 40px;
+    height: 40px;
+  }
+  .Sidebar_Dashboard {
+    width: 60px;
+    padding: 15px 8px;
+  }
+  .Sidebar_Dashboard_profile {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .profile_text,
+  .profile_btn {
+    display: none;
+  }
+  .Sidebar_Dashboard_link a {
+    justify-content: center;
+    font-size: 0;
+    gap: 0;
+  }
+  .Sidebar_Dashboard_link a svg {
+    font-size: 22px;
+  }
+  .Sidebar_Dashboard_link a:hover {
+    background-color: #aaffee40;
+  }
+
+  .linkToMaaashi {
+    width: 40px;
+    height: 40px;
+    background-color: white;
+    margin-top: 0px;
+    padding: 0px;
+  }
+
+  .linkToMaaashi img {
+    display: block;
+  }
+
+  .linkToMaaashi span {
+    display: none;
+  }
+  .logout_btn {
+    padding: 5px 8px;
+    justify-content: center;
+    gap: 0;
+    font-size: 0;
+  }
+  .logout_btn svg {
+    font-size: 22px;
+  }
+  .Sidebar_Dashboard {
+    position: fixed;
+  }
+  .Sidebar_Dashboard.hidden {
+    width: 0px;
+    padding: 0px;
+    overflow: hidden;
+  }
+}

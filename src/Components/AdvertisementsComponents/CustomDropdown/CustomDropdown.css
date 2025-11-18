@@ -1,0 +1,32 @@
+.dropdown {
+    width: 250px;
+    color: var(--parg-color);
+}
+
+.dropdown_menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    height: 0px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    scrollbar-width: thin;
+    scrollbar-color: var(--main-color) #e5e7eb;
+}
+
+.dropdown_item {
+    text-align: start;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.dropdown_item:hover {
+    background: #f0f8ff;
+}

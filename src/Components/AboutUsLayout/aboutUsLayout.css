@@ -1,0 +1,108 @@
+.aboutUsLayout {
+  padding: 200px 20px;
+  margin: 0px auto;
+  background: url("/images/layout.webp") no-repeat center center/cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color);
+  text-align: center;
+}
+.aboutUsLayout_landing {
+  padding: 20px;
+  text-align: center;
+}
+.aboutUsLayout_landing h1 {
+  font-size: 42px;
+  margin-bottom: 20px;
+}
+.aboutUsLayout_landing p {
+  font-size: 15px;
+  margin: auto;
+  margin-bottom: 30px;
+  width: 550px;
+  max-width: 100%;
+  color: #ccc;
+  text-align: center;
+}
+.aboutUsLayout_btn {
+  padding: 12px 24px;
+  background-color: var(--main-color);
+  border: none;
+  border-radius: 99999999px;
+  color: var(--color);
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+  width: 40%;
+  max-width: 250px;
+}
+.aboutUsLayout_btn a:hover {
+  background-color: var(--hover-color);
+  color: var(--color);
+}
+
+/* لحد الشاشات الكبيرة 1200px */
+@media (max-width: 1200px) {
+  .aboutUsLayout_landing h1 {
+    font-size: 36px;
+  }
+  .aboutUsLayout_landing p {
+    font-size: 14px;
+    width: 80%;
+  }
+}
+
+/* لحد التابلت 992px */
+@media (max-width: 992px) {
+  .aboutUsLayout {
+    flex-direction: column;
+    padding: 100px 10px;
+  }
+  .aboutUsLayout_landing h1 {
+    font-size: 32px;
+  }
+  .aboutUsLayout_landing p {
+    font-size: 14px;
+    width: 90%;
+  }
+  .aboutUsLayout_btn {
+    width: 60%;
+  }
+}
+
+/* لحد الموبايل 768px */
+@media (max-width: 768px) {
+  .aboutUsLayout {
+    flex-direction: column;
+    padding: 100px 10px;
+  }
+  .aboutUsLayout_landing h1 {
+    font-size: 28px;
+  }
+  .aboutUsLayout_landing p {
+    font-size: 13px;
+  }
+  .aboutUsLayout_btn {
+    width: 70%;
+    font-size: 15px;
+  }
+}
+/* الموبايل الصغير جدًا 480px */
+@media (max-width: 480px) {
+  .aboutUsLayout {
+    flex-direction: column;
+    padding: 100px 10px;
+  }
+  .aboutUsLayout_landing h1 {
+    font-size: 24px;
+  }
+  .aboutUsLayout_landing p {
+    font-size: 12px;
+  }
+  .aboutUsLayout_btn {
+    width: 90%;
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}

@@ -1,0 +1,170 @@
+.information_container {
+    max-width: 875px;
+    margin: auto;
+    margin-top: 20px;
+    text-align: center;
+    padding: 20px;
+    background: var(--color);
+    border-radius: 12px;
+    border: 1px solid #DBDBDB;
+    color: var(--header-color);
+}
+
+.basicData {
+    border-bottom: 2px solid var(--border-color);
+}
+
+.information_header, .category_header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+    text-align: start;
+}
+
+.information_header .circle, .category_header .circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: var(--main-color);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.information_header .text h1, .category_header .text h1 {
+    font-size: var(--font-size-lg);
+}
+
+.information_header .text p, .category_header .text p {
+    font-size: var(--font-size-md);
+}
+
+.input_container, .textarea_container, .inputPrice {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    gap: 5px;
+    margin-bottom: 20px;
+    border-width: 2px;
+    position: relative;
+}
+
+.inputPrice {
+    margin-bottom: 0px;
+}
+
+.input_container label, .textarea_container label, .inputPrice label {
+    font-size: var(--font-size-md);
+    font-weight: 400;
+    text-align: start;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    position: relative;
+}
+
+.input {
+    border-radius: 5px;
+    border: 2px solid var(--border-color);
+    padding: 15px 10px;
+    outline: none;
+}
+
+.input::placeholder, textarea::placeholder {
+    color: #727272;
+    font-size: var(--font-size-sm);
+}
+
+.input:focus {
+    border: 2px solid var(--main-color);
+}
+
+.inputPrice_container{
+    height: 140px;
+}
+
+.inputPrice > span {
+    position: absolute;
+    left: 10px;
+    bottom: 20px;
+    font-size: var(--font-size-sm);
+    color: #727272;
+}
+
+.main_text {
+    color: var(--main-color);
+    font-size: 12px;
+}
+
+.switch-item {
+    display: flex;
+    height: fit-content;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+/* switch */
+.switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    height: 24px;
+}
+
+.switch input {
+    display: none;
+}
+
+.slider {
+    width: 48px;
+    height: 24px;
+    background-color: #ccc;
+    border-radius: 9999px;
+    position: relative;
+    transition: background-color 0.3s;
+    display: flex;
+}
+
+.slider::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+
+/* لما يكون checked */
+.switch input:checked+.slider {
+    background-color: var(--main-color);
+}
+
+.switch input:checked+.slider::before {
+    transform: translateX(24px);
+}
+
+
+.category_information {
+    padding-top: 20px;
+}
+
+.info_error {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    color: red;
+    font-size: var(--font-size-sm);
+}
+
+.basic_category_data{
+    margin-top: 20px;
+}

@@ -1,0 +1,41 @@
+.layoutProfile {
+  display: flex;
+  min-height: 100vh;
+}
+.layoutProfile_main {
+  display: flex;
+  flex: 1;
+  position: relative;
+}
+
+.layoutProfile_main .toggle_sidebar {
+  display: none;
+  position: absolute;
+}
+.layoutProfile_body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.layoutProfile_content {
+  flex: 1;
+  overflow-y: auto;
+  background-color: #f2f2f2;
+}
+
+@media (max-width: 780px) {
+  .layoutProfile_main .toggle_sidebar {
+    display: block;
+    cursor: pointer;
+    transform: rotate(180deg);
+    position: absolute;
+    top: 20px;
+    left: 10px;
+    transition: all ease-in-out .3s;
+  }
+}
+
+.notFound {
+  border: 1px solid red;
+}

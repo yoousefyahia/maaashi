@@ -1,0 +1,150 @@
+.location_container {
+    background-color: var(--color);
+    color: var(--header-color);
+    border: 1px solid #DBDBDB;
+    border-radius: 12px;
+    text-align: center;
+    margin: 30px 0px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+}
+
+.location_header h3 {
+    font-size: 16px;
+    margin-bottom: 5px;
+    text-align: start;
+}
+
+.area_input, .city_input, .location_input {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: center;
+    gap: 2px;
+    position: relative;
+}
+
+.area_input header, .city_input header, .location_input header {
+    width: 100%;
+    text-align: start;
+    position: relative;
+}
+
+.input_container {
+    display: flex;
+    gap: 0px;
+    width: 100%;
+    margin-top: 0px;
+    position: relative;
+}
+.input {
+    flex: 1;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    padding: 10px 10px;
+    outline: none;
+}
+
+.lucide-chevron-down {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+}
+
+.region_option, .city_option {
+    position: absolute;
+    top: 100%;
+    z-index: 50;
+    text-align: start;
+    background-color: var(--color);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 150px;
+    max-height: 200px;
+    border-radius: 6px;
+    border: 1px solid #DBDBDB;
+    transition: all ease-in-out .5s;
+    overflow: hidden;
+    overflow-y: visible;
+    scrollbar-width: thin;
+    scrollbar-color: var(--main-color) #e5e7eb;
+}
+
+.region_option li, .city_option li {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.region_option li:hover, .city_option li:hover {
+    background-color: #e5e7eb;
+}
+
+.input.readonly {
+    background-color: #f5f5f5;
+    color: #555;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.location_container .two_buttons {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: end;
+    gap: 15px;
+}
+
+.location_container .two_buttons .cancel_button{
+    max-width: 80px;
+    background-color: var(--main-color);
+    color: white;
+}
+
+.location_container .submit_btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100px;
+    padding: 10px 0px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--main-color);
+    color: white;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.location_container .submit_btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.location_container .two_buttons .submit_btn .spinnerLoader {
+    width: 50px;
+    aspect-ratio: 5;
+    --_g: no-repeat radial-gradient(circle closest-side,#000 90%,#0000);
+    background: 
+        var(--_g) 0%   50%,
+        var(--_g) 50%  50%,
+        var(--_g) 100% 50%;
+    background-size: calc(100%/3) 100%;
+    animation: l7 1s infinite linear;
+}
+    @keyframes l7 {
+        33%{background-size:calc(100%/3) 0%  ,calc(100%/3) 100%,calc(100%/3) 100%}
+        50%{background-size:calc(100%/3) 100%,calc(100%/3) 0%  ,calc(100%/3) 100%}
+        66%{background-size:calc(100%/3) 100%,calc(100%/3) 100%,calc(100%/3) 0%  }
+}
+
+.server_message {
+    color: var(--main-color);
+    position: absolute;
+    bottom: 30px;
+    right: 20px;
+}

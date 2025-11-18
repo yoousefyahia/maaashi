@@ -1,0 +1,65 @@
+.dead-container {
+    min-height: 80dvh;
+    background-color: #f9fafb;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: "Cairo", sans-serif;
+    color: #333;
+}
+
+.dead-card {
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    border-radius: 16px;
+    padding: 40px 25px;
+    max-width: 400px;
+    width: 90%;
+}
+
+.dead-icon {
+    font-size: 70px;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+.dead-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #222;
+}
+
+.dead-text {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.7;
+    margin-bottom: 25px;
+}
+
+.retry-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    outline: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+.retry-btn:hover {
+    background-color: #005fc1;
+}
+
+.dead-footer {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #999;
+}

@@ -1,0 +1,21 @@
+.deviceType_container {
+    text-align: start;
+    margin-top: 15px;
+    position: relative;
+}
+
+.deviceType_container label {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+}
+
+.deviceType_container label .info_error {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.deviceType_container .input_container {
+    margin: 0px;
+    margin-top: 10px;
+}

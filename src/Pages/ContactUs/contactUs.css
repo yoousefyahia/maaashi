@@ -1,0 +1,212 @@
+
+.contact-us {
+  margin: 50px auto;
+  padding: 40px 20px;
+  text-align: center;
+  background-color: var(--landing-color);
+}
+.contact_title {
+  font-size: 28px;
+  margin-bottom: 10px;
+  color: #2c3e50;
+}
+.contact_description {
+  font-size: 16px;
+  margin-bottom: 30px;
+  color: #2c3e50;
+}
+.contact_us_container {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.contact_us_container_right {
+  flex: 1;
+  background-color: var(--color);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+.contact_us_container_right_content {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+.contact_us_container_right_icon {
+  font-size: 28px;
+  margin-left: 10px;
+  color: var(--main-color);
+  background-color: #aaffee80;
+  padding: 8px;
+  border-radius: 8px;
+}
+.contact_us_container_right_title {
+  font-size: 20px;
+  text-align: start;
+  color: #333;
+}
+.contact_us_form .input-group {
+  position: relative;
+  margin-bottom: 18px;
+}
+.contact_us_label {
+  display: block;
+  text-align: start;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #444;
+}
+.contact_us_input,
+.contact_us_textarea {
+  width: 100%;
+  padding: 12px 40px 12px 12px;
+  border: 1px solid #dbdbdb;
+  border-radius: 8px;
+  outline: none;
+  font-size: 15px;
+  transition: 0.3s;
+}
+.contact_us_input:focus,
+.contact_us_textarea:focus {
+  border-color: var(--main-color);
+}
+.input-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #777;
+  font-size: 18px;
+}
+.textarea-group .input-icon {
+  top: 20px;
+  transform: none;
+}
+.contact_us_textarea {
+  resize: none;
+  height: 120px;
+}
+.contact_us_btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background-color: var(--main-color);
+  color: var(--color);
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: 0.3s;
+}
+.contact_us_btn:hover {
+  background-color: var(--hover-color);
+}
+.btn-icon {
+  font-size: 18px;
+}
+.contact_us_container_left {
+  flex: 0.8;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: right;
+  position: sticky;
+  top: 40px;
+  align-self: flex-start;
+}
+.contact_us_container_left_top,
+.contact_us_container_left_bottom {
+  margin-bottom: 20px;
+  background-color: var(--color);
+  border: 1px solid #dbdbdb;
+  padding: 15px;
+  border-radius: 8px;
+}
+.contact_us_container_left h1 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+.contact_us_container_left span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #555;
+  margin-bottom: 20px;
+}
+.contact_us_container_left a {
+  color: var(--main-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.contact_us_container_left a:hover {
+  text-decoration: underline;
+}
+.contact_us_container_left_icon {
+  color: var(--main-color);
+  font-size: 20px;
+}
+
+/* -------------------- ريسبونسف -------------------- */
+@media (max-width: 992px) {
+  .contact-us {
+    margin: 40px auto;
+    padding: 30px 20px;
+  }
+  .contact_us_container {
+    flex-direction: column;
+    gap: 25px;
+  }
+  .contact_us_container_right,
+  .contact_us_container_left {
+    width: 100%;
+    padding: 20px;
+  }
+}
+@media (max-width: 600px) {
+  .contact-us {
+    margin: 15px auto;
+    padding: 25px 15px;
+  }
+  .contact_title {
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+  .contact_description {
+    font-size: 13px;
+    margin-bottom: 15px;
+  }
+  .contact_us_container {
+    gap: 15px;
+  }
+  .contact_us_container_right,
+  .contact_us_container_left {
+    padding: 12px;
+  }
+  .contact_us_input,
+  .contact_us_textarea {
+    font-size: 13px;
+    padding: 8px 30px 8px 8px;
+  }
+  .contact_us_btn {
+    font-size: 13px;
+    padding: 9px;
+  }
+  .contact_us_container_left h1 {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+}
+.contact-us {
+  margin-bottom: 0;
+  padding-bottom: 20px;
+}
+.contact-us *:last-child {
+  margin-bottom: 0 !important;
+}
+

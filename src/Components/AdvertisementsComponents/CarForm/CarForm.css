@@ -1,0 +1,50 @@
+.carForm_inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.model_input, .year_input {
+    position: relative;
+} 
+
+.model_input header, .year_input header{
+    text-align: start;
+    margin-bottom: 5px;
+    position: relative;
+}
+.model_input_container, .year_input_container {
+    position: relative;
+}
+.model_input_container .input, .year_input_container .input{
+    width: 100%;
+}
+.brand_container {
+    margin-top: 15px;
+    text-align: start;
+    position: relative;
+}
+
+.brand_container label .info_error{
+    position: absolute;
+    top: 0;
+}
+
+.brand_container .input_container{
+    margin-top: 10px;
+    margin-bottom: 0px;
+}
+
+.chevron_up{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--parg-color);
+    position: absolute;
+    top: 20px;
+    left: 10px;
+    padding: 0px;
+    transition: all ease-in-out .3s;
+}
+.chevron_up.open{
+    transform: rotate(180deg);
+}

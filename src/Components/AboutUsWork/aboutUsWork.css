@@ -1,0 +1,94 @@
+.AboutUsWork_container {
+    text-align: center;
+    padding: 40px 0px;
+}
+
+.howItWork{
+    background: #ECF0F1CC;
+    padding: 50px 0px;
+}
+.howItWork_container, .choose_container {
+    max-width: 1150px;
+    margin: auto;
+}
+
+.choose_container{
+    margin-top: 50px;
+}
+.section-title {
+    font-size: 26px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.section-title span {
+    color: #00b894;
+}
+
+.subtitle {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 30px;
+    margin-bottom: 50px;
+}
+
+.AboutUsWork_card {
+    background: #fff;
+    height: 217px;
+    align-content: center;
+    padding: 40px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.AboutUsWork_card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.AboutUsWork_card .card_icon {
+    background-color: var(--main-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-bottom: 15px;
+    margin: auto;
+}
+
+.cards-grid .AboutUsWork_card:nth-child(2) .card_icon {
+    background-color: black;
+}
+
+.AboutUsWork_card .card_icon .img_icon {
+    width: 35px;
+    height: 35px;
+    background-color: transparent;
+}
+
+.AboutUsWork_card h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #222;
+}
+
+.AboutUsWork_card p {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.6;
+}
+
+@media (max-width: 540px) {
+    .howItWork, .choose_container{
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}

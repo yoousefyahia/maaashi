@@ -1,0 +1,17 @@
+.furniture_inputs {
+    text-align: start;
+    margin-top: 15px;
+    padding: 0px;
+    position: relative;
+}
+.furniture_inputs label {
+    padding-bottom: 5px;
+}
+.furniture_inputs label .info_error { 
+    position: absolute;
+    top: 0;
+}
+.furniture_inputs .input_container {
+    margin: 0px;
+    margin-top: 10px;
+}

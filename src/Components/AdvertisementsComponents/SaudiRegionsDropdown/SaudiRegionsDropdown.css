@@ -1,0 +1,36 @@
+.filterDropdown{
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    gap: 20px;
+}
+
+.regionDropdown, .citiesDropdown {
+    width: fit-content;
+    position: relative;
+}
+
+.regionDropdown button, .citiesDropdown button {
+    width: 150px;
+    background-color: transparent;
+    color: var(--parg-color);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    text-align: start;
+}
+
+.regionDropdown button:hover, .citiesDropdown button:hover {
+    background-color: transparent;
+    color: var(--parg-color);
+}
+.regionDropdown .chevron_up, .citiesDropdown .chevron_up {
+    position: absolute;
+    top: 15px;
+    left: 5px;
+}
+.regionDropdown .dropdown_menu, .citiesDropdown .dropdown_menu{
+    position: absolute;
+    top: 100%;
+    right: 0px;
+    width: 150px;
+}

@@ -1,0 +1,15 @@
+.services_inputs {
+    margin-top: 15px;
+    text-align: start;
+    position: relative;
+}
+
+.services_inputs label .info_error {
+    position: absolute;
+    top: 0;
+}
+
+.services_inputs .input_container{
+    margin: 0px;
+    margin-top: 10px;
+}

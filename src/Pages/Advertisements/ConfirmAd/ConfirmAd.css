@@ -1,0 +1,126 @@
+.confirmAd_container {
+    max-width: 875px;
+    margin: auto;
+    margin-top: 20px;
+    text-align: center;
+    padding: 20px;
+    background-color: var(--color);
+    border-radius: 12px;
+    border: 1px solid #DBDBDB;
+    color: var(--header-color);
+    margin-bottom: 20px;
+}
+
+.confirmAd_header h3 {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.confirmAd_header p {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.information_ad {
+    text-align: start;
+    font-size: var(--font-size-sm);
+}
+
+.info_list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.info_list li {
+    display: flex;
+    gap: 5px;
+}
+
+.btn_confirmAd .btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 30px;
+    background-color: var(--main-color);
+    margin: auto;
+}
+
+.btn_confirmAd .btn img {
+    width: 20px;
+    height: 20px;
+}
+
+.btn_confirmAd p {
+    font-size: var(--font-size-sm);
+    margin-top: 10px;
+}
+
+.fee_agreement, .featured {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    gap: 10px;
+    margin: 15px 0px;
+}
+
+.fee_agreement .text, .featured .text {
+    text-align: start;
+}
+
+.terms_section .terms_label .terms_checkbox,
+.featured_section .featured_label .featured_checkbox {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #aaa;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    top: 5px;
+}
+
+.terms_section .terms_label .terms_checkbox:checked,
+.featured_section .featured_label .featured_checkbox:checked {
+    background-color: var(--main-color);
+    border-color: var(--main-color);
+}
+
+.terms_checkbox:checked::after,
+.featured_checkbox:checked::after {
+    content: "✔";
+    color: white;
+    font-size: 14px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* -------- loader ---------*/
+.loader {
+    --d: 50px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    color: #25b09b;
+    box-shadow:
+        calc(1*var(--d)) calc(0*var(--d)) 0 0,
+        calc(0.707*var(--d)) calc(0.707*var(--d)) 0 1px,
+        calc(0*var(--d)) calc(1*var(--d)) 0 2px,
+        calc(-0.707*var(--d)) calc(0.707*var(--d)) 0 3px,
+        calc(-1*var(--d)) calc(0*var(--d)) 0 4px,
+        calc(-0.707*var(--d)) calc(-0.707*var(--d))0 5px,
+        calc(0*var(--d)) calc(-1*var(--d)) 0 6px;
+    animation: l27 1.5s infinite steps(8);
+}
+
+@keyframes l27 {
+    100% {
+        transform: rotate(1turn)
+    }
+}

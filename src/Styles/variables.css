@@ -1,0 +1,31 @@
+:root {
+  /* Colors */
+  --color: #fff;
+  --start-color: #444444;
+  --main-color: #1abc9c;
+  --hover-color: #16a085;
+  --header-color: #2c3e50;
+  --yellow-color: #f1c40f;
+  --shadow-color: #00000026;
+  --parg-color: #555;
+  --title-color: #222;
+  --landing-color: #f8f5f5;
+  --border-color: #DBDBDB;
+
+  /* Fonts */
+  --font-main: "Cairo", sans-serif;
+  --font-alt: "Outfit", sans-serif;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 28px;
+  /* Borders & Shadows */
+  --space-sm: 8px;
+  --space-md: 12px;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 2px 5px var(--shadow-color);
+  --shadow-md: 0 4px 12px var(--shadow-color);
+}

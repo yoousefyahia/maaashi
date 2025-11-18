@@ -1,0 +1,144 @@
+.aboutUsPlatform {
+  margin: 60px auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  max-width: 1150px;
+}
+
+.aboutUsPlatform_right_heading {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: #222;
+}
+
+.aboutUsPlatform_right_para {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #666;
+  margin-bottom: 24px;
+  max-width: 400px;
+}
+
+.aboutUsPlatform_categories_container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.aboutUsPlatform_category {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  gap: 6px;
+  border-radius: 999px;
+  background-color: #DCDCDC66;
+}
+.aboutUsPlatform_category:nth-child(1), .aboutUsPlatform_category:nth-child(3) {
+  background-color: #AAFFEE80;
+}
+.aboutUsPlatform_line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aboutUsPlatform_line img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.aboutUsPlatform_line_text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+
+/* ---------------------- aboutUsPlatform_left --------------------- */
+.aboutUsPlatform_left {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  position: relative;
+}
+
+.aboutUsPlatform_left_avatar {
+  max-width: 360px;
+  width: 100%;
+  padding: 0px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.aboutUsPlatform_left_avatar .avatar_img {
+  padding: 0px;
+  margin: 0px;
+}
+
+.avatar_img img {
+  border-radius: 20px;
+  margin: 0px;
+}
+
+.aboutUsPlatform_left_avatar_icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 90px;
+  width: 50px;
+  position: absolute;
+  bottom: -5px;
+  right: -10px;
+  color: var(--color);
+  background-color: var(--main-color);
+  padding: 10px;
+  border-radius: var(--radius-md);
+  rotate: 25deg;
+}
+
+.aboutUsPlatform_left_avatar_icon img {
+  width: 24px;
+  height: 24px;
+}
+
+/* ريسبونسف */
+@media (max-width: 1192px) {
+  .aboutUsPlatform {
+    padding: 20px;
+  }
+}
+@media (max-width: 775px) {
+  .aboutUsPlatform {
+    flex-direction: column;
+    text-align: center;
+    padding: 40px 20px;
+    gap: 30px;
+  }
+
+  .aboutUsPlatform_categories_container {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .aboutUsPlatform_right_heading {
+    font-size: 22px;
+  }
+
+  .aboutUsPlatform_right_para {
+    font-size: 14px;
+  }
+
+  .aboutUsPlatform_category {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  .aboutUsPlatform_line_text {
+    font-size: 13px;
+  }
+}

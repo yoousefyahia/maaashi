@@ -1,0 +1,110 @@
+.category_main {
+    margin-bottom: 10px;
+    background-color: var(--landing-color);
+}
+
+.categories-container {
+    max-width: 875px;
+    margin: auto;
+    margin-top: 20px;
+    text-align: center;
+    padding: 20px;
+    background: var(--color);
+    border-radius: 12px;
+    border: 1px solid #DBDBDB;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 15px;
+}
+
+.categoryads_card {
+    border: 1px solid #d9e4e6;
+    border-radius: 10px;
+    padding: 20px 10px;
+    background: #fff;
+    cursor: pointer;
+    transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.categoryads_card:hover {
+    border-color: #4cafac;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.icon {
+    font-size: 30px;
+    color: #4cafac;
+    margin-bottom: 10px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #ECF0F1;
+    display: flex;
+    align-items: center;
+    justify-items: center;
+    justify-content: center;
+}
+
+.active_category {
+    background-color: var(--main-color);
+    color: white;
+}
+
+.active_category p {
+    color: white;
+}
+
+.error{
+    color: red;
+    margin-top: 15px;
+    transition: all ease-in-out .8s;
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+
+/* للأجهزة الكبيرة (desktop) */
+@media (min-width: 1025px) {
+
+}
+
+/* للأجهزة المتوسطة (tablet) */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 15px;
+    }
+}
+
+/* للأجهزة الصغيرة (mobile) */
+@media (max-width: 540px) {
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 10px;
+    }
+    
+    .categoryads_card {
+        padding: 10px;
+    }
+}

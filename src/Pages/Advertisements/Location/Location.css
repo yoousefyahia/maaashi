@@ -1,0 +1,72 @@
+.location_container {
+    max-width: 875px;
+    margin: auto;
+    margin-top: 20px;
+    text-align: center;
+    padding: 20px;
+    background-color: var(--color);
+    border-radius: 12px;
+    border: 1px solid #DBDBDB;
+    color: var(--header-color);
+    margin-bottom: 20px;
+}
+
+.location_header h3 {
+    font-size: 16px;
+    margin-bottom: 5px;
+    text-align: start;
+}
+
+.location_header p {
+    text-align: start;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.area_input, .city_input{
+    display: flex;
+    width: 100%;
+    position: relative;
+}
+
+.area_input .input, .city_input .input {
+    width: 100%;
+    border-width: 2px;
+}
+
+.area_input img, .city_input img {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+}
+
+.region_option, .city_option{
+    position: absolute;
+    top: 100%;
+    z-index: 50;
+    text-align: start;
+    background-color: var(--color);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 150px;
+    max-height: 280px;
+    border-radius: 6px;
+    border: 1px solid #DBDBDB;
+    transition: all ease-in-out .5s;
+    overflow: hidden;
+    overflow-y: visible;
+    scrollbar-width: thin;
+    scrollbar-color: var(--main-color) #e5e7eb;
+}
+
+.region_option li, .city_option li {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.region_option li:hover, .city_option li:hover {
+    background-color: #e5e7eb;
+}
