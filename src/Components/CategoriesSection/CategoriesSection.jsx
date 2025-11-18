@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import "./CategoriesSection.css";
+import "./categoriesSection.css";
 
 const CategoriesSection = () => {
   const [categories, setCategories] = useState([]);
