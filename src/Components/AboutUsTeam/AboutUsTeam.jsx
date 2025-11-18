@@ -1,5 +1,5 @@
 import React from "react";
-import "./aboutUsTeam.css";
+import "./AboutUsTeam.css";
 import { LuWebcam } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { CiHeart } from "react-icons/ci";
