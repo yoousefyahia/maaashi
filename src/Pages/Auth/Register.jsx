@@ -65,9 +65,16 @@ export default function Register() {
         const data = await response.json();
         console.log(data);
 
-        if (response.ok && data.success) {
-          setIsLoading(false)
+        const apiSucceeded =
+          response.ok &&
+          (data.success === true ||
+            data.status === true ||
+            Boolean(data.token || data.data?.token));
+
+        if (apiSucceeded) {
+          setIsLoading(false);
           setShowModdel(true);
+          setErrorMessage("");
           setCookie("token", data, {
             maxAge: 60 * 60 * 24 * 30,
             sameSite: "lax",
@@ -86,7 +93,8 @@ export default function Register() {
           } else {
             setErrorMessage("حدث خطأ أثناء التحقق من البيانات");
           }
-        } else {
+        } 
+        else {
           setErrorMessage("حدث خطأ أثناء التسجيل، حاول مرة أخرى.");
         }
       } catch {

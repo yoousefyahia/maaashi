@@ -7,6 +7,7 @@ import SkeletonCard from '../../Components/SkeletonCard/SkeletonCard';
 import NotFound from '../../Components/NotFound/NotFound';
 import { useCookies } from 'react-cookie';
 import { ToastWarning } from '../../Components/Header/Header';
+import { parseAuthCookie } from '../../utils/auth';
 
 export default function ShowAnyUser() {
     const { userID } = useParams();
@@ -41,8 +42,8 @@ export default function ShowAnyUser() {
     }, [userID]);
 
     // handle favorite toggle
-    const [cookies, removeCookie] = useCookies(["token"]);
-    const token = cookies?.token?.data?.token;
+    const [cookies] = useCookies(["token"]);
+    const { token } = parseAuthCookie(cookies?.token);
     const [showToast, setShowToast] = useState(false);
     const [favorites, setFavorites] = useState({});
     const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);

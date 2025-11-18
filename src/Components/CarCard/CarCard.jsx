@@ -5,10 +5,11 @@ import "./carCard.css";
 import { timeSince } from "../../Pages/SpecificCategory/SpecificCategory";
 import { useCookies } from "react-cookie";
 import { ToastWarning } from "../Header/Header";
+import { parseAuthCookie } from "../../utils/auth";
 
 const CarCard = () => {
-  const [cookies, removeCookie] = useCookies(["token"]);
-  const token = cookies?.token?.data?.token;
+  const [cookies] = useCookies(["token"]);
+  const { token } = parseAuthCookie(cookies?.token);
   const [showToast, setShowToast] = useState(false);
   const navigate = useNavigate();
   const [adsCard, setAdsCard] = useState([]);

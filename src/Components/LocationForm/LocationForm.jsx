@@ -4,6 +4,7 @@ import * as Yup from 'yup';
 import axios from 'axios';
 import "./locationFormStyle.css";
 import { useCookies } from 'react-cookie';
+import { parseAuthCookie } from '../../utils/auth';
 
 export const saudiRegions = [
     {
@@ -75,11 +76,13 @@ export const saudiRegions = [
 
 export default function LocationForm() {
     const [cookies] = useCookies(["token"]);
-    const userID = cookies?.token?.data?.user?.id;
-    const token = cookies?.token?.data?.token;
+    const { token, user } = parseAuthCookie(cookies?.token);
+    const userID = user?.id;
     const [userData, setUserData] = useState({});
 
     useEffect(() => {
+        if (!userID || !token) return;
+
         const fetchUserData = async () => {
             try {
                 const response = await fetch(`https://api.maaashi.com/api/user/${userID}`, {
@@ -97,7 +100,7 @@ export default function LocationForm() {
         };
 
         fetchUserData();
-    }, []);
+    }, [userID, token]);
 
     const [isLoading, setIsLoading] = useState(false);
     const [serverMessage, setServerMessage] = useState(null);

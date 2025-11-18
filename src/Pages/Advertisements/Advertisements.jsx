@@ -14,13 +14,14 @@ import { useCookies } from "react-cookie";
 import LoginRequiredCard from '../../Components/AdvertisementsComponents/LoginRequiredCard/LoginRequiredCard';
 import { Link, useNavigate } from 'react-router-dom';
 import { ToastWarning } from '../../Components/Header/Header';
+import { parseAuthCookie } from '../../utils/auth';
 
 export default function Advertisements() {
     // Step management: 1=category, 2=details, 3=review
     const [cookies, setCookie, removeCookie] = useCookies(["token"]);
     const navigate = useNavigate();
-    const token = cookies?.token?.data?.token;
-    const userData = cookies?.token?.data?.user;
+    const { token, user } = parseAuthCookie(cookies?.token);
+    const userData = user;
     const [showToast, setShowToast] = useState(true);
     // console.log(userData);
     const [ads_id, setAds_id] = useState('');

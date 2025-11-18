@@ -3,10 +3,11 @@ import "./favoritesUser.css";
 import { IoLocationOutline } from "react-icons/io5";
 import { CiStopwatch } from "react-icons/ci";
 import { useCookies } from "react-cookie";
+import { parseAuthCookie } from "../../../utils/auth";
 
 const FavoritesUser = () => {
   const [cookies] = useCookies(["token"]);
-  const token = cookies?.token?.data?.token;
+  const { token } = parseAuthCookie(cookies?.token);
   const [favorites, setFavorites] = useState([]);
   const [error, setError] = useState("");
 

@@ -61,13 +61,19 @@ export function LoginForm() {
           }
         );
         const data = await response.json();
-        if (response.ok) {
-          navigate("/");
+        const apiSucceeded =
+          response.ok &&
+          (data.success === true ||
+            data.status === true ||
+            Boolean(data.token || data.data?.token));
+
+        if (apiSucceeded) {
           setCookie("token", data, {
             maxAge: 60 * 60 * 24 * 30,
             sameSite: "lax",
             secure: process.env.NODE_ENV === "production",
           });
+          navigate("/");
         } else if (data.errors) {
           const hasEmailError = data.errors.email;
 
@@ -76,8 +82,10 @@ export function LoginForm() {
           } else {
             setErrorMessage("حدث خطأ أثناء التحقق من البيانات");
           }
+        } else if (data.message) {
+          setErrorMessage(data.message);
         } else {
-          setErrorMessage("حدث خطأ أثناء التسجيل، حاول مرة أخرى.");
+          setErrorMessage("بيانات تسجيل الدخول غير صحيحة، حاول مرة أخرى.");
         }
       } catch (err) {
         setErrorMessage("حدث خطأ، حاول مرة أخرى");

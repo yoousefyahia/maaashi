@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useCookies } from "react-cookie";
+import { parseAuthCookie } from "./utils/auth";
 
 // Layouts
 import LayoutDashboard from "./LayoutDashboard/LayoutProfile";
@@ -31,7 +32,7 @@ const HelpUser = lazy(() => import("./Pages/DashboardUser/HelpUser/HelpUser"));
 
 const App = () => {
   const [cookies] = useCookies(["token"]);
-  const token = cookies?.token?.data?.token ?? null;
+  const { token } = parseAuthCookie(cookies?.token);
 
   return (
     //Suspense يلف كل الـ Routes عشان يعرض loader أثناء تحميل الصفحات

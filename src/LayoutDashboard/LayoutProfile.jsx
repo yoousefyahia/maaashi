@@ -5,10 +5,11 @@ import SidebarDashboard from "../Components/SidebarDashboard/SidebarDashboard";
 import { useLocation } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import LoginRequiredCard from "../Components/AdvertisementsComponents/LoginRequiredCard/LoginRequiredCard";
+import { parseAuthCookie } from "../utils/auth";
 
 const LayoutProfile = ({ children }) => {
   const [cookies] = useCookies(["token"]);
-  const token = cookies?.token?.data?.token ?? null;
+  const { token } = parseAuthCookie(cookies?.token);
 
   // لو الناف بار موجود داخل الرسايل يخفيه
   const location = useLocation();

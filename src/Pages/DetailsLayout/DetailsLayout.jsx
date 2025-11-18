@@ -17,10 +17,11 @@ import { CiFlag1 } from "react-icons/ci";
 import { attributeMapForDetails } from "../../data";
 import { useCookies } from "react-cookie";
 import { LoginForm } from "../Auth/Login";
+import { parseAuthCookie } from "../../utils/auth";
 
 const DetailsLayout = () => {
   const [cookies] = useCookies(["token"]);
-  const userToken = cookies?.token?.data?.token;
+  const { token: userToken } = parseAuthCookie(cookies?.token);
   const [loginModel, setLoginModel] = useState(false);
 
   const { details, id } = useParams();

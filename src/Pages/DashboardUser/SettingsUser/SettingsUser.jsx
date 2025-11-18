@@ -4,11 +4,12 @@ import { FaCamera } from "react-icons/fa";
 import "./settingsUser.css";
 import LocationForm from "../../../Components/LocationForm/LocationForm";
 import { useCookies } from "react-cookie";
+import { parseAuthCookie } from "../../../utils/auth";
 
 const SettingsUser = () => {
   const [cookies] = useCookies(["token"]);
-  const userID = cookies?.token?.data?.user?.id;
-  const token = cookies?.token?.data?.token;
+  const { token, user } = parseAuthCookie(cookies?.token);
+  const userID = user?.id;
   const [userData, setUserData] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -110,6 +111,8 @@ const SettingsUser = () => {
   };
 
   useEffect(() => {
+    if (!userID || !token) return;
+
     const fetchUserData = async () => {
       setIsLoading(true);
       try {
@@ -127,7 +130,7 @@ const SettingsUser = () => {
       }
     };
     fetchUserData();
-  }, []);
+  }, [userID, token]);
 
   useEffect(() => {
     if (userData?.data?.profile_image) {

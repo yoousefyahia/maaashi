@@ -4,12 +4,13 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { CiSearch } from "react-icons/ci";
 import { navLinks } from "../../Constants/NavLinks.js";
 import { useCookies } from "react-cookie";
+import { parseAuthCookie } from "../../utils/auth";
 
 const Header = () => {
   // بنستخدم useCookies عشان نقدر نقرأ ونمسح الكوكيز (زي التوكن)
-  const [cookies, removeCookie] = useCookies(["token"]);
-  const userID = cookies?.token?.data?.user?.id;
-  const token = cookies?.token?.data?.token;
+  const [cookies, , removeCookie] = useCookies(["token"]);
+  const { token, user } = parseAuthCookie(cookies?.token);
+  const userID = user?.id;
 
   // بنجيب بيانات المستخدم من التوكن اللي في الكوكيز
   const [userData, setUserData] = useState({});
@@ -206,7 +207,7 @@ const Header = () => {
 
         {/* أزرار الهيدر في الديسكتوب */}
         <div className="header-button">
-          {cookies?.token?.data?.token && cookies?.token?.data?.token !== "undefined" ? (
+          {token ? (
             <div>
               {/* زر البروفايل في الديسكتوب */}
               <Link
@@ -266,8 +267,8 @@ export default Header;
 
 export function ProfileCard({ toggleProfileCard, userData, removeCookie, onClose, triggerRef }) {
   const navigate = useNavigate();
-  const [cookies, ,] = useCookies(["token"]);
-  const token = cookies?.token?.data?.token;
+  const [cookies] = useCookies(["token"]);
+  const { token } = parseAuthCookie(cookies?.token);
   const cardRef = useRef(null);
 
   useEffect(() => {

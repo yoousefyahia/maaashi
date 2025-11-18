@@ -2,17 +2,20 @@ import React, { useEffect, useState } from 'react';
 import "./ConfirmAd.css";
 import { categories } from '../Category/Category';
 import { useCookies } from 'react-cookie';
+import { parseAuthCookie } from '../../../utils/auth';
 
 export default function ConfirmAd({ formik, isLoading }) {
     const { values } = formik;
     const category = categories.find((cat) => values?.category === cat.key) || "اسم الفئة";
     const [cookies] = useCookies(["token"]);
-    const userID = cookies?.token?.data?.user?.id;
-    const token = cookies?.token?.data?.token;
+    const { token, user } = parseAuthCookie(cookies?.token);
+    const userID = user?.id;
     const [userData, setUserData] = useState({});
     console.log(userData?.area);
 
     useEffect(() => {
+        if (!userID || !token) return;
+
         const fetchUserData = async () => {
             try {
                 const response = await fetch(`https://api.maaashi.com/api/user/${userID}`, {
@@ -25,12 +28,12 @@ export default function ConfirmAd({ formik, isLoading }) {
                 const data = await response.json();
                 setUserData(data?.data);
             } catch (err) {
-                console.log(); (err.message);
+                console.log(err.message);
             }
         };
 
         fetchUserData();
-    }, []);
+    }, [userID, token]);
 
     return (
         <div className="confirmAd_container">

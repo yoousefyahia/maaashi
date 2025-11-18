@@ -10,6 +10,7 @@ import "./specificCategoryStyle.css"
 import DatePicker from '../../Components/DatePicker/DatePicker';
 import { useCookies } from 'react-cookie';
 import { ToastWarning } from '../../Components/Header/Header';
+import { parseAuthCookie } from '../../utils/auth';
 
 export default function SpecificCategory() {
     const { category } = useParams();
@@ -86,8 +87,8 @@ export default function SpecificCategory() {
     }, [category]);
 
     // 💖 handle favorite toggle
-    const [cookies, removeCookie] = useCookies(["token"]);
-    const token = cookies?.token?.data?.token;
+    const [cookies] = useCookies(["token"]);
+    const { token } = parseAuthCookie(cookies?.token);
     const [showToast, setShowToast] = useState(false);
     const [favorites, setFavorites] = useState({});
     const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
