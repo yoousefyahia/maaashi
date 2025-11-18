@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from "react";
 import "./topSectionProfile.css";
 import { useCookies } from "react-cookie";
+import { parseAuthCookie } from "../../../utils/auth";
 
 const TopSectionProfile = () => {
   const [userData, setUserData] = useState(null);
   const [cookie] = useCookies(["token"]);
-  const userID = cookie?.token?.data?.user?.id;
+  const { token, user } = parseAuthCookie(cookie?.token);
+  const userID = user?.id;
   const [error, setError] = useState("");
 
   //جلب بيانات المستخدم
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const token = cookie?.token?.data?.token;
         if (!token) {
           setError("يرجى تسجيل الدخول مرة أخرى.");
           return;
@@ -40,8 +41,10 @@ const TopSectionProfile = () => {
       }
     };
 
-    fetchUserData();
-  }, [cookie]);
+    if (userID && token) {
+      fetchUserData();
+    }
+  }, [userID, token]);
 
   return (
     <div className="accountUserImage_up">

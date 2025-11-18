@@ -11,10 +11,12 @@ import { MdFavoriteBorder } from "react-icons/md";
 import { AiOutlineSetting } from "react-icons/ai";
 import { RiBloggerLine } from "react-icons/ri";
 import { useCookies } from "react-cookie";
+import { parseAuthCookie } from "../../utils/auth";
 
 export default function SidebarDashboard({toggleSidebar, setToggleSidebar, sidebarRef}) {
   const [cookie, , removeCookie] = useCookies(["token"]);
-  const userID = cookie?.token?.data?.user?.id;
+  const { token, user } = parseAuthCookie(cookie?.token);
+  const userID = user?.id;
 
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -28,8 +30,6 @@ export default function SidebarDashboard({toggleSidebar, setToggleSidebar, sideb
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
-        const token = cookie?.token?.data?.token;
-
         const res = await fetch (
           `https://api.maaashi.com/api/user/${userID}`,
           {
@@ -53,13 +53,14 @@ export default function SidebarDashboard({toggleSidebar, setToggleSidebar, sideb
       }
     };
 
-    fetchUserProfile();
-  }, [cookie]);
+    if (userID && token) {
+      fetchUserProfile();
+    }
+  }, [userID, token]);
 
   // تسجيل الخروج
   const handleLogout = async () => {
     try {
-      const token = cookie?.token?.data?.token;
       const response = await fetch(
         "https://api.maaashi.com/api/logout",
         {

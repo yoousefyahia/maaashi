@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { FaCheckCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie"; 
+import { parseAuthCookie } from "../../utils/auth";
 
 const SellSeaction = () => {
 
@@ -12,13 +13,12 @@ const SellSeaction = () => {
 
     // لتخزين التوكين
     const [cookie] = useCookies(["token"]);
+    const { token } = parseAuthCookie(cookie?.token);
 
   // للتاكد من تسجيل الدخول
   const handelForOffers = (path) => {
     // تاكيد التوكين
-    const tokein = cookie?.token?.data?.token;
-    // تشيك 
-    if(tokein) {
+    if(token) {
       navigate(path);
     } else {
       navigate("/login");

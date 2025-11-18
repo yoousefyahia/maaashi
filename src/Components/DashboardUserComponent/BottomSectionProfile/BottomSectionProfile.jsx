@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import "./bottomSectionProfile.css";
 import { MdOutlineTimer } from "react-icons/md";
 import { useCookies } from "react-cookie";
+import { parseAuthCookie } from "../../../utils/auth";
 
 const BottomSectionProfile = () => {
   const [inputDate, setInputDate] = useState("");
@@ -10,6 +11,7 @@ const BottomSectionProfile = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [Cookies] = useCookies(["token"]);
+  const { token } = parseAuthCookie(Cookies?.token);
   const [showModal, setShowModal] = useState(false);
   const [selectedAd, setSelectedAd] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -20,8 +22,6 @@ const BottomSectionProfile = () => {
     const fetchShowUser = async () => {
       try {
         setLoading(true);
-        const token = Cookies?.token?.data?.token;
-
         const response = await fetch(
           "https://api.maaashi.com/api/profile/ealans",
           {
@@ -42,15 +42,15 @@ const BottomSectionProfile = () => {
       }
     };
 
-    fetchShowUser();
-  }, [Cookies]);
+    if (token) {
+      fetchShowUser();
+    }
+  }, [token]);
 
   // -------------------- حذف إعلان --------------------
   const deleteAdById = async (adId, category) => {
     try {
       setDeleting(true);
-      const token = Cookies?.token?.data?.token;
-
       const resp = await fetch(
         `https://api.maaashi.com/api/profile/ealans/${category}/${adId}`,
         {

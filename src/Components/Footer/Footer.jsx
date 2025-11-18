@@ -15,10 +15,12 @@ import { MdFavoriteBorder } from "react-icons/md";
 // استدعاء للتنقب لين لاصفحات
 import { useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
+import { parseAuthCookie } from "../../utils/auth";
 
 const Footer = () => {
   // لتخزين التوكين
   const [cookie] = useCookies(["token"]);
+  const { token } = parseAuthCookie(cookie?.token);
 
   // للتنقل بين الصفحات
   const navigate = useNavigate();
@@ -26,8 +28,6 @@ const Footer = () => {
   // handle Logout for Icons
   const handleCheckLogout = (path) => {
     // تاكيد التوكين
-    const token = cookie?.token?.data?.token;
-
     if (token) {
       // تشيك
       navigate(path);
