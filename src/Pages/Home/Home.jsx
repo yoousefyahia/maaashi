@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import "./Home.css";
+import "./home.css";
 import SearchBar from "../../Components/SearchBar/SearchBar";
 import Slider from '../../Components/Slider/Slider.jsx';
 import AddList from '../../Components/AddList/AddList';
