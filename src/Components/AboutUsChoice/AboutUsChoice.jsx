@@ -1,5 +1,5 @@
 import React from "react";
-import "./AboutUsChoice.css";
+import "./aboutUsChoice.css";
 
 export default function AboutUsChoice() {
   return (
