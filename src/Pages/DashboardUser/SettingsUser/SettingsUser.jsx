@@ -116,10 +116,11 @@ const SettingsUser = () => {
     const fetchUserData = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(
-          `https://api.maaashi.com/api/user/${userID}`,
-          { method: "get", headers: { Authorization: `Bearer ${token}` } }
-        );
+const response = await fetch(
+  "https://api.maaashi.com/api/profile",
+  { method: "GET", headers: { Authorization: `Bearer ${token}` } }
+);
+
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         setUserData(data);

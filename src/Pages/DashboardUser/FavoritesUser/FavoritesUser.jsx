@@ -9,87 +9,73 @@ const FavoritesUser = () => {
   const [cookies] = useCookies(["token"]);
   const { token } = parseAuthCookie(cookies?.token);
   const [favorites, setFavorites] = useState([]);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchFavorites = async () => {
       try {
-        const res = await fetch(
-          "https://api.maaashi.com/api/favorites",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
+        const res = await fetch("https://api.maaashi.com/api/favorites", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await res.json();
-        setFavorites(data.data);
-        console.log("Response data:", data);
-
+        const ads = Array.isArray(data.ads) ? data.ads : [];
+        setFavorites(ads);
+        localStorage.setItem(
+          "localFavorites",
+          JSON.stringify(ads.map((ad) => ad.id))
+        );
       } catch (err) {
         console.error(err);
-        setError("حدث خطأ أثناء تحميل البيانات.");
+      } finally {
+        setLoading(false);
       }
     };
-
-    if (token) fetchUserData();
+    fetchFavorites();
   }, [token]);
+
+  if (loading) return <p>جارِ تحميل المفضلة...</p>;
 
   return (
     <div className="Favorites_user">
       <h2 className="Favorites_user_desc">
-        <span className="Favorites_user_total">({favorites.length}) </span>
-        اعلانات محفوظة
+        <span className="Favorites_user_total">({favorites.length})</span> اعلانات محفوظة
       </h2>
+
       <hr />
 
-      {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
-
       <div className="Favorites_user_item">
-        {favorites.map((item) => (
-          <div className="Favorites_user_card" key={item.id_ads}>
-            {/* الصورة */}
-            <div className="Favorites_user_item_picture">
-              <img
-                src={
-                  item.images?.[0]
-                    ? `https://api.maaashi.com/storage/${item.images[0]}`
-                    : "/images/no-image.webp"
-                }
-                alt={item.information?.title || "إعلان"}
-              />
-            </div>
-
-            {/* المحتوى */}
-            <div className="Favorites_user_item_details">
-              <h3 className="Favorites_user_title">
-                {item.information?.title || "بدون عنوان"}
-              </h3>
-
-              <div className="Favorites_user_meta">
-                <p>
-                  <IoLocationOutline />{" "}
-                  {item.user?.area || "غير محدد"}
-                </p>
-                <span>
-                  <CiStopwatch />{" "}
-                  {new Date(item.created_at).toLocaleDateString("ar-EG")}
-                </span>
+        {favorites.length > 0 ? (
+          favorites.map((item) => (
+            <div className="Favorites_user_card" key={item.id}>
+              <div className="Favorites_user_item_picture">
+                <img
+                  src={item.images?.[0] || "/images/no-image.webp"}
+                  alt={item.title}
+                />
               </div>
-
-              <p className="Favorites_user_price">
-                السعر: {item.information?.price || 0} ر.س
-              </p>
+              <div className="Favorites_user_item_details">
+                <h3 className="Favorites_user_title">{item.title}</h3>
+                <div className="Favorites_user_meta">
+                  <p>
+                    <IoLocationOutline /> {item.area || "غير محدد"}
+                  </p>
+                  <span>
+                    <CiStopwatch /> {new Date(item.created_at).toLocaleDateString("ar-EG")}
+                  </span>
+                </div>
+                <p className="Favorites_user_price">السعر: {item.price} ر.س</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <p style={{ textAlign: "center" }}>لا توجد إعلانات محفوظة حالياً</p>
+        )}
       </div>
-
-      {favorites.length > 3 && (
-        <button className="Favorites_user_showMore">عرض المزيد...</button>
-      )}
     </div>
   );
 };

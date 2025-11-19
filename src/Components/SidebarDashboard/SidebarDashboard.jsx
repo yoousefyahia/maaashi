@@ -30,15 +30,14 @@ export default function SidebarDashboard({toggleSidebar, setToggleSidebar, sideb
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
-        const res = await fetch (
-          `https://api.maaashi.com/api/user/${userID}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+const res = await fetch(
+  "https://api.maaashi.com/api/profile",
+  {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  }
+);
+
 
         const data = await res.json();        
         if (data?.success) {
