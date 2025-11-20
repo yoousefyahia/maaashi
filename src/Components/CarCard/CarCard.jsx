@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CiLocationOn, CiStopwatch } from "react-icons/ci";
-import "./carCard.css";
 import { useCookies } from "react-cookie";
+import axios from "axios";
 import { ToastWarning } from "../Header/Header";
 import { parseAuthCookie } from "../../utils/auth";
+import "./carCard.css";
 
 const CarCard = () => {
   const [cookies] = useCookies(["token"]);
@@ -23,10 +24,8 @@ const CarCard = () => {
   useEffect(() => {
     const fetchCard = async () => {
       try {
-        const res = await fetch("https://api.maaashi.com/api/ads/featured");
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        const ads = Array.isArray(data.ads) ? data.ads : [];
+        const res = await axios.get("https://api.maaashi.com/api/ads/featured");
+        const ads = Array.isArray(res.data.ads) ? res.data.ads : [];
         setAdsCard(
           ads.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         );
@@ -39,18 +38,19 @@ const CarCard = () => {
     fetchCard();
   }, []);
 
-  // 2- Load favorites from server, use localStorage for UI instant feedback
+  // 2- Load favorites
   useEffect(() => {
     if (!token) return;
 
     const fetchFavorites = async () => {
       try {
-        const res = await fetch("https://api.maaashi.com/api/favorites", {
+        const res = await axios.get("https://api.maaashi.com/api/favorites", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const data = await res.json();
         const serverFavIds = new Set(
-          Array.isArray(data.ads) ? data.ads.map((item) => Number(item.id)) : []
+          Array.isArray(res.data.ads)
+            ? res.data.ads.map((item) => Number(item.id))
+            : []
         );
         setFavorites(serverFavIds);
         localStorage.setItem("localFavorites", JSON.stringify([...serverFavIds]));
@@ -62,9 +62,8 @@ const CarCard = () => {
   }, [token]);
 
   // 3- Toggle favorite
-  const handleFavorite = (e, adId) => {
+  const handleFavoriteClick = (e, adId) => {
     e.stopPropagation();
-
     if (!token) {
       setShowToast(true);
       return;
@@ -76,15 +75,14 @@ const CarCard = () => {
     if (isFavorite) updatedFavorites.delete(adId);
     else updatedFavorites.add(adId);
 
-    // Update UI immediately
     setFavorites(updatedFavorites);
     localStorage.setItem("localFavorites", JSON.stringify([...updatedFavorites]));
+
+    setLoadingFavoriteId(adId);
 
     const url = isFavorite
       ? "https://api.maaashi.com/api/favorites/delete"
       : "https://api.maaashi.com/api/favorites";
-
-    setLoadingFavoriteId(adId);
 
     fetch(url, {
       method: "POST",
@@ -121,22 +119,54 @@ const CarCard = () => {
         <h2 className="section-title">اكتشف الجديد أولًا</h2>
         <div className="categories_items">
           {adsCard.length > 0 ? (
-            adsCard.map((ad) => (
+            adsCard.map((ad) => ( 
               <div
                 key={ad.id}
                 className="category_card"
                 onClick={() => navigate(`/${ad.category_id}/${ad.id}`)}
               >
+                {/* صورة الإعلان */}
                 <div className="card_image">
                   <img src={ad.images?.[0] || "/placeholder.png"} alt={ad.title} />
                 </div>
 
+                {/* بيانات البائع */}
+                <div
+                  className="card_user"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/user/${ad.seller_name}/${ad.user_id}`);
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width={22}
+                    height={22}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide-circle-user-round-icon"
+                  >
+                    <path d="M18 20a6 6 0 0 0-12 0" />
+                    <circle cx={12} cy={10} r={4} />
+                    <circle cx={12} cy={12} r={10} />
+                  </svg>
+                  <span>{ad.seller_name}</span>
+                </div>
+
+                {/* بيانات الإعلان */}
                 <div className="card_body">
                   <h2>{ad.title.substring(0, 18)}...</h2>
                   <div className="card_meta">
                     <div>
                       <CiLocationOn style={{ color: "var(--main-color)" }} />
-                      <span>{ad.area || "غير محدد"}</span>
+                      <span>
+                        {ad.user?.city || "غير محدد"}
+                        {ad.user?.area ? ` / ${ad.user.area}` : ""}
+                      </span>
                     </div>
                     <div>
                       <CiStopwatch style={{ color: "var(--main-color)" }} />
@@ -145,24 +175,40 @@ const CarCard = () => {
                   </div>
                 </div>
 
-                <div
-                  className="hart_icon"
-                  onClick={(e) => handleFavorite(e, ad.id)}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width={22}
-                    height={22}
-                    viewBox="0 0 24 24"
-                    className="heart-svg"
+                {/* السعر + زر المفضلة */}
+                <div className="card_footer">
+                  <h2 className="card_footer_price">
+                    {ad.price && ad.price !== "0.00" ? (
+                      <>
+                        {ad.price}<span> ر.س</span>
+                      </>
+                    ) : (
+                      "السعر غير محدد"
+                    )}
+                  </h2>
+                  <div
+                    className={`hart_icon ${
+                      loadingFavoriteId === ad.id ? "loading-heart" : ""
+                    }`}
+                    onClick={(e) => handleFavoriteClick(e, ad.id)}
                   >
-                    <path
-                      d="M2 9.5a5.5 5.5 0 0 1 9.6-3.7.56.56 0 0 0 .8 0A5.5 5.5 0 0 1 22 9.5c0 2.3-1.5 4-3 5.5l-5.5 5.3a2 2 0 0 1-3 0L5 15C3.5 13.5 2 11.8 2 9.5"
-                      fill={favorites.has(ad.id) ? "red" : "none"}
-                      stroke={favorites.has(ad.id) ? "red" : "currentColor"}
-                      strokeWidth="2"
-                    />
-                  </svg>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width={22}
+                      height={22}
+                      viewBox="0 0 24 24"
+                      className="heart-svg"
+                    >
+                      <path
+                        d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"
+                        fill={favorites.has(ad.id) ? "red" : "none"}
+                        stroke={favorites.has(ad.id) ? "red" : "currentColor"}
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
                 </div>
               </div>
             ))

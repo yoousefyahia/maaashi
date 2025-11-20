@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./topSectionProfile.css";
 import { useCookies } from "react-cookie";
 import { parseAuthCookie } from "../../../utils/auth";
+import axios from "axios";
 
 const TopSectionProfile = () => {
   const [userData, setUserData] = useState(null);
@@ -10,7 +11,7 @@ const TopSectionProfile = () => {
   const userID = user?.id;
   const [error, setError] = useState("");
 
-  //جلب بيانات المستخدم
+  // جلب بيانات المستخدم
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -19,24 +20,20 @@ const TopSectionProfile = () => {
           return;
         }
 
-        const res = await fetch(
-          `https://api.maaashi.com/api/user/${userID}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.get("https://api.maaashi.com/api/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-        const data = await res.json();
-        if (data.success) {
+        const data = res.data;
+        if (data.status) {
           setUserData(data.data);
           setError("");
         } else {
           setError("فشل في تحميل بيانات المستخدم.");
         }
-      } catch {
+      } catch (err) {
         setError("حدث خطأ أثناء تحميل البيانات.");
       }
     };
@@ -49,21 +46,32 @@ const TopSectionProfile = () => {
   return (
     <div className="accountUserImage_up">
       <div className="Account_user_image">
+        
         {/* صورة الكوفر */}
         <div className="Account_user_image_profile">
-          <img src={userData?.cover_image} alt="صورة الكوفر" loading="lazy"/>
+          <img
+            src={userData?.cover || "/default-cover.jpg"}
+            alt="صورة الكوفر"
+            loading="lazy"
+          />
         </div>
 
         {/* صورة البروفايل */}
         <div className="Account_user_image_profile_person">
           <div className="user_img_container">
-            <img src={userData?.profile_image} alt="صورة البروفايل" loading="lazy"/>
+            <img
+              src={userData?.image_url || "/default-user.jpg"}
+              alt="صورة البروفايل"
+              loading="lazy"
+            />
           </div>
         </div>
 
         {/* بيانات المستخدم */}
         <div className="Account_user_info">
-          <h3 className="user_name">{userData?.name || "جارٍ التحميل..."}</h3>
+          <h3 className="user_name">
+            {userData?.name || "جارٍ التحميل..."}
+          </h3>
           <h6 className="user_status">
             آخر ظهور الآن <span className="status_dot active"></span>
           </h6>
@@ -75,4 +83,5 @@ const TopSectionProfile = () => {
     </div>
   );
 };
+
 export default TopSectionProfile;

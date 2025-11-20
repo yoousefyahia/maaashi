@@ -18,9 +18,7 @@ export default function Register() {
     setShowModdel(false);
     navigate("/settingsUser");
   };
-  const [setCookie] = useCookies(["token"]);
-
-  // Yup for validation
+const [, setCookie] = useCookies(["token"]);
   const validationSchema = Yup.object({
     name: Yup.string().trim().required("الرجاء إدخال الاسم الكامل"),
     email: Yup.string()
@@ -38,7 +36,6 @@ export default function Register() {
       .oneOf([Yup.ref("password"), null], "كلمات المرور غير متطابقة"),
   });
 
-  // formik
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -52,7 +49,9 @@ export default function Register() {
       try {
         setIsLoading(true);
         setErrorMessage("");
-        // url from vite.config
+
+        console.log("Values to send:", values);
+
         const response = await fetch(
           "https://api.maaashi.com/api/register",
           {
@@ -62,8 +61,9 @@ export default function Register() {
           }
         );
 
+        console.log("Response status:", response.status);
         const data = await response.json();
-        console.log(data);
+        console.log("Response data:", data);
 
         const apiSucceeded =
           response.ok &&
@@ -71,16 +71,20 @@ export default function Register() {
             data.status === true ||
             Boolean(data.token || data.data?.token));
 
+        console.log("API succeeded?", apiSucceeded);
+
         if (apiSucceeded) {
+          console.log("Registration successful, setting cookie:", data.token || data.data?.token);
           setIsLoading(false);
           setShowModdel(true);
           setErrorMessage("");
-          setCookie("token", data, {
+          setCookie("token", data.token || data.data?.token, {
             maxAge: 60 * 60 * 24 * 30,
             sameSite: "lax",
             secure: process.env.NODE_ENV === "production",
           });
         } else if (data.errors) {
+          console.log("Validation errors:", data.errors);
           const hasEmailError = data.errors.email;
           const hasPhoneError = data.errors.phone;
 
@@ -93,11 +97,12 @@ export default function Register() {
           } else {
             setErrorMessage("حدث خطأ أثناء التحقق من البيانات");
           }
-        } 
-        else {
+        } else {
+          console.log("Other error:", data);
           setErrorMessage("حدث خطأ أثناء التسجيل، حاول مرة أخرى.");
         }
-      } catch {
+      } catch (err) {
+        console.log("Fetch error:", err);
         setErrorMessage("حدث خطأ في الاتصال بالخادم، حاول مرة أخرى لاحقًا.");
       } finally {
         setIsLoading(false);
@@ -108,12 +113,10 @@ export default function Register() {
   return (
     <div className="register-container">
       <div className="register-box">
-        {/* image */}
         <div className="register-image">
           <img src="/images/login.webp" alt="Register" />
         </div>
 
-        {/* المحتوى */}
         <div className="register-content">
           <h2>إنشاء حساب جديد</h2>
           <p>
@@ -199,12 +202,15 @@ export default function Register() {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                   />
-                  <div className="eye_password_icon" onClick={() => setShowPassword(!showPassword)}>
-                    {showPassword ?
+                  <div
+                    className="eye_password_icon"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
                       <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye-icon lucide-eye"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx={12} cy={12} r={3} /></svg>
-                      :
+                    ) : (
                       <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye-off-icon lucide-eye-off"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" /><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" /><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" /><path d="m2 2 20 20" /></svg>
-                    }
+                    )}
                   </div>
                 </div>
               </div>
@@ -212,9 +218,12 @@ export default function Register() {
               <div className="confirmPassword_input">
                 <label htmlFor="password_confirmation">
                   <span>تأكيد كلمة المرور</span>
-                  {formik.touched.password_confirmation && formik.errors.password_confirmation && (
-                    <p className="error_message">{formik.errors.password_confirmation} </p>
-                  )}
+                  {formik.touched.password_confirmation &&
+                    formik.errors.password_confirmation && (
+                      <p className="error_message">
+                        {formik.errors.password_confirmation}{" "}
+                      </p>
+                    )}
                 </label>
                 <div className="password_input_container">
                   <input
@@ -225,22 +234,21 @@ export default function Register() {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                   />
-                  <div className="eye_icon" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                    {showConfirmPassword ?
+                  <div
+                    className="eye_icon"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
                       <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye-icon lucide-eye"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx={12} cy={12} r={3} /></svg>
-                      :
+                    ) : (
                       <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye-off-icon lucide-eye-off"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" /><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" /><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" /><path d="m2 2 20 20" /></svg>
-                    }
+                    )}
                   </div>
                 </div>
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="regis_button"
-              disabled={isLoading}
-            >
+            <button type="submit" className="regis_button" disabled={isLoading}>
               {isLoading ? "جاري التسجيل..." : "إنشاء حساب"}
             </button>
             {errorMessage && <p className="error_general">{errorMessage}</p>}
@@ -251,7 +259,6 @@ export default function Register() {
         </div>
       </div>
 
-      {/* موديل النجاح */}
       {showModdel && (
         <div className="success_model">
           <div className="success_content">
@@ -263,4 +270,4 @@ export default function Register() {
       )}
     </div>
   );
-};
+}

@@ -98,11 +98,11 @@
   background-color: var(--main-color);
   color: var(--color);
 }
-/* .category-card:first-child .browse-spen {
+.category-card:first-child .browse-spen {
   background: var(--main-color);
   color: var(--color);
   border: none;
-} */
+}
 
 /* === ريسبونسف للموبايل === */
 @media (max-width: 865px) {
