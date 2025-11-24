@@ -286,7 +286,7 @@ export function ProfileCard({ toggleProfileCard, userData, removeCookie, onClose
 // =======================
 export function ToastWarning({ message, onClose }) {
   useEffect(() => {
-    const timer = setTimeout(() => onClose(), 3000);
+    const timer = setTimeout(() => onClose(), 2000);
     return () => clearTimeout(timer);
   }, [onClose]);
 

@@ -1,74 +1,54 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { FaCamera } from "react-icons/fa";
 import "./settingsUser.css";
 import LocationForm from "../../../Components/LocationForm/LocationForm";
 import { useCookies } from "react-cookie";
 import { parseAuthCookie } from "../../../utils/auth";
 import axios from "axios";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const SettingsUser = () => {
   const [cookies] = useCookies(["token"]);
   const { token, user } = parseAuthCookie(cookies?.token);
   const userID = user?.id;
 
-  const [userData, setUserData] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [imageLoading, setImageLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  // صور المستخدم
   const [profileImage, setProfileImage] = useState(null);
   const [coverImage, setCoverImage] = useState(null);
-
-  // موديلات الحذف
+  const [imageLoading, setImageLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeletedModal, setShowDeletedModal] = useState(false);
 
+  const queryClient = useQueryClient();
+
   // ==============================
-  // 🔥 حذف الحساب
+  // 🔥 جلب بيانات المستخدم
   // ==============================
-  const handleDeleteAccount = async () => {
-    setIsLoading(true);
-    try {
-      const res = await axios.delete("https://api.maaashi.com/api/profile/delete", {
+  const { data: userData, isLoading } = useQuery({
+    queryKey: ["user", userID],
+    queryFn: async () => {
+      const res = await axios.get("https://api.maaashi.com/api/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       if (res.data.status) {
-        setShowDeleteModal(false);
-        setShowDeletedModal(true);
-      } else {
-        setError("حدث خطأ أثناء حذف الحساب");
+        if (res.data.data.image_url) {
+          setProfileImage(`${res.data.data.image_url}?t=${Date.now()}`);
+        }
+        if (res.data.data.cover_image) {
+          setCoverImage(res.data.data.cover_image);
+        }
+        return res.data.data;
       }
-    } catch (err) {
-      setError("خطأ في الاتصال بالسيرفر");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      return {};
+    },
+    enabled: !!token && !!userID,
+  });
 
   // ==============================
-  // 🔥 تحويل الصورة إلى webp
-  // ==============================
-  const convertToWebP = async (file, quality = 0.9) => {
-    const imageBitmap = await createImageBitmap(file);
-    const canvas = document.createElement("canvas");
-    canvas.width = imageBitmap.width;
-    canvas.height = imageBitmap.height;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(imageBitmap, 0, 0);
-    const blob = await new Promise((resolve) =>
-      canvas.toBlob(resolve, "image/webp", quality)
-    );
-    return new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", { type: "image/webp" });
-  };
-
-  // ==============================
-  // 🔥 رفع الصورة الشخصية
+  // 🔥 رفع صورة البروفايل
   // ==============================
   const uploadProfileImage = async (file) => {
     const formData = new FormData();
-    formData.append("image", file); // المفتاح الصحيح حسب رسالة الخطأ
+    formData.append("image", file);
 
     const res = await axios.post("https://api.maaashi.com/api/profile/avatar", formData, {
       headers: {
@@ -77,66 +57,38 @@ const SettingsUser = () => {
       },
     });
 
-    if (res.data.status) {
-      return res.data.data.image_url; // رابط الصورة الجديدة
-    } else {
-      throw new Error("فشل رفع الصورة");
-    }
+    if (res.data.status) return res.data.data.image_url;
+    throw new Error("فشل رفع الصورة");
   };
 
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
+    const previewURL = URL.createObjectURL(file);
+    setProfileImage(previewURL);
     setImageLoading(true);
+
     try {
-      const webpFile = await convertToWebP(file);
-      const uploadedUrl = await uploadProfileImage(webpFile);
+      const uploadedUrl = await uploadProfileImage(file);
       setProfileImage(`${uploadedUrl}?t=${Date.now()}`);
+      queryClient.invalidateQueries(["user", userID]);
     } catch (err) {
-      console.log(err);
+      console.log("Upload failed:", err);
     } finally {
       setImageLoading(false);
     }
   };
 
   // ==============================
-  // 🔥 جلب بيانات المستخدم
+  // 🔥 حذف الحساب
   // ==============================
-  useEffect(() => {
-    if (!token || !userID) return;
 
-    const getUserData = async () => {
-      setIsLoading(true);
-      try {
-        const res = await axios.get("https://api.maaashi.com/api/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.data.status) {
-          setUserData(res.data.data);
-
-          if (res.data.data.image_url) {
-            setProfileImage(`${res.data.data.image_url}?t=${Date.now()}`);
-          }
-
-          if (res.data.data.cover_image) {
-            setCoverImage(res.data.data.cover_image);
-          }
-        }
-      } catch (err) {
-        setError("خطأ أثناء تحميل البيانات");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getUserData();
-  }, [userID, token]);
+  
 
   return (
     <div className="Settings_user">
-      {/* الأزرار العلوية */}
+      {/* الأزرار */}
       <ul className="Settings_user_buttons">
         <li>حسابي</li>
         <li>الشروط والأحكام</li>
@@ -155,7 +107,7 @@ const SettingsUser = () => {
             <div className="modal-buttons">
               <button onClick={() => setShowDeleteModal(false)}>إلغاء</button>
               <button onClick={handleDeleteAccount}>
-                {isLoading ? "جاري الحذف..." : "تأكيد"}
+                {deleteMutation.isLoading ? "جاري الحذف..." : "تأكيد"}
               </button>
             </div>
           </div>
@@ -175,20 +127,19 @@ const SettingsUser = () => {
 
       {/* الصفحة الرئيسية */}
       <div className="settings_user_container">
-        {/* صور المستخدم */}
         <div className="Settings_user_image">
           <div className="image_container">
             {/* كوفر */}
             <div className="Settings_user_image_cover">
-              {coverImage && <img src={coverImage} alt="صورة الغلاف" />}
+              {coverImage && <img src={coverImage} alt="Cover" />}
               <label className="change_banner_btn">
                 <FaCamera />
-                <input type="file" accept="image/*" onChange={handleImageUpload} />
+                <input type="file" accept="image/*" />
                 <span>تغيير البانر</span>
               </label>
             </div>
 
-            {/* بروفايل */}
+            {/* صورة بروفايل */}
             <div className="Settings_user_image_profile">
               <div className="user_img_container">
                 {imageLoading ? (
@@ -196,8 +147,9 @@ const SettingsUser = () => {
                     <div className="UploadImages_loader"></div>
                   </div>
                 ) : (
-                  profileImage && <img src={profileImage} alt="صورة البروفايل" />
+                  profileImage && <img src={profileImage} alt="Profile" />
                 )}
+
                 <label className="profile_camera_icon">
                   <FaCamera />
                   <input type="file" accept="image/*" onChange={handleImageUpload} />
@@ -205,6 +157,7 @@ const SettingsUser = () => {
               </div>
             </div>
           </div>
+
           <div className="user_name">
             <h3>{userData?.name}</h3>
           </div>
