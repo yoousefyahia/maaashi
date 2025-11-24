@@ -40,6 +40,7 @@
   border-radius: 12px;
   background-color: var(--color);
   border: 1px solid #dbdbdb;
+  overflow: visible;
 }
 .Settings_user_image .user_name {
   margin-top: 25px;
@@ -75,6 +76,7 @@
   align-items: center;
   gap: 6px;
   transition: 0.3s;
+  z-index: 10;
 }
 .change_banner_btn:hover {
   background: rgba(0, 0, 0, 0.8);
@@ -106,6 +108,7 @@
 .profile_camera_icon input,
 .change_banner_btn input {
   display: none;
+  pointer-events: auto;
 }
 .profile_camera_icon {
   position: absolute;
@@ -121,6 +124,7 @@
   align-items: center;
   cursor: pointer;
   transition: 0.3s;
+  z-index: 10;
 }
 .profile_camera_icon:hover {
   background: rgba(0, 0, 0, 0.9);
