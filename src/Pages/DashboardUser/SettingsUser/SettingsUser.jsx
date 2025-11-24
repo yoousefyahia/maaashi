@@ -71,25 +71,49 @@ const SettingsUser = () => {
     const file = event.target.files[0];
     if (!file) return;
 
+    // التحقق من نوع وحجم الملف
+    if (!file.type.startsWith('image/')) {
+      toast.error("الرجاء اختيار ملف صورة فقط");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("حجم الصورة يجب أن يكون أقل من 5MB");
+      return;
+    }
+
     const previewURL = URL.createObjectURL(file);
-    setProfileImage(previewURL); // Preview فورًا
+    setProfileImage(previewURL);
     setImageLoading(true);
 
     try {
       const uploadedUrl = await uploadProfileImage(file);
 
-      // تحديث الصورة مع timestamp لتفادي الكاش
-      setProfileImage(`${uploadedUrl}?t=${Date.now()}`);
+      // تحديث الصورة مع timestamp جديد
+      const newImageUrl = `${uploadedUrl}?t=${Date.now()}`;
+      setProfileImage(newImageUrl);
 
-      // تحديث بيانات المستخدم مباشرة
+      // تحديث بيانات المستخدم في الكاش
       queryClient.setQueryData(["user", userID], (oldData) => ({
         ...oldData,
         image_url: uploadedUrl
       }));
 
-      queryClient.invalidateQueries(["user", userID]);
+      // إعادة جلب البيانات للتأكد من التحديث
+      await queryClient.invalidateQueries(["user", userID]);
+      
+      toast.success("تم تحديث صورة البروفايل بنجاح!");
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast.error("فشل في رفع الصورة");
+      // الرجوع للصورة الأصلية في حالة الخطأ
+      if (userData?.image_url) {
+        setProfileImage(`${userData.image_url}?t=${Date.now()}`);
+      }
     } finally {
       setImageLoading(false);
+      // تنظيف الـ preview URL
+      URL.revokeObjectURL(previewURL);
     }
   };
 
@@ -170,17 +194,32 @@ const SettingsUser = () => {
             {/* صورة البروفايل */}
             <div className="Settings_user_image_profile">
               <div className="user_img_container">
-                {imageLoading ? (
-                  <div className="upload_overlay">
-                    <div className="UploadImages_loader"></div>
-                  </div>
-                ) : (
-                  profileImage && <img src={profileImage} alt="Profile" />
+                {profileImage && (
+                  <>
+                    <img 
+                      src={profileImage} 
+                      alt="Profile" 
+                      onError={(e) => {
+                        // إذا فشل تحميل الصورة، إخفاء الصورة التالفة
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                    {imageLoading && (
+                      <div className="upload_overlay">
+                        <div className="UploadImages_loader"></div>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <label className="profile_camera_icon">
                   <FaCamera />
-                  <input type="file" accept="image/*" onChange={handleImageUpload} />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleImageUpload}
+                    disabled={imageLoading}
+                  />
                 </label>
               </div>
             </div>
@@ -215,6 +254,7 @@ const SettingsUser = () => {
             type="button"
             className="Settings_user_save_btn"
             onClick={handleUpdateProfile}
+            disabled={updateProfileMutation.isLoading}
           >
             {updateProfileMutation.isLoading ? "جاري التحديث..." : "تعديل الملف الشخصي"}
           </button>
