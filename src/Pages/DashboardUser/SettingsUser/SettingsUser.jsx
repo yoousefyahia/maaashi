@@ -17,40 +17,30 @@ const SettingsUser = () => {
   const [coverImage, setCoverImage] = useState(null);
   const [imageLoading, setImageLoading] = useState(false);
 
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showDeletedModal, setShowDeletedModal] = useState(false);
-
   const queryClient = useQueryClient();
 
   // =======================
-  // 🎯 جلب بيانات المستخدم
+  // جلب بيانات المستخدم
   // =======================
-  const { data: userData, isLoading } = useQuery({
+  const { data: userData } = useQuery({
     queryKey: ["user", userID],
     queryFn: async () => {
       const res = await axios.get("https://api.maaashi.com/api/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.data.status) {
-        return res.data.data;
-      }
-      return {};
+      return res.data.status ? res.data.data : {};
     },
     enabled: !!token && !!userID,
   });
 
-  // 🤍 تحديث الصور بعد جلب البيانات
+  // تحديث الصور بعد جلب البيانات
   useEffect(() => {
-    if (userData?.image_url) {
-      setProfileImage(`${userData.image_url}?t=${Date.now()}`);
-    }
-    if (userData?.cover_image) {
-      setCoverImage(`${userData.cover_image}?t=${Date.now()}`);
-    }
+    if (userData?.image_url) setProfileImage(`${userData.image_url}?t=${Date.now()}`);
+    if (userData?.cover_image) setCoverImage(`${userData.cover_image}?t=${Date.now()}`);
   }, [userData]);
 
   // =======================
-  // 🔥 رفع صورة البروفايل
+  // رفع صورة البروفايل
   // =======================
   const uploadProfileImage = async (file) => {
     const formData = new FormData();
@@ -64,7 +54,7 @@ const SettingsUser = () => {
     });
 
     if (res.data.status) return res.data.data.image_url;
-    throw new Error("فشل رفع الصورة");
+    throw new Error(res.data?.message || "فشل رفع الصورة");
   };
 
   const handleImageUpload = async (event) => {
@@ -72,13 +62,13 @@ const SettingsUser = () => {
     if (!file) return;
 
     // التحقق من نوع وحجم الملف
-    if (!file.type.startsWith('image/')) {
-      toast.error("الرجاء اختيار ملف صورة فقط");
+    if (!file.type.startsWith("image/")) {
+      toast.error("الملف المختار ليس صورة. الرجاء اختيار ملف صورة فقط.");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("حجم الصورة يجب أن يكون أقل من 5MB");
+      toast.error("حجم الصورة كبير جدًا. الرجاء اختيار صورة أصغر من 5MB.");
       return;
     }
 
@@ -89,37 +79,37 @@ const SettingsUser = () => {
     try {
       const uploadedUrl = await uploadProfileImage(file);
 
-      // تحديث الصورة مع timestamp جديد
+      if (!uploadedUrl) {
+        toast.error("الصورة لم تتغير. حاول مرة أخرى.");
+        return;
+      }
+
       const newImageUrl = `${uploadedUrl}?t=${Date.now()}`;
       setProfileImage(newImageUrl);
 
-      // تحديث بيانات المستخدم في الكاش
       queryClient.setQueryData(["user", userID], (oldData) => ({
         ...oldData,
-        image_url: uploadedUrl
+        image_url: uploadedUrl,
       }));
 
-      // إعادة جلب البيانات للتأكد من التحديث
       await queryClient.invalidateQueries(["user", userID]);
-      
+
       toast.success("تم تحديث صورة البروفايل بنجاح!");
     } catch (error) {
       console.error("Error uploading image:", error);
-      toast.error("فشل في رفع الصورة");
-      // الرجوع للصورة الأصلية في حالة الخطأ
+      toast.error(`فشل رفع الصورة: ${error.response?.data?.message || error.message}`);
       if (userData?.image_url) {
         setProfileImage(`${userData.image_url}?t=${Date.now()}`);
       }
     } finally {
       setImageLoading(false);
-      // تنظيف الـ preview URL
       URL.revokeObjectURL(previewURL);
     }
   };
 
-  // =============================
-  // 🔧 التحكم في فورم البيانات
-  // =============================
+  // =======================
+  // فورم البيانات
+  // =======================
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -132,20 +122,15 @@ const SettingsUser = () => {
     }
   }, [userData]);
 
-  // =============================
-  // 🔥 تحديث بيانات الحساب
-  // =============================
+  // =======================
+  // تحديث بيانات الحساب
+  // =======================
   const updateProfileMutation = useMutation({
-    mutationFn: async (data) => {
-      return await axios.post(
-        "https://api.maaashi.com/api/profile",
-        data,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["user", userID]);
-    },
+    mutationFn: async (data) =>
+      axios.post("https://api.maaashi.com/api/profile", data, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    onSuccess: () => queryClient.invalidateQueries(["user", userID]),
   });
 
   const handleUpdateProfile = () => {
@@ -162,25 +147,19 @@ const SettingsUser = () => {
     <div className="Settings_user">
       <Toaster position="top-right" reverseOrder={false} />
 
-      {/* =======================
-          📌 Buttons
-      =========================== */}
+      {/* Buttons */}
       <ul className="Settings_user_buttons">
         <li>حسابي</li>
         <li>الشروط والأحكام</li>
         <li>الخصوصية</li>
         <li>الأسئلة الشائعة</li>
         <li>تغيير البانر</li>
-        <li onClick={() => setShowDeleteModal(true)}>حذف الحساب</li>
       </ul>
 
-      {/* =======================
-          🖼️ الصور
-      =========================== */}
+      {/* الصور */}
       <div className="settings_user_container">
         <div className="Settings_user_image">
           <div className="image_container">
-
             {/* صورة الكوفر */}
             <div className="Settings_user_image_cover">
               {coverImage && <img src={coverImage} alt="Cover" />}
@@ -195,35 +174,31 @@ const SettingsUser = () => {
             <div className="Settings_user_image_profile">
               <div className="user_img_container">
                 {profileImage && (
-                  <>
-                    <img 
-                      src={profileImage} 
-                      alt="Profile" 
-                      onError={(e) => {
-                        // إذا فشل تحميل الصورة، إخفاء الصورة التالفة
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                    {imageLoading && (
-                      <div className="upload_overlay">
-                        <div className="UploadImages_loader"></div>
-                      </div>
-                    )}
-                  </>
+                  <img
+                    src={profileImage}
+                    alt="Profile"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      toast.error("فشل تحميل الصورة. ربما تم حذفها أو الرابط غير صالح.");
+                    }}
+                  />
                 )}
-
+                {imageLoading && (
+                  <div className="upload_overlay">
+                    <div className="UploadImages_loader"></div>
+                  </div>
+                )}
                 <label className="profile_camera_icon">
                   <FaCamera />
-                  <input 
-                    type="file" 
-                    accept="image/*" 
+                  <input
+                    type="file"
+                    accept="image/*"
                     onChange={handleImageUpload}
                     disabled={imageLoading}
                   />
                 </label>
               </div>
             </div>
-
           </div>
 
           <div className="user_name">
@@ -231,9 +206,7 @@ const SettingsUser = () => {
           </div>
         </div>
 
-        {/* =======================
-            📄 فورم تعديل الحساب
-        =========================== */}
+        {/* فورم تعديل الحساب */}
         <form className="Settings_user_form" onSubmit={(e) => e.preventDefault()}>
           <label>
             الاسم الكامل
