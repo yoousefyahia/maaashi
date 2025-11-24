@@ -8,12 +8,18 @@ import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast, { Toaster } from "react-hot-toast";
 
+// إنشاء instance مخصص لـ axios
+const api = axios.create({
+  baseURL: 'https://api.maaashi.com/api',
+  timeout: 30000,
+});
+
 const SettingsUser = () => {
   const [cookies] = useCookies(["token"]);
   const { token, user } = parseAuthCookie(cookies?.token);
   const userID = user?.id;
 
-  const [profileImage, setProfileImage] = useState(null);
+  const [profileImage, setProfileImage] = useState(null); // ✅ هنا تعريف profileImage
   const [coverImage, setCoverImage] = useState(null);
   const [imageLoading, setImageLoading] = useState(false);
 
@@ -25,41 +31,111 @@ const SettingsUser = () => {
   const { data: userData } = useQuery({
     queryKey: ["user", userID],
     queryFn: async () => {
-      const res = await axios.get("https://api.maaashi.com/api/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return res.data.status ? res.data.data : {};
+      if (!token) {
+        toast.error("لا يوجد token، يرجى تسجيل الدخول مرة أخرى");
+        return {};
+      }
+
+      try {
+        toast.loading("جاري جلب البيانات...");
+        const res = await api.get("/profile", {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          },
+        });
+        
+        toast.dismiss();
+        
+        if (res.data.status) {
+          toast.success("تم جلب البيانات بنجاح");
+          return res.data.data;
+        } else {
+          toast.error("فشل في جلب البيانات من السيرفر");
+          return {};
+        }
+      } catch (error) {
+        toast.dismiss();
+        
+        if (error.message?.includes('timeout')) {
+          toast.error("انتهت مدة الانتظار. تحقق من الإنترنت وحاول مرة أخرى.");
+        } else if (error.response) {
+          toast.error(`خطأ من السيرفر: ${error.response.status}`);
+        } else if (error.request) {
+          toast.error("لا يمكن الاتصال بالسيرفر. تحقق من الإنترنت.");
+        } else {
+          toast.error("حدث خطأ غير متوقع");
+        }
+        
+        return {};
+      }
     },
     enabled: !!token && !!userID,
   });
 
   // تحديث الصور بعد جلب البيانات
   useEffect(() => {
-    if (userData?.image_url) setProfileImage(`${userData.image_url}?t=${Date.now()}`);
-    if (userData?.cover_image) setCoverImage(`${userData.cover_image}?t=${Date.now()}`);
+    if (userData?.image_url) {
+      setProfileImage(`${userData.image_url}?t=${Date.now()}`);
+    }
+    if (userData?.cover_image) {
+      setCoverImage(`${userData.cover_image}?t=${Date.now()}`);
+    }
   }, [userData]);
 
   // =======================
   // رفع صورة البروفايل
   // =======================
   const uploadProfileImage = async (file) => {
+    if (!token) {
+      throw new Error("No token available");
+    }
+
     const formData = new FormData();
     formData.append("image", file);
 
-    const res = await axios.post("https://api.maaashi.com/api/profile/avatar", formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
 
-    if (res.data.status) return res.data.data.image_url;
-    throw new Error(res.data?.message || "فشل رفع الصورة");
+      const response = await fetch('https://api.maaashi.com/api/profile/avatar', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.status) {
+        return data.data.image_url;
+      } else {
+        throw new Error(data?.message || "فشل رفع الصورة");
+      }
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new Error("انتهت مدة الانتظار أثناء رفع الصورة");
+      }
+      throw error;
+    }
   };
 
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
-    if (!file) return;
+    event.target.value = ''; // تنظيف الـ input
+
+    if (!file) {
+      return;
+    }
 
     // التحقق من نوع وحجم الملف
     if (!file.type.startsWith("image/")) {
@@ -72,37 +148,52 @@ const SettingsUser = () => {
       return;
     }
 
+    // عرض صورة معاينة
     const previewURL = URL.createObjectURL(file);
     setProfileImage(previewURL);
     setImageLoading(true);
 
     try {
+      toast.loading("جاري رفع الصورة...");
+
       const uploadedUrl = await uploadProfileImage(file);
 
-      if (!uploadedUrl) {
-        toast.error("الصورة لم تتغير. حاول مرة أخرى.");
-        return;
+      if (uploadedUrl) {
+        // استخدام الصورة الجديدة مع timestamp
+        const newImageUrl = `${uploadedUrl}?t=${Date.now()}`;
+        setProfileImage(newImageUrl);
+        
+        // تحديث الـ cache
+        queryClient.setQueryData(["user", userID], (oldData) => ({
+          ...oldData,
+          image_url: uploadedUrl,
+        }));
+
+        // إعادة تحميل البيانات
+        await queryClient.invalidateQueries(["user", userID]);
+        
+        toast.success("🎉 تم تحديث صورة البروفايل بنجاح!");
       }
 
-      const newImageUrl = `${uploadedUrl}?t=${Date.now()}`;
-      setProfileImage(newImageUrl);
-
-      queryClient.setQueryData(["user", userID], (oldData) => ({
-        ...oldData,
-        image_url: uploadedUrl,
-      }));
-
-      await queryClient.invalidateQueries(["user", userID]);
-
-      toast.success("تم تحديث صورة البروفايل بنجاح!");
     } catch (error) {
-      console.error("Error uploading image:", error);
-      toast.error(`فشل رفع الصورة: ${error.response?.data?.message || error.message}`);
+      console.error("Upload error:", error);
+      
+      // رسائل خطأ محددة
+      if (error.message.includes('انتهت مدة الانتظار')) {
+        toast.error("استغرقت العملية وقتاً طويلاً. حاول مرة أخرى.");
+      } else if (error.message.includes('HTTP error')) {
+        toast.error("مشكلة في السيرفر. حاول مرة أخرى لاحقاً.");
+      } else {
+        toast.error(`فشل رفع الصورة: ${error.message}`);
+      }
+
+      // الرجوع للصورة الأصلية
       if (userData?.image_url) {
         setProfileImage(`${userData.image_url}?t=${Date.now()}`);
       }
     } finally {
       setImageLoading(false);
+      // تنظيف الـ URL المؤقت
       URL.revokeObjectURL(previewURL);
     }
   };
@@ -127,10 +218,12 @@ const SettingsUser = () => {
   // =======================
   const updateProfileMutation = useMutation({
     mutationFn: async (data) =>
-      axios.post("https://api.maaashi.com/api/profile", data, {
+      api.post("/profile", data, {
         headers: { Authorization: `Bearer ${token}` },
       }),
-    onSuccess: () => queryClient.invalidateQueries(["user", userID]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["user", userID]);
+    },
   });
 
   const handleUpdateProfile = () => {
@@ -138,14 +231,27 @@ const SettingsUser = () => {
       { name, email, phone },
       {
         onSuccess: () => toast.success("تم تحديث البيانات بنجاح!"),
-        onError: () => toast.error("حدث خطأ أثناء التحديث!"),
+        onError: (error) => {
+          toast.error(`فشل التحديث: ${error.response?.data?.message || "حدث خطأ"}`);
+        }
       }
     );
   };
 
   return (
     <div className="Settings_user">
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster 
+        position="top-center"
+        reverseOrder={false}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+            fontSize: '14px',
+          },
+        }}
+      />
 
       {/* Buttons */}
       <ul className="Settings_user_buttons">
@@ -179,13 +285,14 @@ const SettingsUser = () => {
                     alt="Profile"
                     onError={(e) => {
                       e.target.style.display = "none";
-                      toast.error("فشل تحميل الصورة. ربما تم حذفها أو الرابط غير صالح.");
+                      toast.error("فشل تحميل الصورة.");
                     }}
                   />
                 )}
                 {imageLoading && (
                   <div className="upload_overlay">
                     <div className="UploadImages_loader"></div>
+                    <span style={{color: 'white', fontSize: '12px', marginTop: '10px'}}>جاري الرفع...</span>
                   </div>
                 )}
                 <label className="profile_camera_icon">
