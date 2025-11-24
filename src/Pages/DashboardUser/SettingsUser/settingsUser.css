@@ -78,6 +78,7 @@
   transition: 0.3s;
   z-index: 10;
 }
+
 .change_banner_btn:hover {
   background: rgba(0, 0, 0, 0.8);
 }
@@ -108,7 +109,6 @@
 .profile_camera_icon input,
 .change_banner_btn input {
   display: none;
-  pointer-events: auto;
 }
 .profile_camera_icon {
   position: absolute;
@@ -125,10 +125,13 @@
   cursor: pointer;
   transition: 0.3s;
   z-index: 10;
+  border: none;
 }
+
 .profile_camera_icon:hover {
   background: rgba(0, 0, 0, 0.9);
 }
+
 .profile_camera_icon svg {
   font-size: 14px;
 }

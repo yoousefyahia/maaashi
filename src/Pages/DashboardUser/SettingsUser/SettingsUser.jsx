@@ -1,5 +1,5 @@
 // SettingsUser.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaCamera } from "react-icons/fa";
 import "./settingsUser.css";
 import LocationForm from "../../../Components/LocationForm/LocationForm";
@@ -18,6 +18,9 @@ const SettingsUser = () => {
   const [coverImage, setCoverImage] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [coverLoading, setCoverLoading] = useState(false);
+
+  const profileInputRef = useRef(null);
+  const coverInputRef = useRef(null);
 
   const queryClient = useQueryClient();
 
@@ -58,8 +61,12 @@ const SettingsUser = () => {
 
   const handleProfileUpload = async (event) => {
     const file = event.target.files[0];
-    if (!file) return toast.error("لم يتم اختيار أي صورة");
+    if (!file) {
+      console.log("لم يتم اختيار ملف");
+      return toast.error("لم يتم اختيار أي صورة");
+    }
 
+    console.log("تم اختيار ملف:", file.name);
     const previewURL = URL.createObjectURL(file);
     setProfileImage(previewURL);
     setProfileLoading(true);
@@ -70,7 +77,8 @@ const SettingsUser = () => {
       setProfileImage(`${uploadedUrl}?t=${Date.now()}`);
       queryClient.invalidateQueries(["user", userID]);
       toast.success("تم تحديث صورة البروفايل!");
-    } catch {
+    } catch (error) {
+      console.error("خطأ في الرفع:", error);
       toast.error("فشل رفع صورة البروفايل!");
     } finally {
       setProfileLoading(false);
@@ -114,6 +122,10 @@ const SettingsUser = () => {
       setCoverLoading(false);
     }
   };
+
+  // دوال لتشغيل اختيار الملفات
+  const triggerProfileInput = () => profileInputRef.current?.click();
+  const triggerCoverInput = () => coverInputRef.current?.click();
 
   // فورم تعديل البيانات
   const [name, setName] = useState("");
@@ -169,10 +181,21 @@ const SettingsUser = () => {
               ) : (
                 coverImage && <img src={coverImage} alt="Cover" />
               )}
-              <label className="change_banner_btn">
+              <button 
+                className="change_banner_btn"
+                type="button"
+                onClick={triggerCoverInput}
+              >
                 <FaCamera />
-                <input type="file" accept="image/*" onChange={handleCoverUpload} />
-              </label>
+                تغيير
+              </button>
+              <input 
+                ref={coverInputRef}
+                type="file" 
+                accept="image/*" 
+                onChange={handleCoverUpload}
+                style={{ display: 'none' }}
+              />
             </div>
 
             {/* صورة البروفايل */}
@@ -183,10 +206,21 @@ const SettingsUser = () => {
                 ) : (
                   profileImage && <img src={profileImage} alt="Profile" />
                 )}
-                <label className="profile_camera_icon">
+                <button
+                  className="profile_camera_icon"
+                  type="button"
+                  onClick={triggerProfileInput}
+                  title="تغيير الصورة الشخصية"
+                >
                   <FaCamera />
-                  <input type="file" accept="image/*" onChange={handleProfileUpload} />
-                </label>
+                </button>
+                <input 
+                  ref={profileInputRef}
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleProfileUpload}
+                  style={{ display: 'none' }}
+                />
               </div>
             </div>
           </div>
