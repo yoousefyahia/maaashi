@@ -1,3 +1,4 @@
+// SettingsUser.jsx
 import React, { useState, useEffect } from "react";
 import { FaCamera } from "react-icons/fa";
 import "./settingsUser.css";
@@ -13,7 +14,6 @@ const SettingsUser = () => {
   const { token, user } = parseAuthCookie(cookies?.token);
   const userID = user?.id;
 
-  // الصور وحالات التحميل لكل واحدة
   const [profileImage, setProfileImage] = useState(null);
   const [coverImage, setCoverImage] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -21,9 +21,7 @@ const SettingsUser = () => {
 
   const queryClient = useQueryClient();
 
-  // =======================
-  // 🎯 جلب بيانات المستخدم
-  // =======================
+  // جلب بيانات المستخدم
   const { data: userData } = useQuery({
     queryKey: ["user", userID],
     queryFn: async () => {
@@ -36,55 +34,42 @@ const SettingsUser = () => {
     enabled: !!token && !!userID,
   });
 
-  // 🤍 تحديث الصور بعد جلب البيانات
   useEffect(() => {
-    if (userData?.profile_image) {
-      setProfileImage(`${userData.profile_image}?t=${Date.now()}`);
-    }
-    if (userData?.cover_image) {
-      setCoverImage(`${userData.cover_image}?t=${Date.now()}`);
-    }
+    if (userData?.profile_image) setProfileImage(userData.profile_image);
+    if (userData?.cover_image) setCoverImage(userData.cover_image);
   }, [userData]);
 
-  // =======================
-  // 🔥 رفع صورة البروفايل
-  // =======================
+  // رفع صورة البروفايل
   const uploadProfileImage = async (file) => {
     const formData = new FormData();
-    formData.append("avatar", file);
+    formData.append("image", file);
 
     const res = await axios.post(
       "https://api.maaashi.com/api/profile/avatar",
       formData,
       {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
       }
     );
 
     if (res.data.status) return res.data.data.profile_image;
-    throw new Error("فشل رفع الصورة");
+    throw new Error("فشل رفع صورة البروفايل");
   };
 
   const handleProfileUpload = async (event) => {
     const file = event.target.files[0];
-    if (!file) return;
+    if (!file) return toast.error("لم يتم اختيار أي صورة");
 
     const previewURL = URL.createObjectURL(file);
-    setProfileImage(previewURL); // عرض الصورة فورًا
+    setProfileImage(previewURL);
     setProfileLoading(true);
+    toast("جارٍ رفع الصورة...");
 
     try {
       const uploadedUrl = await uploadProfileImage(file);
       setProfileImage(`${uploadedUrl}?t=${Date.now()}`);
-      queryClient.setQueryData(["user", userID], (oldData) => ({
-        ...oldData,
-        profile_image: uploadedUrl,
-      }));
       queryClient.invalidateQueries(["user", userID]);
-      toast.success("تم تحديث صورة البروفايل بنجاح!");
+      toast.success("تم تحديث صورة البروفايل!");
     } catch {
       toast.error("فشل رفع صورة البروفايل!");
     } finally {
@@ -92,9 +77,7 @@ const SettingsUser = () => {
     }
   };
 
-  // =======================
-  // 🔥 رفع صورة الكوفر
-  // =======================
+  // رفع صورة الكوفر
   const uploadCoverImage = async (file) => {
     const formData = new FormData();
     formData.append("cover", file);
@@ -103,10 +86,7 @@ const SettingsUser = () => {
       "https://api.maaashi.com/api/profile/cover",
       formData,
       {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
       }
     );
 
@@ -116,21 +96,18 @@ const SettingsUser = () => {
 
   const handleCoverUpload = async (event) => {
     const file = event.target.files[0];
-    if (!file) return;
+    if (!file) return toast.error("لم يتم اختيار أي صورة");
 
     const previewURL = URL.createObjectURL(file);
-    setCoverImage(previewURL); // عرض الصورة فورًا
+    setCoverImage(previewURL);
     setCoverLoading(true);
+    toast("جارٍ رفع صورة الكوفر...");
 
     try {
       const uploadedUrl = await uploadCoverImage(file);
       setCoverImage(`${uploadedUrl}?t=${Date.now()}`);
-      queryClient.setQueryData(["user", userID], (oldData) => ({
-        ...oldData,
-        cover_image: uploadedUrl,
-      }));
       queryClient.invalidateQueries(["user", userID]);
-      toast.success("تم تحديث صورة الكوفر بنجاح!");
+      toast.success("تم تحديث صورة الكوفر!");
     } catch {
       toast.error("فشل رفع صورة الكوفر!");
     } finally {
@@ -138,9 +115,7 @@ const SettingsUser = () => {
     }
   };
 
-  // =======================
-  // 🔧 التحكم في فورم البيانات
-  // =======================
+  // فورم تعديل البيانات
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -153,16 +128,11 @@ const SettingsUser = () => {
     }
   }, [userData]);
 
-  // =======================
-  // 🔥 تحديث بيانات الحساب
-  // =======================
   const updateProfileMutation = useMutation({
     mutationFn: async (data) => {
-      return await axios.post(
-        "https://api.maaashi.com/api/profile",
-        data,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      return await axios.post("https://api.maaashi.com/api/profile", data, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
     },
     onSuccess: () => queryClient.invalidateQueries(["user", userID]),
   });
@@ -171,19 +141,16 @@ const SettingsUser = () => {
     updateProfileMutation.mutate(
       { name, email, phone },
       {
-        onSuccess: () => toast.success("تم تحديث البيانات بنجاح!"),
-        onError: () => toast.error("حدث خطأ أثناء التحديث!"),
+        onSuccess: () => toast.success("تم تحديث البيانات!"),
+        onError: () => toast.error("فشل تحديث البيانات"),
       }
     );
   };
 
   return (
     <div className="Settings_user">
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster position="top-right" />
 
-      {/* =======================
-          📌 Buttons
-      =========================== */}
       <ul className="Settings_user_buttons">
         <li>حسابي</li>
         <li>الشروط والأحكام</li>
@@ -192,25 +159,19 @@ const SettingsUser = () => {
         <li>تغيير البانر</li>
       </ul>
 
-      {/* =======================
-          🖼️ الصور
-      =========================== */}
       <div className="settings_user_container">
         <div className="Settings_user_image">
           <div className="image_container">
             {/* صورة الكوفر */}
             <div className="Settings_user_image_cover">
               {coverLoading ? (
-                <div className="upload_overlay">
-                  <div className="UploadImages_loader"></div>
-                </div>
+                <div className="upload_overlay">جارٍ التحميل...</div>
               ) : (
                 coverImage && <img src={coverImage} alt="Cover" />
               )}
               <label className="change_banner_btn">
                 <FaCamera />
                 <input type="file" accept="image/*" onChange={handleCoverUpload} />
-                <span>تغيير البانر</span>
               </label>
             </div>
 
@@ -218,9 +179,7 @@ const SettingsUser = () => {
             <div className="Settings_user_image_profile">
               <div className="user_img_container">
                 {profileLoading ? (
-                  <div className="upload_overlay">
-                    <div className="UploadImages_loader"></div>
-                  </div>
+                  <div className="upload_overlay">جارٍ التحميل...</div>
                 ) : (
                   profileImage && <img src={profileImage} alt="Profile" />
                 )}
@@ -233,14 +192,14 @@ const SettingsUser = () => {
           </div>
 
           <div className="user_name">
-            <h3>{userData?.name}</h3>
+            <h3>{userData?.name || "جارٍ التحميل..."}</h3>
           </div>
         </div>
 
-        {/* =======================
-            📄 فورم تعديل الحساب
-        =========================== */}
-        <form className="Settings_user_form" onSubmit={(e) => e.preventDefault()}>
+        <form
+          className="Settings_user_form"
+          onSubmit={(e) => e.preventDefault()}
+        >
           <label>
             الاسم الكامل
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} />

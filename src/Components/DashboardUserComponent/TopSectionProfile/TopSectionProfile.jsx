@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./topSectionProfile.css";
 import { useCookies } from "react-cookie";
 import { parseAuthCookie } from "../../../utils/auth";
@@ -6,8 +6,10 @@ import axios from "axios";
 
 const TopSectionProfile = () => {
   const [userData, setUserData] = useState(null);
-  const [coverImage, setCoverImage] = useState("/default-cover.jpg");
-  const [profileImage, setProfileImage] = useState("/default-user.jpg");
+  const [coverImage, setCoverImage] = useState(null);
+  const [profileImage, setProfileImage] = useState(null);
+  const coverRef = useRef(null); // لتخزين آخر cover
+  const profileRef = useRef(null); // لتخزين آخر profile
   const [cookie] = useCookies(["token"]);
   const { token, user } = parseAuthCookie(cookie?.token);
   const userID = user?.id;
@@ -15,32 +17,30 @@ const TopSectionProfile = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      try {
-        if (!token) {
-          setError("يرجى تسجيل الدخول مرة أخرى.");
-          return;
-        }
+      if (!token || !userID) return;
 
+      try {
         const res = await axios.get("https://api.maaashi.com/api/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         const data = res.data;
         if (data.status) {
-          setUserData(data.data);
+          setUserData(prev => {
+            if (JSON.stringify(prev) === JSON.stringify(data.data)) return prev;
+            return data.data;
+          });
 
-          // تحديث الصور فقط إذا لم يتم تغييرها بالفعل
-          setProfileImage(prev =>
-            prev === "/default-user.jpg" && data.data.profile_image
-              ? `${data.data.profile_image}?t=${Date.now()}`
-              : prev
-          );
+          // تحديث الصور فقط لو مختلفة عن المرة اللي فاتت
+          if (data.data.profile_image && profileRef.current !== data.data.profile_image) {
+            setProfileImage(`${data.data.profile_image}?t=${Date.now()}`);
+            profileRef.current = data.data.profile_image;
+          }
 
-          setCoverImage(prev =>
-            prev === "/default-cover.jpg" && data.data.cover_image
-              ? `${data.data.cover_image}?t=${Date.now()}`
-              : prev
-          );
+          if (data.data.cover_image && coverRef.current !== data.data.cover_image) {
+            setCoverImage(`${data.data.cover_image}?t=${Date.now()}`);
+            coverRef.current = data.data.cover_image;
+          }
 
           setError("");
         } else {
@@ -51,27 +51,26 @@ const TopSectionProfile = () => {
       }
     };
 
-    if (userID && token) {
-      fetchUserData();
-    }
+    fetchUserData();
   }, [userID, token]);
 
   return (
     <div className="accountUserImage_up">
       <div className="Account_user_image">
-        {/* صورة الكوفر */}
-        <div className="Account_user_image_profile">
-          <img src={coverImage} alt="صورة الكوفر" loading="lazy" />
-        </div>
-
-        {/* صورة البروفايل */}
-        <div className="Account_user_image_profile_person">
-          <div className="user_img_container">
-            <img src={profileImage} alt="صورة البروفايل" loading="lazy" />
+        {coverImage && (
+          <div className="Account_user_image_profile">
+            <img src={coverImage} alt="صورة الكوفر" />
           </div>
-        </div>
+        )}
 
-        {/* بيانات المستخدم */}
+        {profileImage && (
+          <div className="Account_user_image_profile_person">
+            <div className="user_img_container">
+              <img src={profileImage} alt="صورة البروفايل" />
+            </div>
+          </div>
+        )}
+
         <div className="Account_user_info">
           <h3 className="user_name">{userData?.name || "جارٍ التحميل..."}</h3>
           <h6 className="user_status">
@@ -79,7 +78,6 @@ const TopSectionProfile = () => {
           </h6>
         </div>
 
-        {/* عرض الخطأ إن وجد */}
         {error && <p className="error_message">{error}</p>}
       </div>
     </div>
