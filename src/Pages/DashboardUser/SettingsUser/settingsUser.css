@@ -54,11 +54,11 @@
   overflow: hidden;
 }
 .Settings_user_image_cover img {
-  position: absolute;
-  inset: 0px;
   width: 100%;
   height: 300px;
-  position: relative;
+  object-fit: cover; /* يحافظ على تناسق الصورة */
+  display: block;
+  transition: opacity 0.3s ease-in-out;
 }
 .change_banner_btn {
   position: absolute;
@@ -96,12 +96,12 @@
   height: 100%;
 }
 .Settings_user_image_profile .user_img_container img {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover; /* يحافظ على تناسق البروفايل */
+  border-radius: 50%;
+  display: block;
+  transition: opacity 0.3s ease-in-out;
 }
 .profile_camera_icon input,
 .change_banner_btn input {

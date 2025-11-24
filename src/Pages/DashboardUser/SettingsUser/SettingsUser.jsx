@@ -6,6 +6,7 @@ import { useCookies } from "react-cookie";
 import { parseAuthCookie } from "../../../utils/auth";
 import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import toast, { Toaster } from "react-hot-toast";
 
 const SettingsUser = () => {
   const [cookies] = useCookies(["token"]);
@@ -38,7 +39,7 @@ const SettingsUser = () => {
     enabled: !!token && !!userID,
   });
 
-  // 🤍 تحديث صور البروفايل بعد جلب البيانات (حل مشكلة الموبايل)
+  // 🤍 تحديث الصور بعد جلب البيانات
   useEffect(() => {
     if (userData?.image_url) {
       setProfileImage(`${userData.image_url}?t=${Date.now()}`);
@@ -71,12 +72,21 @@ const SettingsUser = () => {
     if (!file) return;
 
     const previewURL = URL.createObjectURL(file);
-    setProfileImage(previewURL); // Preview
+    setProfileImage(previewURL); // Preview فورًا
     setImageLoading(true);
 
     try {
       const uploadedUrl = await uploadProfileImage(file);
+
+      // تحديث الصورة مع timestamp لتفادي الكاش
       setProfileImage(`${uploadedUrl}?t=${Date.now()}`);
+
+      // تحديث بيانات المستخدم مباشرة
+      queryClient.setQueryData(["user", userID], (oldData) => ({
+        ...oldData,
+        image_url: uploadedUrl
+      }));
+
       queryClient.invalidateQueries(["user", userID]);
     } finally {
       setImageLoading(false);
@@ -90,7 +100,6 @@ const SettingsUser = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
-  // تحديث الحقول بعد جلب البيانات
   useEffect(() => {
     if (userData) {
       setName(userData.name || "");
@@ -116,11 +125,18 @@ const SettingsUser = () => {
   });
 
   const handleUpdateProfile = () => {
-    updateProfileMutation.mutate({ name, email, phone });
+    updateProfileMutation.mutate(
+      { name, email, phone },
+      {
+        onSuccess: () => toast.success("تم تحديث البيانات بنجاح!"),
+        onError: () => toast.error("حدث خطأ أثناء التحديث!"),
+      }
+    );
   };
 
   return (
     <div className="Settings_user">
+      <Toaster position="top-right" reverseOrder={false} />
 
       {/* =======================
           📌 Buttons
@@ -154,7 +170,6 @@ const SettingsUser = () => {
             {/* صورة البروفايل */}
             <div className="Settings_user_image_profile">
               <div className="user_img_container">
-
                 {imageLoading ? (
                   <div className="upload_overlay">
                     <div className="UploadImages_loader"></div>
