@@ -12,6 +12,7 @@
   align-items: center;
   box-shadow: 0 2px 6px var(--shadow-color);
 }
+
 .header-container {
   width: 100%;
   max-width: 1200px;
@@ -175,7 +176,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--main-color);
+  color:white;
   align-content: center;
 }
 

@@ -25,7 +25,6 @@ const Header = () => {
   const inputRef = useRef(null);
 
   const navigate = useNavigate();
-
   const handleFocus = () => inputRef.current.focus();
   const closeMenu = () => setMenuOpen(false);
 
@@ -108,9 +107,9 @@ const Header = () => {
                 className="header_profile_img"
                 ref={mobileProfileRef}
               >
-                {userData?.image_url ? (
+                {userData?.profile_image ? (
                   <img
-                    src={userData.image_url}
+                    src={userData.profile_image}
                     alt={userData?.name}
                     className="user_img"
                   />
@@ -209,7 +208,7 @@ const Header = () => {
       </div>
 
       {/* Toast */}
-      {token && showToast && userData?.area === null && (
+      {token && showToast && (!userData?.area || userData?.area === "") && (
         <ToastWarning
           message="الرجاء إضافة الموقع قبل المتابعة."
           onClose={() => setShowToast(false)}
@@ -252,20 +251,19 @@ export function ProfileCard({ toggleProfileCard, userData, removeCookie, onClose
     <div
       className="profile-card"
       style={{
-        height: "280px",           // دايمًا 280px
-        opacity: toggleProfileCard ? 1 : 0,  // يتحكم بالظهور فقط
+        height: "280px",
+        opacity: toggleProfileCard ? 1 : 0,
         transition: "opacity 0.3s"
       }}
     >
       <div className="user-info">
-        {userData?.image_url ? (
-          <img src={userData.image_url} alt={userData?.name} className="user_img" />
+        {userData?.profile_image ? (
+          <img src={userData.profile_image} alt={userData?.name} className="user_img" />
         ) : (
           <span className="two_char">{initials}</span>
         )}
         <div>
           <p className="greeting">أهلا</p>
-          {/* <p className="username">{userData?.name || "User"}</p> */}
         </div>
       </div>
       <Link to="/accountUser" className="show_accountUser">
