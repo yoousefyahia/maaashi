@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaCamera } from "react-icons/fa";
 import "./settingsUser.css";
 import LocationForm from "../../../Components/LocationForm/LocationForm";
@@ -15,14 +15,15 @@ const SettingsUser = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [coverImage, setCoverImage] = useState(null);
   const [imageLoading, setImageLoading] = useState(false);
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeletedModal, setShowDeletedModal] = useState(false);
 
   const queryClient = useQueryClient();
 
-  // ==============================
-  // 🔥 جلب بيانات المستخدم
-  // ==============================
+  // =======================
+  // 🎯 جلب بيانات المستخدم
+  // =======================
   const { data: userData, isLoading } = useQuery({
     queryKey: ["user", userID],
     queryFn: async () => {
@@ -30,12 +31,6 @@ const SettingsUser = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.status) {
-        if (res.data.data.image_url) {
-          setProfileImage(`${res.data.data.image_url}?t=${Date.now()}`);
-        }
-        if (res.data.data.cover_image) {
-          setCoverImage(res.data.data.cover_image);
-        }
         return res.data.data;
       }
       return {};
@@ -43,9 +38,19 @@ const SettingsUser = () => {
     enabled: !!token && !!userID,
   });
 
-  // ==============================
+  // 🤍 تحديث صور البروفايل بعد جلب البيانات (حل مشكلة الموبايل)
+  useEffect(() => {
+    if (userData?.image_url) {
+      setProfileImage(`${userData.image_url}?t=${Date.now()}`);
+    }
+    if (userData?.cover_image) {
+      setCoverImage(`${userData.cover_image}?t=${Date.now()}`);
+    }
+  }, [userData]);
+
+  // =======================
   // 🔥 رفع صورة البروفايل
-  // ==============================
+  // =======================
   const uploadProfileImage = async (file) => {
     const formData = new FormData();
     formData.append("image", file);
@@ -66,29 +71,60 @@ const SettingsUser = () => {
     if (!file) return;
 
     const previewURL = URL.createObjectURL(file);
-    setProfileImage(previewURL);
+    setProfileImage(previewURL); // Preview
     setImageLoading(true);
 
     try {
       const uploadedUrl = await uploadProfileImage(file);
       setProfileImage(`${uploadedUrl}?t=${Date.now()}`);
       queryClient.invalidateQueries(["user", userID]);
-    } catch (err) {
-      console.log("Upload failed:", err);
     } finally {
       setImageLoading(false);
     }
   };
 
-  // ==============================
-  // 🔥 حذف الحساب
-  // ==============================
+  // =============================
+  // 🔧 التحكم في فورم البيانات
+  // =============================
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
 
-  
+  // تحديث الحقول بعد جلب البيانات
+  useEffect(() => {
+    if (userData) {
+      setName(userData.name || "");
+      setEmail(userData.email || "");
+      setPhone(userData.phone || "");
+    }
+  }, [userData]);
+
+  // =============================
+  // 🔥 تحديث بيانات الحساب
+  // =============================
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data) => {
+      return await axios.post(
+        "https://api.maaashi.com/api/profile",
+        data,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["user", userID]);
+    },
+  });
+
+  const handleUpdateProfile = () => {
+    updateProfileMutation.mutate({ name, email, phone });
+  };
 
   return (
     <div className="Settings_user">
-      {/* الأزرار */}
+
+      {/* =======================
+          📌 Buttons
+      =========================== */}
       <ul className="Settings_user_buttons">
         <li>حسابي</li>
         <li>الشروط والأحكام</li>
@@ -98,38 +134,14 @@ const SettingsUser = () => {
         <li onClick={() => setShowDeleteModal(true)}>حذف الحساب</li>
       </ul>
 
-      {/* موديل تأكيد الحذف */}
-      {showDeleteModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h3>تأكيد حذف الحساب</h3>
-            <p>هل أنت متأكد أنك تريد حذف حسابك نهائيًا؟</p>
-            <div className="modal-buttons">
-              <button onClick={() => setShowDeleteModal(false)}>إلغاء</button>
-              <button onClick={handleDeleteAccount}>
-                {deleteMutation.isLoading ? "جاري الحذف..." : "تأكيد"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* موديل تم الحذف */}
-      {showDeletedModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h3>تم حذف الحساب</h3>
-            <p>تم حذف حسابك بنجاح.</p>
-            <button onClick={() => (window.location.href = "/login")}>موافق</button>
-          </div>
-        </div>
-      )}
-
-      {/* الصفحة الرئيسية */}
+      {/* =======================
+          🖼️ الصور
+      =========================== */}
       <div className="settings_user_container">
         <div className="Settings_user_image">
           <div className="image_container">
-            {/* كوفر */}
+
+            {/* صورة الكوفر */}
             <div className="Settings_user_image_cover">
               {coverImage && <img src={coverImage} alt="Cover" />}
               <label className="change_banner_btn">
@@ -139,9 +151,10 @@ const SettingsUser = () => {
               </label>
             </div>
 
-            {/* صورة بروفايل */}
+            {/* صورة البروفايل */}
             <div className="Settings_user_image_profile">
               <div className="user_img_container">
+
                 {imageLoading ? (
                   <div className="upload_overlay">
                     <div className="UploadImages_loader"></div>
@@ -156,6 +169,7 @@ const SettingsUser = () => {
                 </label>
               </div>
             </div>
+
           </div>
 
           <div className="user_name">
@@ -163,41 +177,32 @@ const SettingsUser = () => {
           </div>
         </div>
 
-        {/* الفورم */}
-        <form className="Settings_user_form">
+        {/* =======================
+            📄 فورم تعديل الحساب
+        =========================== */}
+        <form className="Settings_user_form" onSubmit={(e) => e.preventDefault()}>
           <label>
             الاسم الكامل
-            <input type="text" defaultValue={userData?.name} />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
           </label>
 
           <label>
             بريدك الإلكتروني
-            <input type="email" defaultValue={userData?.email} />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
 
           <label>
             رقم الجوال
-            <input type="tel" defaultValue={userData?.phone} />
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
           </label>
 
-          <div className="password_row">
-            <label>
-              كلمة المرور الحالية
-              <input type="password" defaultValue="***************" />
-            </label>
-
-            <label>
-              كلمة المرور الجديدة
-              <input type="password" />
-            </label>
-
-            <label>
-              تأكيد كلمة المرور الجديدة
-              <input type="password" />
-            </label>
-          </div>
-
-          <button className="Settings_user_save_btn">تعديل الملف الشخصي</button>
+          <button
+            type="button"
+            className="Settings_user_save_btn"
+            onClick={handleUpdateProfile}
+          >
+            {updateProfileMutation.isLoading ? "جاري التحديث..." : "تعديل الملف الشخصي"}
+          </button>
         </form>
 
         <LocationForm />
