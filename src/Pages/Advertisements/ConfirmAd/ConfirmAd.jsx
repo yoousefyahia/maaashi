@@ -1,39 +1,48 @@
 import React, { useEffect, useState } from 'react';
 import "./ConfirmAd.css";
-import { categories } from '../Category/Category';
-import { useCookies } from 'react-cookie';
-import { parseAuthCookie } from '../../../utils/auth';
 
-export default function ConfirmAd({ formik, isLoading }) {
-    const { values } = formik;
-    const category = categories.find((cat) => values?.category === cat.key) || "اسم الفئة";
-    const [cookies] = useCookies(["token"]);
-    const { token, user } = parseAuthCookie(cookies?.token);
-    const userID = user?.id;
+export default function ConfirmAd({ formik, isLoading, errorMessage }) {
+    const { values, handleSubmit, setFieldValue } = formik;
     const [userData, setUserData] = useState({});
-    console.log(userData?.area);
+    const [categories, setCategories] = useState([]);
+    const [categoryName, setCategoryName] = useState("");
 
     useEffect(() => {
-        if (!userID || !token) return;
+        const fetchCategories = async () => {
+            try {
+                const res = await fetch("https://api.maaashi.com/api/categories");
+                const data = await res.json();
+                setCategories(data?.data || []);
+            } catch (err) {
+                console.log("Error loading categories:", err);
+            }
+        };
+        fetchCategories();
+    }, []);
 
+    useEffect(() => {
+        if (values.category && categories.length > 0) {
+            const selectedCat = categories.find((cat) => cat.id == values.category);
+            setCategoryName(selectedCat ? selectedCat.name : "اسم الفئة");
+        }
+    }, [values.category, categories]);
+
+    useEffect(() => {
         const fetchUserData = async () => {
             try {
-                const response = await fetch(`https://api.maaashi.com/api/user/${userID}`, {
-                    method: "get",
-                    headers: { Authorization: `Bearer ${token}` }
+                const token = localStorage.getItem("token");
+                if (!token) return;
+                const response = await fetch(`https://api.maaashi.com/api/profile`, {
+                    headers: { Authorization: `Bearer ${token}` },
                 });
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
                 const data = await response.json();
                 setUserData(data?.data);
             } catch (err) {
                 console.log(err.message);
             }
         };
-
         fetchUserData();
-    }, [userID, token]);
+    }, []);
 
     return (
         <div className="confirmAd_container">
@@ -44,87 +53,63 @@ export default function ConfirmAd({ formik, isLoading }) {
 
             <div className="information_ad">
                 <ul className='info_list'>
-                    <li>
-                        <h4>القسم/الفئة:</h4>
-                        <p>{category?.name}</p>
-                    </li>
-                    <li>
-                        <h4>عنوان الإعلان:</h4>
-                        <p>{values?.information?.adTitle}</p>
-                    </li>
-                    <li>
-                        <h4>السعر:</h4>
-                        <p>{values?.information?.adPrice} ريال سعودي</p>
-                    </li>
-                    <li>
-                        <h4>عدد الصور:</h4>
-                        <p>{values?.images.length}</p>
-                    </li>
-                    <li>
-                        <h4>الموقع:</h4>
-                        <p>{userData?.area}</p>
-                    </li>
-                    <li>
-                        <h4>البائع:</h4>
-                        <p>{values?.seller?.name}</p>
-                    </li>
+                    <li><h4>القسم/الفئة:</h4><p>{categoryName || "اسم الفئة"}</p></li>
+                    <li><h4>عنوان الإعلان:</h4><p>{values?.information?.adTitle}</p></li>
+                    <li><h4>السعر:</h4><p>{values?.information?.adPrice} ريال سعودي</p></li>
+                    <li><h4>عدد الصور:</h4><p>{values?.images.length}</p></li>
+                    <li><h4>الموقع:</h4><p>{userData?.area || userData?.location || "غير محدد"}</p></li>
+                    <li><h4>البائع:</h4><p>{userData?.name}</p></li>
+                    <li><h4>رقم الهاتف:</h4><p>{userData?.phone}</p></li>
                 </ul>
             </div>
 
-            {/* إتفاقية الرسوم*/}
             <div className="fee_agreement">
-                <div className="terms_section">
-                    <label className="terms_label">
-                        <input
-                            type="checkbox"
-                            name="feeAgreement"
-                            id="feeAgreement"
-                            checked={values.feeAgreement || false}
-                            onChange={(e) => formik.setFieldValue("feeAgreement", e.target.checked)}
-                            className="terms_checkbox"
-                        />
-                    </label>
-                </div>
-
+                <label className="terms_label">
+                    <input
+                        type="checkbox"
+                        name="feeAgreement"
+                        checked={values.feeAgreement || false}
+                        onChange={(e) => setFieldValue("feeAgreement", e.target.checked)}
+                    />
+                </label>
                 <div className="text">
-                    <p>اتعهد واقسم بالله أنا المعلن أن أدفع رسوم الموقع وهي 1% من قيمة البيع سواء تم البيع عن طريق الموقع أو بسببه.</p>
-                    <p>كما أتعهد بدفع الرسوم خلال 10 أيام من استلام كامل مبلغ المبايعة.</p>
+                    <p>اتعهد واقسم بالله أنا المعلن أن أدفع رسوم الموقع وهي 1% من قيمة البيع.</p>
                 </div>
             </div>
-            
+
             <div className="featured">
-                <div className="featured_section">
-                    <label className="featured_label">
-                        <input
-                            type="checkbox"
-                            name="featured"
-                            id="featured"
-                            checked={values.featured || false}
-                            onChange={(e) => formik.setFieldValue("featured", e.target.checked)}
-                            className="featured_checkbox"
-                        />
-                    </label>
-                </div>
+                <label className="featured_label">
+                    <input
+                        type="checkbox"
+                        name="featured"
+                        checked={values.featured || false}
+                        onChange={(e) => setFieldValue("featured", e.target.checked)}
+                    />
+                </label>
                 <div className="text">
                     <p>أريد تمييز الإعلان</p>
-                    <p>يمكنك تمييز إعلانك لزيادة فرص ظهوره للمستخدمين وتحقيق مبيعات أسرع.</p>
                 </div>
             </div>
 
-            {values.feeAgreement && (
+            {values.feeAgreement &&
                 <div className="btn_confirmAd">
-                    <button type='submit' className='btn'>
-                        <span>انشر إعلانك الأن</span>
+                    <button
+                        type='button'
+                        className='btn'
+                        onClick={handleSubmit}
+                        disabled={isLoading}
+                    >
+                        <span>انشر إعلانك الآن</span>
                         <img src="./advertisements/Plus.svg" alt="Plus" />
                     </button>
-                    <p>بنشر إعلانك، أنت توافق على سياسة الاستخدام وشروط الخدمة</p>
                 </div>
-            )}
+            }
+
+            {errorMessage && <div className="error_message">{errorMessage}</div>}
 
             <div className="modal_fade" style={{ display: isLoading ? "flex" : "none" }}>
                 <div className="loader" />
             </div>
-
         </div>
-    )
-};
+    );
+}
