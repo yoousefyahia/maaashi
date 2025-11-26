@@ -26,12 +26,54 @@ const SettingsUser = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ================================
-  // قراءة البيانات من localStorage أولًا
-  // ================================
-  useEffect(() => {
+  const fetchUserData = async (ignoreLocal = false) => {
     if (!token || !userID) return;
+    setLoading(true);
 
+    try {
+      const res = await axios.get("https://api.maaashi.com/api/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = res.data;
+      if (data.status) {
+        const serverData = { ...data.data, userID };
+
+        // لو البيانات مختلفة عن الـ localStorage أو طلبنا تجاهل الـ localStorage
+        const needUpdate =
+          ignoreLocal ||
+          !userData ||
+          userData.profile_image !== data.data.profile_image ||
+          userData.cover_image !== data.data.cover_image ||
+          userData.name !== data.data.name ||
+          userData.email !== data.data.email ||
+          userData.phone !== data.data.phone;
+
+        if (needUpdate) {
+          localStorage.setItem("userData", JSON.stringify(serverData));
+          setUserData(serverData);
+
+          if (data.data.profile_image) {
+            const newProfileURL = `${data.data.profile_image}?t=${Date.now()}`;
+            setProfileImage(newProfileURL);
+            profileRef.current = data.data.profile_image;
+          }
+          if (data.data.cover_image) {
+            const newCoverURL = `${data.data.cover_image}?t=${Date.now()}`;
+            setCoverImage(newCoverURL);
+            coverRef.current = data.data.cover_image;
+          }
+        }
+      }
+    } catch (err) {
+      toast.error("فشل تحميل بيانات المستخدم من السيرفر");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // قراءة البيانات من localStorage أولًا
+  useEffect(() => {
     const localData = localStorage.getItem("userData");
     let parsedLocal = null;
     try {
@@ -52,57 +94,12 @@ const SettingsUser = () => {
       }
     }
 
-    // ================================
-    // جلب البيانات من السيرفر ومقارنة الصور
-    // ================================
-    const fetchUserData = async () => {
-      try {
-        const res = await axios.get("https://api.maaashi.com/api/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const data = res.data;
-        if (data.status) {
-          const serverData = { ...data.data, userID };
-
-          const needUpdate =
-            !parsedLocal ||
-            parsedLocal.profile_image !== data.data.profile_image ||
-            parsedLocal.cover_image !== data.data.cover_image ||
-            parsedLocal.name !== data.data.name ||
-            parsedLocal.email !== data.data.email ||
-            parsedLocal.phone !== data.data.phone;
-
-          if (needUpdate) {
-            localStorage.setItem("userData", JSON.stringify(serverData));
-            setUserData(serverData);
-
-            if (data.data.profile_image && profileRef.current !== data.data.profile_image) {
-              setProfileImage(`${data.data.profile_image}?t=${Date.now()}`);
-              profileRef.current = data.data.profile_image;
-            }
-            if (data.data.cover_image && coverRef.current !== data.data.cover_image) {
-              setCoverImage(`${data.data.cover_image}?t=${Date.now()}`);
-              coverRef.current = data.data.cover_image;
-            }
-          }
-        }
-      } catch (err) {
-        toast.error("فشل تحميل بيانات المستخدم من السيرفر");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUserData();
   }, [token, userID]);
 
   const triggerProfileInput = () => profileInputRef.current?.click();
   const triggerCoverInput = () => coverInputRef.current?.click();
 
-  // ================================
-  // رفع صورة البروفايل
-  // ================================
   const handleProfileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return toast.error("لم يتم اختيار أي صورة");
@@ -127,12 +124,13 @@ const SettingsUser = () => {
       );
 
       if (res.data.status) {
-        setProfileImage(`${res.data.data.profile_image}?t=${Date.now()}`);
+        // تحديث الصورة بدون أي undefined
+        const newProfileURL = `${res.data.data.profile_image}?t=${Date.now()}`;
+        setProfileImage(newProfileURL);
         profileRef.current = res.data.data.profile_image;
 
-        const updatedData = { ...userData, profile_image: res.data.data.profile_image };
-        setUserData(updatedData);
-        localStorage.setItem("userData", JSON.stringify(updatedData));
+        // تجاهل localStorage القديم ونعمل re-fetch
+        await fetchUserData(true);
 
         toast.success("تم تحديث صورة البروفايل!");
       }
@@ -141,9 +139,6 @@ const SettingsUser = () => {
     }
   };
 
-  // ================================
-  // رفع صورة الكوفر
-  // ================================
   const handleCoverUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return toast.error("لم يتم اختيار أي صورة");
@@ -168,12 +163,12 @@ const SettingsUser = () => {
       );
 
       if (res.data.status) {
-        setCoverImage(`${res.data.data.cover_image}?t=${Date.now()}`);
+        const newCoverURL = `${res.data.data.cover_image}?t=${Date.now()}`;
+        setCoverImage(newCoverURL);
         coverRef.current = res.data.data.cover_image;
 
-        const updatedData = { ...userData, cover_image: res.data.data.cover_image };
-        setUserData(updatedData);
-        localStorage.setItem("userData", JSON.stringify(updatedData));
+        // تجاهل localStorage القديم ونعمل re-fetch
+        await fetchUserData(true);
 
         toast.success("تم تحديث صورة الكوفر!");
       }
@@ -190,7 +185,7 @@ const SettingsUser = () => {
         <div className="Settings_user_image">
           <div className="image_container">
 
-            {/* صورة الكوفر */}
+            {/* Cover */}
             <div className="Settings_user_image_cover">
               <img src={coverImage || defaultCover} alt="Cover" />
               <button className="change_banner_btn" onClick={triggerCoverInput}>
@@ -205,7 +200,7 @@ const SettingsUser = () => {
               />
             </div>
 
-            {/* صورة البروفايل */}
+            {/* Profile */}
             <div className="Settings_user_image_profile">
               <div className="user_img_container">
                 <img src={profileImage || defaultProfile} alt="Profile" />
