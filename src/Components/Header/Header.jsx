@@ -5,7 +5,6 @@ import { CiSearch } from "react-icons/ci";
 import { navLinks } from "../../Constants/NavLinks.js";
 import { useCookies } from "react-cookie";
 import { parseAuthCookie } from "../../utils/auth";
-import defaultAvatar from "../../../public/Icons/grayJobs.svg";
 
 const Header = () => {
   const [cookies, , removeCookie] = useCookies(["token"]);

@@ -1,4 +1,3 @@
-// SettingsUser.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { FaCamera } from "react-icons/fa";
 import "./settingsUser.css";
@@ -6,7 +5,6 @@ import LocationForm from "../../../Components/LocationForm/LocationForm";
 import { useCookies } from "react-cookie";
 import { parseAuthCookie } from "../../../utils/auth";
 import axios from "axios";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast, { Toaster } from "react-hot-toast";
 
 import defaultProfile from "../../../assets/default-profile.jpg";
@@ -19,182 +17,185 @@ const SettingsUser = () => {
 
   const [profileImage, setProfileImage] = useState(null);
   const [coverImage, setCoverImage] = useState(null);
-
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [coverLoading, setCoverLoading] = useState(false);
+  const profileRef = useRef(null);
+  const coverRef = useRef(null);
 
   const profileInputRef = useRef(null);
   const coverInputRef = useRef(null);
 
-  const queryClient = useQueryClient();
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // ================================
-  // جلب بيانات المستخدم
+  // قراءة البيانات من localStorage أولًا
   // ================================
-  const { data: userData, isLoading: userLoading } = useQuery({
-    queryKey: ["user", userID],
-    queryFn: async () => {
-      const res = await axios.get("https://api.maaashi.com/api/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.data.status) return res.data.data;
-      return {};
-    },
-    enabled: !!token && !!userID,
-  });
-
   useEffect(() => {
-    if (userData?.profile_image) setProfileImage(userData.profile_image);
-    if (userData?.cover_image) setCoverImage(userData.cover_image);
-  }, [userData]);
+    if (!token || !userID) return;
+
+    const localData = localStorage.getItem("userData");
+    let parsedLocal = null;
+    try {
+      parsedLocal = localData ? JSON.parse(localData) : null;
+    } catch {
+      parsedLocal = null;
+    }
+
+    if (parsedLocal && parsedLocal.userID === userID) {
+      setUserData(parsedLocal);
+      if (parsedLocal.profile_image) {
+        setProfileImage(parsedLocal.profile_image);
+        profileRef.current = parsedLocal.profile_image;
+      }
+      if (parsedLocal.cover_image) {
+        setCoverImage(parsedLocal.cover_image);
+        coverRef.current = parsedLocal.cover_image;
+      }
+    }
+
+    // ================================
+    // جلب البيانات من السيرفر ومقارنة الصور
+    // ================================
+    const fetchUserData = async () => {
+      try {
+        const res = await axios.get("https://api.maaashi.com/api/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = res.data;
+        if (data.status) {
+          const serverData = { ...data.data, userID };
+
+          const needUpdate =
+            !parsedLocal ||
+            parsedLocal.profile_image !== data.data.profile_image ||
+            parsedLocal.cover_image !== data.data.cover_image ||
+            parsedLocal.name !== data.data.name ||
+            parsedLocal.email !== data.data.email ||
+            parsedLocal.phone !== data.data.phone;
+
+          if (needUpdate) {
+            localStorage.setItem("userData", JSON.stringify(serverData));
+            setUserData(serverData);
+
+            if (data.data.profile_image && profileRef.current !== data.data.profile_image) {
+              setProfileImage(`${data.data.profile_image}?t=${Date.now()}`);
+              profileRef.current = data.data.profile_image;
+            }
+            if (data.data.cover_image && coverRef.current !== data.data.cover_image) {
+              setCoverImage(`${data.data.cover_image}?t=${Date.now()}`);
+              coverRef.current = data.data.cover_image;
+            }
+          }
+        }
+      } catch (err) {
+        toast.error("فشل تحميل بيانات المستخدم من السيرفر");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [token, userID]);
+
+  const triggerProfileInput = () => profileInputRef.current?.click();
+  const triggerCoverInput = () => coverInputRef.current?.click();
 
   // ================================
   // رفع صورة البروفايل
   // ================================
-  const uploadProfileImage = async (file) => {
-    const formData = new FormData();
-    formData.append("image", file);
-
-    const res = await axios.post(
-      "https://api.maaashi.com/api/profile/avatar",
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-
-    if (res.data.status) return res.data.data.profile_image;
-    throw new Error("فشل رفع صورة البروفايل");
-  };
-
   const handleProfileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return toast.error("لم يتم اختيار أي صورة");
 
     const previewURL = URL.createObjectURL(file);
     setProfileImage(previewURL);
-    setProfileLoading(true);
-    toast("جارٍ رفع الصورة...");
+
+    const formData = new FormData();
+    formData.append("image", file);
 
     try {
-      const uploadedUrl = await uploadProfileImage(file);
-      setProfileImage(`${uploadedUrl}?t=${Date.now()}`);
-      queryClient.invalidateQueries(["user", userID]);
-      toast.success("تم تحديث صورة البروفايل!");
+      toast("جارٍ رفع الصورة...");
+      const res = await axios.post(
+        "https://api.maaashi.com/api/profile/avatar",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (res.data.status) {
+        setProfileImage(`${res.data.data.profile_image}?t=${Date.now()}`);
+        profileRef.current = res.data.data.profile_image;
+
+        const updatedData = { ...userData, profile_image: res.data.data.profile_image };
+        setUserData(updatedData);
+        localStorage.setItem("userData", JSON.stringify(updatedData));
+
+        toast.success("تم تحديث صورة البروفايل!");
+      }
     } catch {
       toast.error("فشل رفع صورة البروفايل!");
-    } finally {
-      setProfileLoading(false);
     }
   };
 
   // ================================
   // رفع صورة الكوفر
   // ================================
-  const uploadCoverImage = async (file) => {
-    const formData = new FormData();
-    formData.append("cover", file);
-
-    const res = await axios.post(
-      "https://api.maaashi.com/api/profile/cover",
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-
-    if (res.data.status) return res.data.data.cover_image;
-    throw new Error("فشل رفع صورة الكوفر");
-  };
-
   const handleCoverUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return toast.error("لم يتم اختيار أي صورة");
 
     const previewURL = URL.createObjectURL(file);
     setCoverImage(previewURL);
-    setCoverLoading(true);
-    toast("جارٍ رفع صورة الكوفر...");
+
+    const formData = new FormData();
+    formData.append("cover", file);
 
     try {
-      const uploadedUrl = await uploadCoverImage(file);
-      setCoverImage(`${uploadedUrl}?t=${Date.now()}`);
-      queryClient.invalidateQueries(["user", userID]);
-      toast.success("تم تحديث صورة الكوفر!");
+      toast("جارٍ رفع صورة الكوفر...");
+      const res = await axios.post(
+        "https://api.maaashi.com/api/profile/cover",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (res.data.status) {
+        setCoverImage(`${res.data.data.cover_image}?t=${Date.now()}`);
+        coverRef.current = res.data.data.cover_image;
+
+        const updatedData = { ...userData, cover_image: res.data.data.cover_image };
+        setUserData(updatedData);
+        localStorage.setItem("userData", JSON.stringify(updatedData));
+
+        toast.success("تم تحديث صورة الكوفر!");
+      }
     } catch {
       toast.error("فشل رفع صورة الكوفر!");
-    } finally {
-      setCoverLoading(false);
     }
   };
-
-  const triggerProfileInput = () => profileInputRef.current?.click();
-  const triggerCoverInput = () => coverInputRef.current?.click();
-
-  // ================================
-  // فورم تعديل البيانات
-  // ================================
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-
-  useEffect(() => {
-    if (userData) {
-      setName(userData.name || "");
-      setEmail(userData.email || "");
-      setPhone(userData.phone || "");
-    }
-  }, [userData]);
-
-  const updateProfileMutation = useMutation({
-    mutationFn: async (data) => {
-      return await axios.post("https://api.maaashi.com/api/profile", data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    },
-    onSuccess: () => queryClient.invalidateQueries(["user", userID]),
-  });
 
   return (
     <div className="Settings_user">
       <Toaster position="top-right" />
 
-      <ul className="Settings_user_buttons">
-        <li>حسابي</li>
-        <li>الشروط والأحكام</li>
-        <li>الخصوصية</li>
-        <li>الأسئلة الشائعة</li>
-        <li>تغيير البانر</li>
-      </ul>
-
       <div className="settings_user_container">
         <div className="Settings_user_image">
           <div className="image_container">
 
-            {/* ===========================
-                صورة الكوفر 
-            ============================ */}
+            {/* صورة الكوفر */}
             <div className="Settings_user_image_cover">
-
-              {(coverLoading || userLoading) ? (
-                <div className="upload_overlay">جارٍ التحميل...</div>
-              ) : (
-                <img
-                  src={coverImage || defaultCover}
-                  alt="Cover"
-                />
-              )}
-
+              <img src={coverImage || defaultCover} alt="Cover" />
               <button className="change_banner_btn" onClick={triggerCoverInput}>
                 <FaCamera /> تغيير
               </button>
-
               <input
                 ref={coverInputRef}
                 type="file"
@@ -204,21 +205,10 @@ const SettingsUser = () => {
               />
             </div>
 
-            {/* ===========================
-                صورة البروفايل 
-            ============================ */}
+            {/* صورة البروفايل */}
             <div className="Settings_user_image_profile">
               <div className="user_img_container">
-
-                {(profileLoading || userLoading) ? (
-                  <div className="upload_overlay">جارٍ التحميل...</div>
-                ) : (
-                  <img
-                    src={profileImage || defaultProfile}
-                    alt="Profile"
-                  />
-                )}
-
+                <img src={profileImage || defaultProfile} alt="Profile" />
                 <button
                   className="profile_camera_icon"
                   type="button"
@@ -226,7 +216,6 @@ const SettingsUser = () => {
                 >
                   <FaCamera />
                 </button>
-
                 <input
                   ref={profileInputRef}
                   type="file"
@@ -240,47 +229,44 @@ const SettingsUser = () => {
           </div>
 
           <div className="user_name">
-            <h3>{userLoading ? "..." : userData?.name || "مستخدم جديد"}</h3>
+            <h3>{loading ? "جارٍ التحميل..." : userData?.name || "مستخدم جديد"}</h3>
           </div>
         </div>
 
-        {/* ================================
-            فورم البيانات
-        ================================= */}
-        <form
-          className="Settings_user_form"
-          onSubmit={(e) => e.preventDefault()}
-        >
+        {/* الفورم */}
+        <form className="Settings_user_form" onSubmit={(e) => e.preventDefault()}>
           <label>
             الاسم الكامل
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+            <input
+              type="text"
+              value={userData?.name || ""}
+              onChange={(e) =>
+                setUserData((prev) => ({ ...prev, name: e.target.value }))
+              }
+            />
           </label>
 
           <label>
             بريدك الإلكتروني
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input
+              type="email"
+              value={userData?.email || ""}
+              onChange={(e) =>
+                setUserData((prev) => ({ ...prev, email: e.target.value }))
+              }
+            />
           </label>
 
           <label>
             رقم الجوال
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <input
+              type="tel"
+              value={userData?.phone || ""}
+              onChange={(e) =>
+                setUserData((prev) => ({ ...prev, phone: e.target.value }))
+              }
+            />
           </label>
-
-          <button
-            type="button"
-            className="Settings_user_save_btn"
-            onClick={() =>
-              updateProfileMutation.mutate(
-                { name, email, phone },
-                {
-                  onSuccess: () => toast.success("تم تحديث البيانات!"),
-                  onError: () => toast.error("فشل تحديث البيانات"),
-                }
-              )
-            }
-          >
-            {updateProfileMutation.isLoading ? "جاري التحديث..." : "تعديل الملف الشخصي"}
-          </button>
         </form>
 
         <LocationForm />
