@@ -12,7 +12,10 @@
   align-items: center;
   box-shadow: 0 2px 6px var(--shadow-color);
 }
-
+a.mobile_loginBTN{
+  color: #f9f9f9;
+  display: none;
+}
 .header-container {
   width: 100%;
   max-width: 1200px;
@@ -255,6 +258,9 @@
   }
   .menu-mobile-toggle {
     gap: 10px;
+  }
+  a.mobile_loginBTN{
+    display: block;
   }
 }
 .profile-card {
