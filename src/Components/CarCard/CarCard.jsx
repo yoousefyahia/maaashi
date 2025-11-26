@@ -1,3 +1,4 @@
+// *** الكود كما طلبت - معدل فقط على جزء الفيتش ***
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CiLocationOn, CiStopwatch } from "react-icons/ci";
@@ -20,15 +21,35 @@ const CarCard = () => {
   const [showToast, setShowToast] = useState(false);
   const [loadingFavoriteId, setLoadingFavoriteId] = useState(null);
 
-  // 1- Load featured ads
+  // ****** الجديد هنا ******
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+
+  // 1- Load featured ads with pagination
   useEffect(() => {
     const fetchCard = async () => {
       try {
-        const res = await axios.get("https://api.maaashi.com/api/ads/featured");
-        const ads = Array.isArray(res.data.ads) ? res.data.ads : [];
-        setAdsCard(
-          ads.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        setLoading(true);
+
+        const res = await axios.get(
+          `https://api.maaashi.com/api/ads/featured?page=${currentPage}&limit=12`
         );
+
+        const apiData = res.data;
+        const ads = Array.isArray(apiData.data) ? apiData.data : [];
+
+        // فلترة is_featured = true
+        const filtered = ads.filter((item) => item.is_featured === true);
+
+        // ترتيب حسب الأحدث
+        const sorted = filtered.sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        );
+
+        setAdsCard(sorted);
+
+        // تحديث آخر صفحة
+        setLastPage(apiData.last_page || 1);
       } catch {
         setError("حدث خطأ أثناء تحميل الإعلانات.");
       } finally {
@@ -36,7 +57,7 @@ const CarCard = () => {
       }
     };
     fetchCard();
-  }, []);
+  }, [currentPage]); // ← دعم الباجينيشن
 
   // 2- Load favorites
   useEffect(() => {
@@ -119,18 +140,16 @@ const CarCard = () => {
         <h2 className="section-title">اكتشف الجديد أولًا</h2>
         <div className="categories_items">
           {adsCard.length > 0 ? (
-            adsCard.map((ad) => ( 
+            adsCard.map((ad) => (
               <div
                 key={ad.id}
                 className="category_card"
                 onClick={() => navigate(`/${ad.category_id}/${ad.id}`)}
               >
-                {/* صورة الإعلان */}
                 <div className="card_image">
                   <img src={ad.images?.[0] || "/placeholder.png"} alt={ad.title} />
                 </div>
 
-                {/* بيانات البائع */}
                 <div
                   className="card_user"
                   onClick={(e) => {
@@ -157,7 +176,6 @@ const CarCard = () => {
                   <span>{ad.seller_name}</span>
                 </div>
 
-                {/* بيانات الإعلان */}
                 <div className="card_body">
                   <h2>{ad.title.substring(0, 18)}...</h2>
                   <div className="card_meta">
@@ -175,17 +193,18 @@ const CarCard = () => {
                   </div>
                 </div>
 
-                {/* السعر + زر المفضلة */}
                 <div className="card_footer">
                   <h2 className="card_footer_price">
                     {ad.price && ad.price !== "0.00" ? (
                       <>
-                        {ad.price}<span> ر.س</span>
+                        {ad.price}
+                        <span> ر.س</span>
                       </>
                     ) : (
                       "السعر غير محدد"
                     )}
                   </h2>
+
                   <div
                     className={`hart_icon ${
                       loadingFavoriteId === ad.id ? "loading-heart" : ""
@@ -215,6 +234,25 @@ const CarCard = () => {
           ) : (
             <p className="no-ads">لا توجد إعلانات حالياً</p>
           )}
+        </div>
+
+        {/* ****** أزرار الباجينيشن ****** */}
+        <div className="paginationBtns">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
+          >
+            السابق
+          </button>
+
+          <span>{currentPage} / {lastPage}</span>
+
+          <button
+            disabled={currentPage === lastPage}
+            onClick={() => setCurrentPage(currentPage + 1)}
+          >
+            التالي
+          </button>
         </div>
       </div>
 
