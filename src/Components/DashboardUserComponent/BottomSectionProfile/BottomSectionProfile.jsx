@@ -34,7 +34,8 @@ const BottomSectionProfile = () => {
         );
 
         const dataAds = await response.json();
-        setShowUserAds(dataAds.ads || []);
+        console.log("Data from server:", dataAds); // للتأكد
+        setShowUserAds(dataAds.data || []); // <== هنا المفتاح الصح
       } catch {
         setError("فشل الاتصال بالسيرفر.");
       } finally {
@@ -45,7 +46,7 @@ const BottomSectionProfile = () => {
     if (token) fetchShowUser();
   }, [token]);
 
-  // -------------------- حذف إعلان (URL جديد) --------------------
+  // -------------------- حذف إعلان --------------------
   const deleteAdById = async (adId) => {
     try {
       setDeleting(true);
@@ -113,8 +114,8 @@ const BottomSectionProfile = () => {
   };
 
   const filteredAds = showUserAds.filter((ad) => {
-    if (!filterDate) return true; // لو مفيش تاريخ محدد نعرض الكل
-    return new Date(ad.created_at).toISOString().split("T")[0] === filterDate;
+    if (!filterDate) return true;
+    return ad.created_at.split("T")[0] === filterDate; // فلترة التاريخ مباشرة
   });
 
   // -------------------- JSX --------------------
