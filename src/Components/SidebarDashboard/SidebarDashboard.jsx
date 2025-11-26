@@ -199,7 +199,7 @@ const res = await fetch(
               >
                 تسجيل الخروج
               </button>
-              {error && <p className="error_message">{error}</p>}
+              {/* {error && <p className="error_message">{error}</p>} */}
             </div>
           </div>
         </div>

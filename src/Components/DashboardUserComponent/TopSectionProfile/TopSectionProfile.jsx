@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
-import "./topSectionProfile.css";
+import React, { useEffect, useState, useRef } from "react";
 import { useCookies } from "react-cookie";
 import { parseAuthCookie } from "../../../utils/auth";
 import axios from "axios";
+import "./topSectionProfile.css";
 
 const TopSectionProfile = () => {
   const [userData, setUserData] = useState(null);
@@ -57,17 +57,28 @@ const TopSectionProfile = () => {
   return (
     <div className="accountUserImage_up">
       <div className="Account_user_image">
-        {coverImage && (
+
+        {/* صورة الكوفر */}
+        {coverImage ? (
           <div className="Account_user_image_profile">
             <img src={coverImage} alt="صورة الكوفر" />
           </div>
+        ) : (
+          <div className="Account_user_image_profile placeholder">
+            <p>لم يتم إضافة صورة الكوفر بعد، الرجاء إضافة صورة من الإعدادات</p>
+          </div>
         )}
 
-        {profileImage && (
+        {/* صورة البروفايل */}
+        {profileImage ? (
           <div className="Account_user_image_profile_person">
             <div className="user_img_container">
               <img src={profileImage} alt="صورة البروفايل" />
             </div>
+          </div>
+        ) : (
+          <div className="Account_user_image_profile_person placeholder">
+            <p>لم يتم إضافة صورة البروفايل بعد، الرجاء إضافة صورة من الإعدادات</p>
           </div>
         )}
 
