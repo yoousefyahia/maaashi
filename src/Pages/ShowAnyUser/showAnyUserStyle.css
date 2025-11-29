@@ -2,22 +2,26 @@
     background-color: #ececec;
     min-height: 80dvh;
 }
+
+/* ===== Container ===== */
 .showAnyUserData .showAnyUserData_container {
     max-width: 1190px;
     padding: 80px 20px;
     margin: auto;
 }
 
-.showAnyUserData .showAnyUserData_container .user_data {
+/* ===== User Data Box ===== */
+.showAnyUserData .user_data {
     background-color: var(--color);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding-bottom: 20px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     overflow: hidden;
 }
 
-.showAnyUserData .user_data .user_images .cover_user_image {
+/* ===== Cover Image ===== */
+.user_data .user_images .cover_user_image {
     background-color: black;
     display: flex;
     justify-content: center;
@@ -26,15 +30,16 @@
     max-height: 300px;
     position: relative;
 }
-
-.showAnyUserData .user_data .user_images .cover_user_image img {
+.user_data .user_images .cover_user_image img {
     width: 100%;
     height: 100%;
-    position: absolute;
     inset: 0;
+    position: absolute;
+    object-fit: cover;
 }
 
-.showAnyUserData .user_data .user_images .profile_user_image {
+/* ===== Profile Image ===== */
+.user_data .user_images .profile_user_image {
     width: 140px;
     height: 30px;
     margin: auto;
@@ -51,33 +56,47 @@
     top: -10px;
 }
 
-.showAnyUserData .user_data .user_images .profile_user_image .user_img_container {
+.user_img_container {
     background-color: black;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: var(--main-color);
     width: 140px;
     height: 140px;
     border: 4px solid white;
     border-radius: 50%;
+    overflow: hidden;
     position: absolute;
-    bottom: 0px;
+    bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
-
-.showAnyUserData .user_data .user_images .profile_user_image .user_img_container img {
+.user_img_container img {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
 }
 
-.showAnyUserData .user_data .user_info {
+/* ===== User Info (المتغير) ===== */
+.user_info {
     text-align: center;
+    padding: 20px 25px;
 }
 
+.user_info p {
+    margin: 10px 0;
+    padding: 6px 0;
+    font-size: 17px;
+    font-weight: 500;
+    color: #333;
+}
 
-/* ===== Cards ===== */
+.user_info strong {
+    color: var(--main-color);
+    font-weight: 600;
+}
+
+/* ===== Cards Grid ===== */
 .categories_items {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -85,132 +104,120 @@
     margin-top: 40px;
 }
 
-.categories_items .category_card {
+/* ===== Category Card ===== */
+.category_card {
     background: #fff;
     border: 1px solid var(--main-color);
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     transition: all 0.3s ease-in-out;
     overflow: hidden;
 }
-
-.categories_items .category_card:hover {
+.category_card:hover {
     transform: translateY(-4px);
 }
 
-.categories_items .category_card .card_image {
+/* ===== Card Image ===== */
+.card_image {
     width: 100%;
     height: 180px;
     background: #f5f5f5;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
     position: relative;
+    overflow: hidden;
 }
-
-.categories_items .category_card .card_image img {
-    height: 100%;
+.card_image img {
     width: 100%;
+    height: 100%;
     position: absolute;
-    inset: 0px;
+    inset: 0;
+    object-fit: cover;
 }
 
-.categories_items .category_card .card_user {
+/* ===== Card User ===== */
+.card_user {
     display: flex;
     align-items: center;
     gap: 5px;
     padding: 8px 12px;
     cursor: pointer;
 }
-
-.categories_items .category_card .card_user img,
-.categories_items .category_card .avatar_placeholder {
+.card_user img,
+.avatar_placeholder {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    object-fit: cover;
     border: 2px solid #ddd;
+    object-fit: cover;
 }
-
 .avatar_placeholder {
     background-color: #e0e0e0;
     color: #555;
-    font-weight: bold;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.categories_items .category_card .card_body {
-    padding: 0px 15px;
+/* ===== Card Body ===== */
+.card_body {
+    padding: 0 15px;
 }
-
 .card_body h3 {
+    margin: 0 0 5px;
     font-size: 16px;
     font-weight: 600;
     color: #333;
-    margin: 0px;
-    margin-bottom: 5px;
 }
 
+/* ===== Meta ===== */
 .card_meta {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
     justify-content: space-between;
+    flex-wrap: wrap;
     font-size: 14px;
     color: #777;
 }
-
-.card_meta .ciLocationOn, .ciStopwatch {
+.card_meta .ciLocationOn,
+.card_meta .ciStopwatch {
     display: flex;
     align-items: center;
     gap: 4px;
 }
 
+/* ===== Details Link ===== */
 .details_link {
     display: block;
-    text-align: center;
-    background-color: var(--main-color);
-    color: white;
-    padding: 10px;
     width: 90%;
-    margin: auto;
-    margin-bottom: 10px;
+    margin: 10px auto;
+    text-align: center;
+    padding: 10px;
+    background: var(--main-color);
+    color: white;
     border-radius: var(--radius-sm);
-    text-decoration: none;
     font-weight: 500;
+    text-decoration: none;
 }
 
-.details_link:hover {
-    color: white;
-}
+/* ===== Card Footer ===== */
 .card_footer {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
     justify-content: space-between;
-    color: var(--main-color);
     padding: 10px 15px;
+    color: var(--main-color);
 }
-.card_footer .card_footer_price {
+.card_footer_price {
     font-size: 16px;
     font-weight: 600;
 }
-.card_footer .hart_icon {
+.hart_icon {
     cursor: pointer;
 }
 
-/* ====== Responsive ====== */
-
+/* ===== Responsive ===== */
 @media (max-width: 1024px) {
-    .bottom_section_categoryData {
-        padding: 20px 20px 100px;
-    }
-
     .categories_items {
         grid-template-columns: repeat(3, 1fr);
         gap: 15px;
@@ -222,78 +229,25 @@
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
     }
-
     .card_image {
         height: 120px;
-    }
-
-    .categories_items .category_card .card_user {
-        padding: 5px 8px;
-    }
-    .categories_items .category_card .card_user img,
-    .categories_items .category_card .avatar_placeholder {
-        width: 30px;
-        height: 30px;
-    }
-
-    .categories_items .category_card .card_body {
-        padding: 0px 10px;
-    }
-
-    .card_user span,
-    .card_meta span {
-        font-size: 11px;
-        font-weight: 500;
-    }
-
-    .details_link {
-        padding: 5px 10px;
-        font-size: 12px;
-    }
-
-    .card_body h3 {
-        font-size: 14px;
-    }
-
-    .card_footer {
-        padding: 10px;
-    }
-    .card_footer .card_footer_price {
-        font-size: 13px;
-        font-weight: 600;
     }
 }
 
 @media (max-width: 540px) {
-    .categories_items .category_card:hover {
-        transform: translateY(0px);
+    .category_card:hover {
+        transform: none;
     }
-
-    .categories_items .category_card .card_image {
+    .card_image {
         height: 120px;
     }
-
-    .card_user {
-        padding: 5px;
-        gap: 0px;
-        font-weight: 800;
-    }
-
-    .card_meta .ciLocationOn, .card_meta .ciStopwatch {
-        gap: 2px;
-        font-size: 10px;
-        font-weight: 600;
-    }
-
-    .categories_items .category_card .card_user img,
-    .categories_items .category_card .avatar_placeholder {
+    .card_user img,
+    .avatar_placeholder {
         width: 25px;
         height: 25px;
         font-size: 12px;
     }
-    
     .card_footer {
-        padding: 0px 10px;
-        margin-top: 2px;
+        padding: 0 10px;
     }
 }

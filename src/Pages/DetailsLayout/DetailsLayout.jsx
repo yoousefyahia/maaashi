@@ -23,41 +23,24 @@ export function attributeMapForDetails(ad) {
   const map = {};
 
   if (ad.category?.name) {
-    map.category = {
-      label: "الفئة",
-      value: ad.category.name,
-    };
+    map.category = { label: "الفئة", value: ad.category.name };
   }
 
   if (ad.type) {
-    map.type = {
-      label: "نوع الإعلان",
-      value: ad.type,
-    };
+    map.type = { label: "نوع الإعلان", value: ad.type };
   }
 
   if (ad.price) {
-    map.price = {
-      label: "السعر",
-      value: `${ad.price} ريال`,
-    };
+    map.price = { label: "السعر", value: `${ad.price} ريال` };
   }
 
   if (ad.additional_info) {
-    map.additional_info = {
-      label: "معلومات إضافية",
-      value: ad.additional_info,
-    };
+    map.additional_info = { label: "معلومات إضافية", value: ad.additional_info };
   }
 
-  // أي خصائص إضافية من JSON تتحول لمواصفات داينمك
   Object.keys(ad).forEach((key) => {
     if (!map[key] && typeof ad[key] === "string" && ad[key]) {
-      map[key] = {
-        icon: "/icons/default.svg",
-        label: key.replace(/_/g, " "),
-        value: ad[key],
-      };
+      map[key] = { icon: "/icons/default.svg", label: key.replace(/_/g, " "), value: ad[key] };
     }
   });
 
@@ -91,6 +74,9 @@ const DetailsLayout = () => {
   const [mainImage, setMainImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+
   const images = ad_details?.images || [];
 
   // جلب الفئات
@@ -122,9 +108,7 @@ const DetailsLayout = () => {
         const data = response?.data;
         if (data) {
           setAd_details(data);
-          if (data?.images?.length > 0) {
-            setMainImage(data.images[0]);
-          }
+          if (data?.images?.length > 0) setMainImage(data.images[0]);
         }
       } catch (error) {
         console.error("Error fetching ad details:", error);
@@ -135,17 +119,50 @@ const DetailsLayout = () => {
     fetchDetails();
   }, [id]);
 
+  // جلب التعليقات
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const response = await axios.get(
+          `https://api.maaashi.com/api/ads/comments?ad_id=${id}`
+        );
+        setComments(response.data.data || []);
+      } catch (err) {
+        console.error("Error fetching comments:", err);
+      }
+    };
+    fetchComments();
+  }, [id]);
+
   // التحكم في overflow عند فتح/غلق المودال
   useEffect(() => {
     document.body.style.overflow = loginModel ? "hidden" : "auto";
-    return () => {
-      document.body.style.overflow = "auto";
-    };
+    return () => (document.body.style.overflow = "auto");
   }, [loginModel]);
 
-  if (isLoading || !ad_details) {
-    return <p>جاري تحميل الإعلان...</p>;
-  }
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+    try {
+      const response = await axios.post(
+        `https://api.maaashi.com/api/ads/comment`,
+        {
+          ad_id: id,
+          comment: newComment,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        }
+      );
+      setComments([response.data.data, ...comments]);
+      setNewComment("");
+    } catch (err) {
+      console.error("Error adding comment:", err);
+    }
+  };
+
+  if (isLoading || !ad_details) return <p>جاري تحميل الإعلان...</p>;
 
   const attributesArray = Object.values(attributeMapForDetails(ad_details) || {});
 
@@ -199,11 +216,7 @@ const DetailsLayout = () => {
           {/* الصور */}
           <div className="details_images">
             <div className="details-lay-image-main">
-              {mainImage ? (
-                <img src={mainImage} alt="Main" />
-              ) : (
-                <p>لا توجد صورة</p>
-              )}
+              {mainImage ? <img src={mainImage} alt="Main" /> : <p>لا توجد صورة</p>}
             </div>
             <div className="details-lay-image-thumbs">
               {images.length > 0 ? (
@@ -223,28 +236,53 @@ const DetailsLayout = () => {
           </div>
 
           {/* المواصفات */}
-          <div className="details_specifications">
-            <h3 className="details-lay-info-title">المواصفات</h3>
-            {attributesArray.length > 0 ? (
-              <div className="details_specifications_box">
-                <div className="attributes">
-                  {attributesArray.map((item, index) => (
-                    <div className="attribute_item" key={index}>
-                      {/* <div className="attribute_item_icon">
-                        <img src={item.icon || "/icons/default.svg"} alt={item.label} />
-                      </div> */}
-                      <div className="attribute_item_text">
-                        <span>{item.label}</span>
-                        <span>{item.value}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+{/* المواصفات */}
+{/* المواصفات */}
+<div className="details_specifications">
+  <h3 className="details-lay-info-title">المواصفات</h3>
+  {attributesArray.length > 0 ? (
+    <div className="details_specifications_box">
+      <div className="attributes">
+        {attributesArray.map((item, index) => {
+          let value = item.value;
+
+          // تحويل created_at و updated_at للتاريخ العربي
+          if (item.label.toLowerCase() === "created at" && ad_details.created_at) {
+            value = new Date(ad_details.created_at).toLocaleString("ar-EG", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            item.label = "تاريخ النشر";
+          } else if (item.label.toLowerCase() === "updated at" && ad_details.updated_at) {
+            value = new Date(ad_details.updated_at).toLocaleString("ar-EG", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            item.label = "آخر تحديث";
+          }
+
+          return (
+            <div className="attribute_item" key={index}>
+              <div className="attribute_item_text">
+                <span>{item.label}</span>
+                <span>{value}</span>
               </div>
-            ) : (
-              <p>لا توجد مواصفات</p>
-            )}
-          </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  ) : (
+    <p>لا توجد مواصفات</p>
+  )}
+</div>
+
 
           {/* الوصف */}
           <div className="details-layout-decs">
@@ -270,17 +308,15 @@ const DetailsLayout = () => {
                   className="card_user"
                 >
                   <div className="card_user_image">
-                    {/* {ad_details?.user?.image ? (
-                      <img src={ad_details.user.image} alt={ad_details.user.name} />
-                    ) : ( */}
-                      <img
-                        src="data:image/png;base64,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" // رابط مباشر
-                        alt="Default Avatar"
-                        style={{ width: "100%", height: "100%", borderRadius: "50%" }}
-                      />
-                    {/* )} */}
+                    <img
+                      src={
+                        ad_details?.user?.image_profile ||
+                        "https://api.maaashi.com/storage/users/covers/OnlzSpVMpIsd69gUrrBZ6GzWProUDBwnqcEfyTop.webp"
+                      }
+                      alt="Default Avatar"
+                      style={{ width: "100%", height: "100%", borderRadius: "50%" }}
+                    />
                   </div>
-
                   <div className="user_info">
                     <h5>{ad_details?.user?.name}</h5>
                     <p className="details-left-top-user-member">
@@ -344,14 +380,45 @@ const DetailsLayout = () => {
           <p>شارك رايك او استفسارك حول هذا الاعلان</p>
 
           <div className="details-lay-comments-user">
-            <img src="/images/logo.svg" alt="User" />
-            <input type="text" placeholder="اكتب تعليقك هنا..." />
+            <img
+              src={ad_details?.user?.image_profile || "/images/logo.svg"}
+              alt="User"
+            />
+            <input
+              type="text"
+              placeholder="اكتب تعليقك هنا..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+            />
           </div>
 
           <div className="details-lay-comments-actions">
-            <button>
+            <button onClick={handleAddComment}>
               <AiOutlineSend /> اضافه تعليق
             </button>
+          </div>
+
+          <div className="comments_list">
+            {comments.length > 0 ? (
+              comments.map((cmt) => (
+                <div className="comment_item" key={cmt.id}>
+                  {/* <img
+                    src={
+                      cmt.user?.image_profile ||
+                      "https://api.maaashi.com/storage/users/covers/OnlzSpVMpIsd69gUrrBZ6GzWProUDBwnqcEfyTop.webp"
+                    }
+                    alt={cmt.user?.name}
+                  /> */}
+                  <div className="comment_content">
+                    <h5> الاسم: {cmt.user?.name}</h5>
+                    <span> منذ: {timeSince(cmt.created_at)}</span>
+                    <p> التعليق :{cmt.comment}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p>لا توجد تعليقات بعد</p>
+            )}
           </div>
         </div>
       </section>

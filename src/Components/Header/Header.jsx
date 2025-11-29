@@ -107,24 +107,20 @@ const Header = () => {
                 className="header_profile_img"
                 ref={mobileProfileRef}
               >
-                {userData?.profile_image ? (
-                  <img
-                    src={userData.profile_image}
-                    alt={userData?.name}
-                    className="user_img"
-                  />
-                ) : (
-                  <span className="two_char">
-                    {userData?.name
-                      ? userData.name
-                          .split(" ")
-                          .map((w) => w[0])
-                          .slice(0, 2)
-                          .join("")
-                          .toUpperCase()
-                      : "US"}
-                  </span>
-                )}
+{userData?.image_profile ? (
+  <img
+    src={userData.image_profile}
+    alt={userData?.name}
+    className="user_img"
+  />
+) : (
+  <span className="two_char">
+    {userData?.name
+      ? userData.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
+      : "US"}
+  </span>
+)}
+
               </Link>
               <ProfileCard
                 toggleProfileCard={mobileProfileOpen}
@@ -257,11 +253,12 @@ export function ProfileCard({ toggleProfileCard, userData, removeCookie, onClose
       }}
     >
       <div className="user-info">
-        {userData?.profile_image ? (
-          <img src={userData.profile_image} alt={userData?.name} className="user_img" />
-        ) : (
-          <span className="two_char">{initials}</span>
-        )}
+{userData?.image_profile ? (
+  <img src={userData.image_profile} alt={userData?.name} className="user_img" />
+) : (
+  <span className="two_char">{initials}</span>
+)}
+
         <div>
           <p className="greeting">أهلا</p>
         </div>

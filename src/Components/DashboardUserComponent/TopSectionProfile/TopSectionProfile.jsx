@@ -33,9 +33,9 @@ const TopSectionProfile = () => {
         setCoverImage(parsedLocal.cover_image);
         coverRef.current = parsedLocal.cover_image;
       }
-      if (parsedLocal.profile_image) {
-        setProfileImage(parsedLocal.profile_image);
-        profileRef.current = parsedLocal.profile_image;
+      if (parsedLocal.image_profile) {
+        setProfileImage(parsedLocal.image_profile);
+        profileRef.current = parsedLocal.image_profile;
       }
     }
 
@@ -52,16 +52,16 @@ const TopSectionProfile = () => {
           // مقارنة الصور قبل التحديث
           const needUpdate =
             !parsedLocal ||
-            parsedLocal.profile_image !== data.data.profile_image ||
+            parsedLocal.image_profile !== data.data.image_profile ||
             parsedLocal.cover_image !== data.data.cover_image;
 
           if (needUpdate) {
             localStorage.setItem("userData", JSON.stringify(serverData));
             setUserData(serverData);
 
-            if (data.data.profile_image && profileRef.current !== data.data.profile_image) {
-              setProfileImage(`${data.data.profile_image}?t=${Date.now()}`);
-              profileRef.current = data.data.profile_image;
+            if (data.data.image_profile && profileRef.current !== data.data.image_profile) {
+              setProfileImage(`${data.data.image_profile}?t=${Date.now()}`);
+              profileRef.current = data.data.image_profile;
             }
             if (data.data.cover_image && coverRef.current !== data.data.cover_image) {
               setCoverImage(`${data.data.cover_image}?t=${Date.now()}`);
@@ -90,7 +90,7 @@ const TopSectionProfile = () => {
           </div>
         ) : (
           <div className="Account_user_image_profile placeholder">
-            <p>لم يتم إضافة صورة الكوفر بعد، الرجاء إضافة صورة من الإعدادات</p>
+            <p>لم يتم إضافة صورة الكوفر الرجاء إضافة صورة من الإعدادات</p>
           </div>
         )}
 

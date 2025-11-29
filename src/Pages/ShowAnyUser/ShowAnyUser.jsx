@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import "./showAnyUserStyle.css"
+import "./showAnyUserStyle.css";
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CiLocationOn, CiStopwatch } from 'react-icons/ci';
 import { timeSince } from '../SpecificCategory/SpecificCategory';
@@ -21,12 +21,14 @@ export default function ShowAnyUser() {
         const fetchUserData = async () => {
             try {
                 setIsLoading(true);
-                const response = await fetch(`https://api.maaashi.com/api/showAnyUserData/${userID}`, { method: "GET", });
+                const response = await fetch(`https://api.maaashi.com/api/user/${userID}`, {
+                    method: "GET",
+                });
 
                 const data = await response.json();
-                if (data.success) {
+                // --- تعديل هنا ---
+                if (data.status) {
                     setUserData(data.data);
-                    setIsLoading(false)
                     setErrorMessage("");
                 } else {
                     setErrorMessage("فشل في تحميل بيانات المستخدم.");
@@ -41,12 +43,13 @@ export default function ShowAnyUser() {
         fetchUserData();
     }, [userID]);
 
-    // handle favorite toggle
+    // ***** Favorite Handling (زي ما هو) *****
     const [cookies] = useCookies(["token"]);
     const { token } = parseAuthCookie(cookies?.token);
     const [showToast, setShowToast] = useState(false);
     const [favorites, setFavorites] = useState({});
     const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+
     const toggleFavorite = (e, id) => {
         e.stopPropagation();
         setFavorites((prev) => ({
@@ -71,8 +74,6 @@ export default function ShowAnyUser() {
             );
 
             const data = await response.json();
-            console.log(data.data);
-
             if (!response.ok) {
                 setErrorMessage(data?.message || "حدث خطأ أثناء الإضافة للمفضلة.");
             }
@@ -92,8 +93,11 @@ export default function ShowAnyUser() {
         toggleFavorite(e, adID);
         addToFavorites(category, adID);
     };
+
     return (
         <section className="showAnyUserData">
+
+            {/* ****** LOADING SKELETON ****** */}
             {isLoading && (
                 <div className="loading_data">
                     <div className="isLoading">
@@ -102,37 +106,51 @@ export default function ShowAnyUser() {
                 </div>
             )}
 
+            {/* ****** ERROR ****** */}
             {errorMessage && <NotFound />}
 
+            {/* ****** MAIN CONTENT ****** */}
             {!isLoading && !errorMessage && (
                 <div className="showAnyUserData_container">
+
+                    {/* **************** USER DATA **************** */}
                     <div className="user_data">
                         <div className="user_images">
                             <div className="cover_user_image">
-                                <img src={userData?.user?.cover_image} alt="صورة الكوفر" loading="lazy" />
+                                <img
+                                    src={userData?.cover_image}
+                                    alt="صورة الكوفر"
+                                    loading="lazy"
+                                />
                             </div>
 
                             <div className="profile_user_image">
                                 <div className="user_img_container">
-                                    <img src={userData?.user?.profile_image} alt="img" loading="lazy" />
+                                    <img
+                                        src={userData?.image_profile || "/placeholder-profile.png"}
+                                        alt="img"
+                                        loading="lazy"
+                                    />
                                 </div>
-                                <div className="status_dot" style={{ backgroundColor: userData?.user?.is_online ? "var(--main-color)" : "var(--parg-color)" }} />
                             </div>
                         </div>
+<div className="user_info">
+  <p><strong>الاسم:</strong> {userData?.name || "غير محدد"}</p>
 
-                        <div className="user_info">
-                            <h3 className="user_name">{userData?.user?.name?.split(" ").slice(0, 2).join(" ")}</h3>
-                            {!userData?.user?.is_online && (
-                                <h6 className="user_status">
-                                    <span>آخر ظهور  </span>
-                                    <span>{userData?.user?.last_seen_at}</span>
-                                </h6>
-                            )}
-                        </div>
+<p><strong>المنطقة:</strong> {userData?.area || "غير محدد"}</p>
+<p><strong>المدينة:</strong> {userData?.city || "غير محدد"}</p>
+<p><strong>العنوان:</strong> {userData?.location || "غير محدد"}</p>
+
+
+  <p><strong>رقم الهاتف:</strong> {userData?.phone || "غير محدد"}</p>
+</div>
+
+
 
                         {errorMessage && <p className="error_message">{errorMessage}</p>}
                     </div>
 
+                    {/* **************** ADS LIST (بدون أي تعديل) **************** */}
                     <div className="categories_items">
                         {userData?.data?.map((cat) => (
                             <div
@@ -142,7 +160,11 @@ export default function ShowAnyUser() {
                             >
                                 <div className="card_image">
                                     <img
-                                        src={cat?.ad?.images?.[0] ? `https://api.maaashi.com/storage/${cat?.ad?.images[0]}` : "/placeholder.png"}
+                                        src={
+                                            cat?.ad?.images?.[0]
+                                                ? `https://api.maaashi.com/storage/${cat?.ad?.images[0]}`
+                                                : "/placeholder.png"
+                                        }
                                         alt={cat?.ad?.information?.title}
                                     />
                                 </div>
@@ -160,21 +182,39 @@ export default function ShowAnyUser() {
                                     <h3>{cat?.ad?.information?.title.substring(0, 18)}...</h3>
                                     <div className="card_meta">
                                         <div className="ciLocationOn">
-                                            <CiLocationOn style={{ color: "var(--main-color)", fontSize: "12px", fontWeight: "bold" }} />
+                                            <CiLocationOn style={{ color: "var(--main-color)", fontSize: "12px" }} />
                                             <span>{cat?.ad?.user?.area || "غير محدد"}</span>
                                         </div>
                                         <div className="ciStopwatch">
-                                            <CiStopwatch style={{ color: "var(--main-color)", fontSize: "12px", fontWeight: "bold" }} />
+                                            <CiStopwatch style={{ color: "var(--main-color)", fontSize: "12px" }} />
                                             <span>{timeSince(cat?.ad?.created_at)}</span>
                                         </div>
                                     </div>
                                 </div>
+
                                 <div className="card_footer">
                                     <div className="card_footer_price">
-                                        <span className=''>{cat?.ad?.information?.price} ر.س</span>
+                                        <span>{cat?.ad?.information?.price} ر.س</span>
                                     </div>
-                                    <div className="hart_icon" onClick={(e) => handleFavoriteClick(e, cat?.category, cat?.ad?.id_ads)}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill={favorites[cat?.ad?.id_ads] ? "red" : "none"} stroke={favorites[cat?.ad?.id_ads] ? "red" : "currentColor"} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-heart-icon lucide-heart"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg>
+
+                                    <div
+                                        className="hart_icon"
+                                        onClick={(e) => handleFavoriteClick(e, cat?.category, cat?.ad?.id_ads)}
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width={22}
+                                            height={22}
+                                            viewBox="0 0 24 24"
+                                            fill={favorites[cat?.ad?.id_ads] ? "red" : "none"}
+                                            stroke={favorites[cat?.ad?.id_ads] ? "red" : "currentColor"}
+                                            strokeWidth={2}
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            className="lucide lucide-heart"
+                                        >
+                                            <path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" />
+                                        </svg>
                                     </div>
                                 </div>
                             </div>
@@ -182,6 +222,7 @@ export default function ShowAnyUser() {
                     </div>
                 </div>
             )}
+
             {showToast && (
                 <ToastWarning
                     message="قم بتسجيل الدخول أولاً"
@@ -189,5 +230,5 @@ export default function ShowAnyUser() {
                 />
             )}
         </section>
-    )
-};
+    );
+}

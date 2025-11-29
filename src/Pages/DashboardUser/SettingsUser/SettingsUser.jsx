@@ -25,75 +25,31 @@ const SettingsUser = () => {
 
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const fetchUserData = async (ignoreLocal = false) => {
+  const fetchUserData = async () => {
     if (!token || !userID) return;
     setLoading(true);
-
     try {
       const res = await axios.get("https://api.maaashi.com/api/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      const data = res.data;
-      if (data.status) {
-        const serverData = { ...data.data, userID };
-
-        // لو البيانات مختلفة عن الـ localStorage أو طلبنا تجاهل الـ localStorage
-        const needUpdate =
-          ignoreLocal ||
-          !userData ||
-          userData.profile_image !== data.data.profile_image ||
-          userData.cover_image !== data.data.cover_image ||
-          userData.name !== data.data.name ||
-          userData.email !== data.data.email ||
-          userData.phone !== data.data.phone;
-
-        if (needUpdate) {
-          localStorage.setItem("userData", JSON.stringify(serverData));
-          setUserData(serverData);
-
-          if (data.data.profile_image) {
-            const newProfileURL = `${data.data.profile_image}?t=${Date.now()}`;
-            setProfileImage(newProfileURL);
-            profileRef.current = data.data.profile_image;
-          }
-          if (data.data.cover_image) {
-            const newCoverURL = `${data.data.cover_image}?t=${Date.now()}`;
-            setCoverImage(newCoverURL);
-            coverRef.current = data.data.cover_image;
-          }
-        }
+      if (res.data.status) {
+        const data = res.data.data;
+        setUserData(data);
+        setProfileImage(data.image_profile);
+        setCoverImage(data.cover_image);
+        profileRef.current = data.image_profile;
+        coverRef.current = data.cover_image;
       }
-    } catch (err) {
-      toast.error("فشل تحميل بيانات المستخدم من السيرفر");
+    } catch {
+      toast.error("فشل تحميل بيانات المستخدم");
     } finally {
       setLoading(false);
     }
   };
 
-  // قراءة البيانات من localStorage أولًا
   useEffect(() => {
-    const localData = localStorage.getItem("userData");
-    let parsedLocal = null;
-    try {
-      parsedLocal = localData ? JSON.parse(localData) : null;
-    } catch {
-      parsedLocal = null;
-    }
-
-    if (parsedLocal && parsedLocal.userID === userID) {
-      setUserData(parsedLocal);
-      if (parsedLocal.profile_image) {
-        setProfileImage(parsedLocal.profile_image);
-        profileRef.current = parsedLocal.profile_image;
-      }
-      if (parsedLocal.cover_image) {
-        setCoverImage(parsedLocal.cover_image);
-        coverRef.current = parsedLocal.cover_image;
-      }
-    }
-
     fetchUserData();
   }, [token, userID]);
 
@@ -110,8 +66,8 @@ const SettingsUser = () => {
     const formData = new FormData();
     formData.append("image", file);
 
+    const toastId = toast.loading("جارٍ رفع الصورة...");
     try {
-      toast("جارٍ رفع الصورة...");
       const res = await axios.post(
         "https://api.maaashi.com/api/profile/avatar",
         formData,
@@ -122,20 +78,14 @@ const SettingsUser = () => {
           },
         }
       );
-
       if (res.data.status) {
-        // تحديث الصورة بدون أي undefined
-        const newProfileURL = `${res.data.data.profile_image}?t=${Date.now()}`;
-        setProfileImage(newProfileURL);
-        profileRef.current = res.data.data.profile_image;
-
-        // تجاهل localStorage القديم ونعمل re-fetch
-        await fetchUserData(true);
-
-        toast.success("تم تحديث صورة البروفايل!");
+        setProfileImage(`${res.data.data.image_url}?t=${Date.now()}`);
+        profileRef.current = res.data.data.image_url;
+        setUserData((prev) => ({ ...prev, image_profile: res.data.data.image_url }));
+        toast.success("تم تحديث صورة البروفايل!", { id: toastId });
       }
     } catch {
-      toast.error("فشل رفع صورة البروفايل!");
+      toast.error("فشل رفع صورة البروفايل!", { id: toastId });
     }
   };
 
@@ -149,8 +99,8 @@ const SettingsUser = () => {
     const formData = new FormData();
     formData.append("cover", file);
 
+    const toastId = toast.loading("جارٍ رفع صورة الكوفر...");
     try {
-      toast("جارٍ رفع صورة الكوفر...");
       const res = await axios.post(
         "https://api.maaashi.com/api/profile/cover",
         formData,
@@ -161,26 +111,52 @@ const SettingsUser = () => {
           },
         }
       );
-
       if (res.data.status) {
-        const newCoverURL = `${res.data.data.cover_image}?t=${Date.now()}`;
-        setCoverImage(newCoverURL);
-        coverRef.current = res.data.data.cover_image;
-
-        // تجاهل localStorage القديم ونعمل re-fetch
-        await fetchUserData(true);
-
-        toast.success("تم تحديث صورة الكوفر!");
+        setCoverImage(`${res.data.data.image_url}?t=${Date.now()}`);
+        coverRef.current = res.data.data.image_url;
+        setUserData((prev) => ({ ...prev, cover_image: res.data.data.image_url }));
+        toast.success("تم تحديث صورة الكوفر!", { id: toastId });
       }
     } catch {
-      toast.error("فشل رفع صورة الكوفر!");
+      toast.error("فشل رفع صورة الكوفر!", { id: toastId });
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!userData) return;
+    setSaving(true);
+    try {
+      const payload = {
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        image_profile: profileRef.current,
+        cover_image: coverRef.current,
+      };
+
+      const res = await axios.post(
+        "https://api.maaashi.com/api/profile",
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (res.data.status) {
+        const data = res.data.data;
+        setUserData(data);
+        toast.success("تم تحديث البيانات الشخصية بنجاح!");
+      }
+    } catch {
+      toast.error("فشل تحديث البيانات الشخصية");
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
     <div className="Settings_user">
       <Toaster position="top-right" />
-
       <div className="settings_user_container">
         <div className="Settings_user_image">
           <div className="image_container">
@@ -262,6 +238,15 @@ const SettingsUser = () => {
               }
             />
           </label>
+
+          <button
+            type="button"
+            className="Settings_user_save_btn"
+            onClick={handleSaveProfile}
+            disabled={saving}
+          >
+            {saving ? "جاري الحفظ..." : "تعديل الملف الشخصي"}
+          </button>
         </form>
 
         <LocationForm />
