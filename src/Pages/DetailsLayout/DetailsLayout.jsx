@@ -14,7 +14,9 @@ import { useCookies } from "react-cookie";
 import { LoginForm } from "../Auth/Login";
 import { parseAuthCookie } from "../../utils/auth";
 import { timeSince } from "../SpecificCategory/SpecificCategory";
-
+import { FaRegCommentDots } from "react-icons/fa";
+import { LuFlag } from "react-icons/lu";
+import { IoIosHeartEmpty } from "react-icons/io";
 
 export function formatFullDate(dateString) {
   const date = new Date(dateString);
@@ -398,7 +400,7 @@ const DetailsLayout = () => {
         {/* التعليقات */}
         <div className="details_footer_comments">
           <h3>التعليقات</h3>
-          <p>شارك رايك او استفسارك حول هذا الاعلان</p>
+          <p className="comment_subtitle">شارك رايك او استفسارك حول هذا الاعلان</p>
 
           <div className="details-lay-comments-user">
             <img
@@ -415,7 +417,7 @@ const DetailsLayout = () => {
 
           <div className="details-lay-comments-actions">
             <button onClick={handleAddComment}>
-              <AiOutlineSend /> اضافه تعليق
+              <AiOutlineSend  className="send-icon"/> اضافه تعليق    
             </button>
           </div>
 
@@ -444,15 +446,18 @@ const DetailsLayout = () => {
 
         <div className="comment_actions">
           <span className="action_item">
-            👍 {cmt.likes_count}
+            <IoIosHeartEmpty />
+             {cmt.likes_count}
           </span>
 
           <span className="action_item">
-            💬 رد {cmt.replies_count}
+            <FaRegCommentDots />
+ رد {cmt.replies_count}
           </span>
 
           <span className="action_item report_btn">
-            🚫 إبلاغ
+<LuFlag  />
+             إبلاغ
           </span>
         </div>
 

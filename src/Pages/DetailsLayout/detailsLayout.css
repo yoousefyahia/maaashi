@@ -36,7 +36,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  object-fit: cover;
+  /* object-fit: cover; */
   border: 1px solid var(--main-color);
 }
 
@@ -61,7 +61,7 @@
 .comment_text {
   font-size: 14px;
   color: #333;
-  margin: 0;
+  margin-right: 50px;
   line-height: 1.5;
 }
 
@@ -76,7 +76,7 @@
 
 .action_item {
   cursor: pointer;
-  color: var(--main-color);
+  /* color: var(--main-color); */
   display: flex;
   align-items: center;
   gap: 5px;
@@ -87,7 +87,7 @@
 }
 
 .report_btn {
-  color: #e74c3c;
+  /* color: #e74c3c; */
 }
 
 .comment_content h5 {
@@ -402,18 +402,25 @@
 
 .details-lay-comments-user input {
   flex: 1;
-  padding: 8px 12px;
+  padding: 24px 12px;
   border: 1px solid #ddd;
   outline: none;
   border-radius: 8px;
 }
-
+.comment_subtitle{
+  margin-top: 15px;
+  margin-bottom: 20px;
+}
 .details-lay-comments-actions {
   display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
   flex-wrap: wrap;
   gap: 10px;
+}
+.send-icon {
+  transform: rotate(180deg);
+  color: white ;
 }
 
 .details-lay-comments-actions span,
