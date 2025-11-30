@@ -8,7 +8,6 @@ import { MdOutlineShield } from "react-icons/md";
 import { AiOutlineSend } from "react-icons/ai";
 import { IoCallOutline } from "react-icons/io5";
 import { LuMessageCircleMore } from "react-icons/lu";
-
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import { useCookies } from "react-cookie";
@@ -16,6 +15,17 @@ import { LoginForm } from "../Auth/Login";
 import { parseAuthCookie } from "../../utils/auth";
 import { timeSince } from "../SpecificCategory/SpecificCategory";
 
+
+export function formatFullDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleString("ar-EG", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 // تحويل بيانات الإعلان لمواصفات داينمك
 export function attributeMapForDetails(ad) {
   if (!ad) return {};
@@ -319,12 +329,23 @@ const DetailsLayout = () => {
                   </div>
                   <div className="user_info">
                     <h5>{ad_details?.user?.name}</h5>
-                    <p className="details-left-top-user-member">
-                      عضو منذ{" "}
-                      {ad_details?.user?.created_at
-                        ? timeSince(ad_details.user.created_at)
-                        : ""}
-                    </p>
+                      <p className="details-left-top-user-member">
+                        {(() => {
+                          const created = ad_details?.user?.created_at;
+                          if (!created) return "";
+
+                          const diffHours =
+                            (new Date() - new Date(created)) / 1000 / 60 / 60;
+
+                          // لو أقل من 48 ساعة → يظهر "منذ كذا"
+                          if (diffHours < 48) {
+                            return `عضو منذ ${timeSince(created)}`;
+                          }
+
+                          // لو أكتر من 48 ساعة → يظهر التاريخ الكامل
+                          return `تاريخ الانضمام: ${formatFullDate(created)}`;
+                        })()}
+                      </p>
                   </div>
                 </Link>
 
@@ -398,28 +419,50 @@ const DetailsLayout = () => {
             </button>
           </div>
 
-          <div className="comments_list">
-            {comments.length > 0 ? (
-              comments.map((cmt) => (
-                <div className="comment_item" key={cmt.id}>
-                  {/* <img
-                    src={
-                      cmt.user?.image_profile ||
-                      "https://api.maaashi.com/storage/users/covers/OnlzSpVMpIsd69gUrrBZ6GzWProUDBwnqcEfyTop.webp"
-                    }
-                    alt={cmt.user?.name}
-                  /> */}
-                  <div className="comment_content">
-                    <h5> الاسم: {cmt.user?.name}</h5>
-                    <span> منذ: {timeSince(cmt.created_at)}</span>
-                    <p> التعليق :{cmt.comment}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p>لا توجد تعليقات بعد</p>
-            )}
+<div className="comments_list">
+  {comments.length > 0 ? (
+    comments.map((cmt) => (
+      <div className="comment_item" key={cmt.id}>
+        
+        <div className="comment_header">
+          <img
+            src={
+              cmt.user?.image_profile ||
+              "https://api.maaashi.com/storage/users/covers/OnlzSpVMpIsd69gUrrBZ6GzWProUDBwnqcEfyTop.webp"
+            }
+            alt={cmt.user?.name}
+            className="comment_user_img"
+          />
+
+          <div className="comment_user_info">
+            <h5 className="comment_user_name">{cmt.user?.name}</h5>
+            <span className="comment_date">منذ {timeSince(cmt.created_at)}</span>
           </div>
+        </div>
+
+        <p className="comment_text">{cmt.comment}</p>
+
+        <div className="comment_actions">
+          <span className="action_item">
+            👍 {cmt.likes_count}
+          </span>
+
+          <span className="action_item">
+            💬 رد {cmt.replies_count}
+          </span>
+
+          <span className="action_item report_btn">
+            🚫 إبلاغ
+          </span>
+        </div>
+
+      </div>
+    ))
+  ) : (
+    <p>لا توجد تعليقات بعد</p>
+  )}
+</div>
+
         </div>
       </section>
 
