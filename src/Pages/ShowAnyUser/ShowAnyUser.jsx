@@ -145,10 +145,16 @@ export default function ShowAnyUser() {
                             >
                                 {/* Ad Image */}
                                 <div className="card_image">
-                                    <img
-                                        src={ad?.images?.length ? ad.images[0] : "/placeholder.png"}
-                                        alt={ad.title}
+                                <img
+                                src={
+                                ad?.images?.length > 0
+                                    ? `https://api.maaashi.com/storage/${ad.images[0]}`
+                                    : "/images/team.webp"
+                                    }
+                                    alt={ad?.title || "image"}
                                     />
+
+
                                 </div>
 
                                 {/* User Info */}

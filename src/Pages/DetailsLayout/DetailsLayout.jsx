@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./detailsLayout.css";
 
 // Icons
-import { IoIosArrowBack } from "react-icons/io";
+import { IoIosArrowBack, IoIosHeartEmpty, IoIosHeart } from "react-icons/io";
 import { RiStarSLine } from "react-icons/ri";
 import { MdOutlineShield } from "react-icons/md";
 import { AiOutlineSend } from "react-icons/ai";
@@ -14,9 +14,6 @@ import { useCookies } from "react-cookie";
 import { LoginForm } from "../Auth/Login";
 import { parseAuthCookie } from "../../utils/auth";
 import { timeSince } from "../SpecificCategory/SpecificCategory";
-import { FaRegCommentDots } from "react-icons/fa";
-import { LuFlag } from "react-icons/lu";
-import { IoIosHeartEmpty } from "react-icons/io";
 
 export function formatFullDate(dateString) {
   const date = new Date(dateString);
@@ -28,27 +25,14 @@ export function formatFullDate(dateString) {
     minute: "2-digit",
   });
 }
-// تحويل بيانات الإعلان لمواصفات داينمك
+
 export function attributeMapForDetails(ad) {
   if (!ad) return {};
-
   const map = {};
-
-  if (ad.category?.name) {
-    map.category = { label: "الفئة", value: ad.category.name };
-  }
-
-  if (ad.type) {
-    map.type = { label: "نوع الإعلان", value: ad.type };
-  }
-
-  if (ad.price) {
-    map.price = { label: "السعر", value: `${ad.price} ريال` };
-  }
-
-  if (ad.additional_info) {
-    map.additional_info = { label: "معلومات إضافية", value: ad.additional_info };
-  }
+  if (ad.category?.name) map.category = { label: "الفئة", value: ad.category.name };
+  if (ad.type) map.type = { label: "نوع الإعلان", value: ad.type };
+  if (ad.price) map.price = { label: "السعر", value: `${ad.price} ريال` };
+  if (ad.additional_info) map.additional_info = { label: "معلومات إضافية", value: ad.additional_info };
 
   Object.keys(ad).forEach((key) => {
     if (!map[key] && typeof ad[key] === "string" && ad[key]) {
@@ -59,20 +43,13 @@ export function attributeMapForDetails(ad) {
   return map;
 }
 
-// وظيفة فتح WhatsApp
 export function handleWhatsApp(seller, title) {
   if (!seller || !seller.phone) return;
   let phone = seller.phone.trim().replace(/\s+/g, "").replace(/^\+/, "");
-  phone = phone.startsWith("966")
-    ? phone
-    : phone.startsWith("0")
-    ? `966${phone.slice(1)}`
-    : `966${phone}`;
+  phone = phone.startsWith("966") ? phone : phone.startsWith("0") ? `966${phone.slice(1)}` : `966${phone}`;
   if (!/^9665\d{8}$/.test(phone)) return;
-
   const message = `مرحبًا ${seller.name}! أريد التواصل معك بشأن إعلانك "${title}" على موقع ماشي.`;
-  const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-  window.open(waUrl, "_blank", "noopener,noreferrer");
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
 }
 
 const DetailsLayout = () => {
@@ -88,10 +65,10 @@ const DetailsLayout = () => {
 
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
+  const [likedComments, setLikedComments] = useState({}); // لتخزين حالة اللايك
 
   const images = ad_details?.images || [];
 
-  // جلب الفئات
   useEffect(() => {
     const getCategories = async () => {
       try {
@@ -108,7 +85,6 @@ const DetailsLayout = () => {
   const category =
     categories.find((cat) => details === cat.key) || { name: "اسم الفئة", key: "" };
 
-  // جلب تفاصيل الإعلان
   useEffect(() => {
     window.scrollTo(0, 0);
     const fetchDetails = async () => {
@@ -131,22 +107,31 @@ const DetailsLayout = () => {
     fetchDetails();
   }, [id]);
 
-  // جلب التعليقات
+  // جلب كل التعليقات مع حالة اللايك من السيرفر
   useEffect(() => {
     const fetchComments = async () => {
       try {
         const response = await axios.get(
-          `https://api.maaashi.com/api/ads/comments?ad_id=${id}`
+          `https://api.maaashi.com/api/ads/comments?ad_id=${id}`,
+          { headers: userToken ? { Authorization: `Bearer ${userToken}` } : {} }
         );
-        setComments(response.data.data || []);
+
+        const commentsData = response.data.data || [];
+
+        const likedState = {};
+        commentsData.forEach(c => {
+          likedState[c.id] = c.is_liked_by_user || false; // لازم الـ API يرسل is_liked_by_user
+        });
+
+        setLikedComments(likedState);
+        setComments(commentsData);
       } catch (err) {
         console.error("Error fetching comments:", err);
       }
     };
     fetchComments();
-  }, [id]);
+  }, [id, userToken]);
 
-  // التحكم في overflow عند فتح/غلق المودال
   useEffect(() => {
     document.body.style.overflow = loginModel ? "hidden" : "auto";
     return () => (document.body.style.overflow = "auto");
@@ -157,20 +142,65 @@ const DetailsLayout = () => {
     try {
       const response = await axios.post(
         `https://api.maaashi.com/api/ads/comment`,
-        {
-          ad_id: id,
-          comment: newComment,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-          },
-        }
+        { ad_id: id, comment: newComment },
+        { headers: { Authorization: `Bearer ${userToken}` } }
       );
       setComments([response.data.data, ...comments]);
       setNewComment("");
     } catch (err) {
       console.error("Error adding comment:", err);
+    }
+  };
+
+  const handleLikeComment = async (commentId) => {
+    if (!userToken) {
+      setLoginModel(true);
+      return;
+    }
+
+    const isLiked = likedComments[commentId] || false;
+
+    // تحديث UI فورًا
+    setLikedComments(prev => ({
+      ...prev,
+      [commentId]: !isLiked,
+    }));
+    setComments(prev =>
+      prev.map(c =>
+        c.id === commentId 
+          ? { ...c, likes_count: c.likes_count + (isLiked ? -1 : 1) }
+          : c
+      )
+    );
+
+    try {
+      if (!isLiked) {
+        await axios.post(
+          `https://api.maaashi.com/api/comments/like`,
+          { comment_id: commentId, ad_id: id },
+          { headers: { Authorization: `Bearer ${userToken}` } }
+        );
+      } else {
+        await axios.post(
+          `https://api.maaashi.com/api/comments/unlike`,
+          { comment_id: commentId, ad_id: id },
+          { headers: { Authorization: `Bearer ${userToken}` } }
+        );
+      }
+    } catch (err) {
+      console.error("Error updating like:", err);
+      // لو حصل خطأ، نرجع الحالة زي ما كانت
+      setLikedComments(prev => ({
+        ...prev,
+        [commentId]: isLiked,
+      }));
+      setComments(prev =>
+        prev.map(c =>
+          c.id === commentId 
+            ? { ...c, likes_count: c.likes_count + (isLiked ? 1 : -1) }
+            : c
+        )
+      );
     }
   };
 
@@ -180,6 +210,7 @@ const DetailsLayout = () => {
 
   return (
     <div className="details-layout">
+      {/* الهيدر */}
       <div className="details_header">
         <div className="details_links">
           <Link to="/" className="details-close">
@@ -223,7 +254,7 @@ const DetailsLayout = () => {
       </div>
 
       <section className="details_grid_container">
-        {/* right section */}
+        {/* يمين الصفحة */}
         <div className="details-right">
           {/* الصور */}
           <div className="details_images">
@@ -248,53 +279,25 @@ const DetailsLayout = () => {
           </div>
 
           {/* المواصفات */}
-{/* المواصفات */}
-{/* المواصفات */}
-<div className="details_specifications">
-  <h3 className="details-lay-info-title">المواصفات</h3>
-  {attributesArray.length > 0 ? (
-    <div className="details_specifications_box">
-      <div className="attributes">
-        {attributesArray.map((item, index) => {
-          let value = item.value;
-
-          // تحويل created_at و updated_at للتاريخ العربي
-          if (item.label.toLowerCase() === "created at" && ad_details.created_at) {
-            value = new Date(ad_details.created_at).toLocaleString("ar-EG", {
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit",
-              hour: "2-digit",
-              minute: "2-digit",
-            });
-            item.label = "تاريخ النشر";
-          } else if (item.label.toLowerCase() === "updated at" && ad_details.updated_at) {
-            value = new Date(ad_details.updated_at).toLocaleString("ar-EG", {
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit",
-              hour: "2-digit",
-              minute: "2-digit",
-            });
-            item.label = "آخر تحديث";
-          }
-
-          return (
-            <div className="attribute_item" key={index}>
-              <div className="attribute_item_text">
-                <span>{item.label}</span>
-                <span>{value}</span>
+          <div className="details_specifications">
+            <h3 className="details-lay-info-title">المواصفات</h3>
+            {attributesArray.length > 0 ? (
+              <div className="details_specifications_box">
+                <div className="attributes">
+                  {attributesArray.map((item, index) => (
+                    <div className="attribute_item" key={index}>
+                      <div className="attribute_item_text">
+                        <span>{item.label}</span>
+                        <span>{item.value}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  ) : (
-    <p>لا توجد مواصفات</p>
-  )}
-</div>
-
+            ) : (
+              <p>لا توجد مواصفات</p>
+            )}
+          </div>
 
           {/* الوصف */}
           <div className="details-layout-decs">
@@ -309,10 +312,10 @@ const DetailsLayout = () => {
           </div>
         </div>
 
-        {/* left section */}
+        {/* يسار الصفحة */}
         <div className="details-left">
           <div className="details_left_container">
-            {/* معلومات البائع */}
+            {/* بيانات البائع */}
             <div className="details-left-top">
               <div className="details-left-top-user">
                 <Link
@@ -321,52 +324,34 @@ const DetailsLayout = () => {
                 >
                   <div className="card_user_image">
                     <img
-                      src={
-                        ad_details?.user?.image_profile ||
-                        "https://api.maaashi.com/storage/users/covers/OnlzSpVMpIsd69gUrrBZ6GzWProUDBwnqcEfyTop.webp"
-                      }
+                      src={ad_details?.user?.image_profile || "https://api.maaashi.com/storage/users/covers/OnlzSpVMpIsd69gUrrBZ6GzWProUDBwnqcEfyTop.webp"}
                       alt="Default Avatar"
                       style={{ width: "100%", height: "100%", borderRadius: "50%" }}
                     />
                   </div>
                   <div className="user_info">
                     <h5>{ad_details?.user?.name}</h5>
-                      <p className="details-left-top-user-member">
-                        {(() => {
-                          const created = ad_details?.user?.created_at;
-                          if (!created) return "";
-
-                          const diffHours =
-                            (new Date() - new Date(created)) / 1000 / 60 / 60;
-
-                          // لو أقل من 48 ساعة → يظهر "منذ كذا"
-                          if (diffHours < 48) {
-                            return `عضو منذ ${timeSince(created)}`;
-                          }
-
-                          // لو أكتر من 48 ساعة → يظهر التاريخ الكامل
-                          return `تاريخ الانضمام: ${formatFullDate(created)}`;
-                        })()}
-                      </p>
+                    <p className="details-left-top-user-member">
+                      {(() => {
+                        const created = ad_details?.user?.created_at;
+                        if (!created) return "";
+                        const diffHours = (new Date() - new Date(created)) / 1000 / 60 / 60;
+                        if (diffHours < 48) return `عضو منذ ${timeSince(created)}`;
+                        return `تاريخ الانضمام: ${formatFullDate(created)}`;
+                      })()}
+                    </p>
                   </div>
                 </Link>
 
                 <div className="details-left-top-user-actions">
-                  <span>
-                    <MdOutlineShield /> موثوق
-                  </span>
-                  <span>
-                    <RiStarSLine />4.8
-                  </span>
+                  <span><MdOutlineShield /> موثوق</span>
+                  <span><RiStarSLine />4.8</span>
                   <span>{ad_details?.user?.ads_count || 0} اعلان</span>
                   <span>معدل الرد 95%</span>
                 </div>
 
                 <div className="details-left-top-user-buttons">
-                  <button
-                    className="details-left-top-user-btn1"
-                    onClick={() => setLoginModel(true)}
-                  >
+                  <button className="details-left-top-user-btn1" onClick={() => setLoginModel(true)}>
                     <IoCallOutline /> تواصل
                   </button>
                   <button className="details-left-top-user-btn2">
@@ -375,11 +360,7 @@ const DetailsLayout = () => {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleWhatsApp(ad_details?.user, ad_details?.title)}
-                className="details-left-top-send"
-              >
+              <button type="button" onClick={() => handleWhatsApp(ad_details?.user, ad_details?.title)} className="details-left-top-send">
                 واتساب
               </button>
             </div>
@@ -403,89 +384,56 @@ const DetailsLayout = () => {
           <p className="comment_subtitle">شارك رايك او استفسارك حول هذا الاعلان</p>
 
           <div className="details-lay-comments-user">
-            <img
-              src={ad_details?.user?.image_profile || "/images/logo.svg"}
-              alt="User"
-            />
-            <input
-              type="text"
-              placeholder="اكتب تعليقك هنا..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-            />
+            <img src={ad_details?.user?.image_profile || "/images/logo.svg"} alt="User" />
+            <input type="text" placeholder="اكتب تعليقك هنا..." value={newComment} onChange={(e) => setNewComment(e.target.value)} />
           </div>
 
           <div className="details-lay-comments-actions">
             <button onClick={handleAddComment}>
-              <AiOutlineSend  className="send-icon"/> اضافه تعليق    
+              <AiOutlineSend className="send-icon" /> اضافه تعليق
             </button>
           </div>
 
-<div className="comments_list">
-  {comments.length > 0 ? (
-    comments.map((cmt) => (
-      <div className="comment_item" key={cmt.id}>
-        
-        <div className="comment_header">
-          <img
-            src={
-              cmt.user?.image_profile ||
-              "https://api.maaashi.com/storage/users/covers/OnlzSpVMpIsd69gUrrBZ6GzWProUDBwnqcEfyTop.webp"
-            }
-            alt={cmt.user?.name}
-            className="comment_user_img"
-          />
+          <div className="comments_list">
+            {comments.length > 0 ? (
+              comments.map((cmt) => (
+                <div className="comment_item" key={cmt.id}>
+                  <div className="comment_header">
+                    <img src={cmt.user?.image_profile || "https://api.maaashi.com/storage/users/covers/OnlzSpVMpIsd69gUrrBZ6GzWProUDBwnqcEfyTop.webp"} alt={cmt.user?.name} className="comment_user_img" />
+                    <div className="comment_user_info">
+                      <h5 className="comment_user_name">{cmt.user?.name}</h5>
+                      <span className="comment_date">{timeSince(cmt.created_at)}</span>
+                    </div>
+                  </div>
 
-          <div className="comment_user_info">
-            <h5 className="comment_user_name">{cmt.user?.name}</h5>
-            <span className="comment_date">منذ {timeSince(cmt.created_at)}</span>
+                  <p className="comment_text">{cmt.comment}</p>
+
+                  <div className="comment_actions">
+                    <span className="action_item" onClick={() => handleLikeComment(cmt.id)}>
+                      {likedComments[cmt.id] ? <IoIosHeart color="red" /> : <IoIosHeartEmpty />}
+                      {cmt.likes_count}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p>لا توجد تعليقات بعد</p>
+            )}
           </div>
-        </div>
-
-        <p className="comment_text">{cmt.comment}</p>
-
-        <div className="comment_actions">
-          <span className="action_item">
-            <IoIosHeartEmpty />
-             {cmt.likes_count}
-          </span>
-
-          <span className="action_item">
-            <FaRegCommentDots />
- رد {cmt.replies_count}
-          </span>
-
-          <span className="action_item report_btn">
-<LuFlag  />
-             إبلاغ
-          </span>
-        </div>
-
-      </div>
-    ))
-  ) : (
-    <p>لا توجد تعليقات بعد</p>
-  )}
-</div>
-
         </div>
       </section>
 
-      {/* مودال التواصل */}
+      {/* مودال تسجيل الدخول */}
       {loginModel && (
         <section className="login_modal_fade">
           <div className="modal_dialog">
             <div className="modal_header">
-              <button type="button" onClick={() => setLoginModel(false)}>
-                X
-              </button>
+              <button type="button" onClick={() => setLoginModel(false)}>X</button>
             </div>
             {userToken ? (
               <div className="model_content">
                 <p>التواصل مع العارض</p>
-                <a href={`tel:${ad_details?.user?.phone}`} className="sellerPhone">
-                  {ad_details?.user?.phone}
-                </a>
+                <a href={`tel:${ad_details?.user?.phone}`} className="sellerPhone">{ad_details?.user?.phone}</a>
               </div>
             ) : (
               <div>

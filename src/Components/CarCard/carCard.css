@@ -4,6 +4,21 @@
   font-family: var(--main-font);
   direction: rtl;
 }
+.loadMoreBtn {
+  background-color: var(--main-color);
+  color: #fff;
+  border: none;
+  padding: 10px 25px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.loadMoreBtn:hover {
+  opacity: 0.85;
+}
+
 .paginationBtns{
   display:flex;
   justify-content:center;

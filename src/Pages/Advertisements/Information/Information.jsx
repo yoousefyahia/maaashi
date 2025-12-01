@@ -5,7 +5,7 @@ import FormHeader from '../../../Components/AdvertisementsComponents/FormHeader/
 // استدعاء النماذج حسب الفئة
 import CarForm from '../../../Components/AdvertisementsComponents/CarForm/CarForm';
 import RealestateForm from '../../../Components/AdvertisementsComponents/RealestateForm/RealestateForm';
-import ElectricForm from '../../../Components/AdvertisementsComponents/ElectricForm/ElectricForm';
+import ElectricForm from '../../../Components/AdvertisementsComponents/ElectricForm/ElectricForm'; 
 import JobsForm from '../../../Components/AdvertisementsComponents/JobsForm/JobsForm';
 import FurnitureForm from '../../../Components/AdvertisementsComponents/FurnitureForm/FurnitureForm';
 import ServicesForm from '../../../Components/AdvertisementsComponents/ServicesForm/ServicesForm';
@@ -20,7 +20,7 @@ export default function Information({ formik, prevStep, categories }) {
     const { values, setFieldValue, errors, handleBlur, touched } = formik;
 
     const category = categories.find(cat => cat.id === values.category);
-    if (!category) return <p>اختر فئة أولاً</p>; // placeholder لو مش مختار
+    if (!category) return <p>اختر فئة أولاً</p>;
 
     const titleInputRef = useRef(null);
 
@@ -39,6 +39,7 @@ export default function Information({ formik, prevStep, categories }) {
                     </div>
                 </header>
 
+                {/* عنوان الإعلان */}
                 <div className="input_container">
                     <label htmlFor="adTitle">
                         عنوان الإعلان*
@@ -59,6 +60,7 @@ export default function Information({ formik, prevStep, categories }) {
                     />
                 </div>
 
+                {/* الوصف */}
                 <div className="textarea_container">
                     <label htmlFor="adDescription">
                         الوصف*
@@ -77,8 +79,64 @@ export default function Information({ formik, prevStep, categories }) {
                         placeholder='أدخل وصفك هنا...'
                     />
                 </div>
+
+                {/* المعلومات الإضافية */}
+                <div className="textarea_container">
+                    <label htmlFor="adAdditionalInfo">
+                        معلومات إضافية
+                        {errors.information?.additional_info && touched.information?.additional_info && (
+                            <div className="info_error">{errors.information.additional_info}</div>
+                        )}
+                    </label>
+                    <textarea
+                        name="information.additional_info"
+                        value={values.information?.additional_info || ""}
+                        onChange={(e) => setFieldValue("information.additional_info", e.target.value)}
+                        onBlur={handleBlur}
+                        id="adAdditionalInfo"
+                        rows={3}
+                        className='adAdditionalInfo_input input'
+                        placeholder='أدخل أي معلومات إضافية هنا...'
+                    />
+                </div>
+
+                {/* السعر */}
+                <div className="inputPrice_container">
+                    <div className="inputPrice">
+                        <label htmlFor="adPrice"><span>السعر (ريال سعودي)</span> <span className='main_text'> (اختياري)</span></label>
+                        <input
+                            type="text"
+                            name="information.adPrice"
+                            value={values.information.adPrice}
+                            onChange={(e) => setFieldValue("information.adPrice", e.target.value)}
+                            onBlur={handleBlur}
+                            id="adPrice"
+                            className='adPrice_input input'
+                            placeholder='أدخل سعرك هنا' />
+                        <span>ر.س</span>
+                        {errors.information?.adPrice && touched.information?.adPrice && (
+                            <div className="info_error">{errors.information.adPrice}</div>
+                        )}
+                    </div>
+
+                    {values?.information?.adPrice && !errors.information?.adPrice && (
+                        <div className="switch-item">
+                            <p>التفاوض علي السعر</p>
+                            <label className="switch">
+                                <input
+                                    type="checkbox"
+                                    name="information.isNegotiable"
+                                    checked={values.information.isNegotiable}
+                                    onChange={(e) => setFieldValue("information.isNegotiable", e.target.checked)}
+                                />
+                                <span className="slider"></span>
+                            </label>
+                        </div>)
+                    }
+                </div>
             </div>
 
+            {/* قسم الفئة والنماذج الخاصة بها */}
             <div className="basic_category_data">
                 <FormHeader
                     img={category.image}
@@ -87,7 +145,6 @@ export default function Information({ formik, prevStep, categories }) {
                     prevStep={prevStep}
                 />
 
-                {/* عرض النماذج حسب الاسم أو ترتيب الـ API */}
                 {category.name === "السيارات" && <CarForm formik={formik} />}
                 {category.name === "العقارات" && <RealestateForm formik={formik} />}
                 {category.name === "الالكترونيات" && <ElectricForm formik={formik} />}

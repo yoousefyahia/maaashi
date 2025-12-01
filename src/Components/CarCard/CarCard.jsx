@@ -1,4 +1,3 @@
-// *** الكود كما طلبت - معدل فقط على جزء الفيتش ***
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CiLocationOn, CiStopwatch } from "react-icons/ci";
@@ -21,45 +20,30 @@ const CarCard = () => {
   const [showToast, setShowToast] = useState(false);
   const [loadingFavoriteId, setLoadingFavoriteId] = useState(null);
 
-  // ****** الجديد هنا ******
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
 
-  // 1- Load featured ads with pagination
+  // ******** تحميل أول صفحة ********
   useEffect(() => {
-    const fetchCard = async () => {
+    const fetchFirstPage = async () => {
       try {
         setLoading(true);
-
         const res = await axios.get(
-          `https://api.maaashi.com/api/ads/featured?page=${currentPage}&limit=12`
+          `https://api.maaashi.com/api/ads/featured?page=1&limit=12`
         );
-
-        const apiData = res.data;
-        const ads = Array.isArray(apiData.data) ? apiData.data : [];
-
-        // فلترة is_featured = true
-        const filtered = ads.filter((item) => item.is_featured === true);
-
-        // ترتيب حسب الأحدث
-        const sorted = filtered.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at)
-        );
-
-        setAdsCard(sorted);
-
-        // تحديث آخر صفحة
-        setLastPage(apiData.last_page || 1);
+        const ads = Array.isArray(res.data.data) ? res.data.data : [];
+        setAdsCard(ads); // نعين فقط
+        setLastPage(res.data.last_page || 1);
       } catch {
         setError("حدث خطأ أثناء تحميل الإعلانات.");
       } finally {
         setLoading(false);
       }
     };
-    fetchCard();
-  }, [currentPage]); // ← دعم الباجينيشن
+    fetchFirstPage();
+  }, []);
 
-  // 2- Load favorites
+  // ******** تحميل المفضلات ********
   useEffect(() => {
     if (!token) return;
 
@@ -82,7 +66,7 @@ const CarCard = () => {
     fetchFavorites();
   }, [token]);
 
-  // 3- Toggle favorite
+  // ******** Toggle favorite ********
   const handleFavoriteClick = (e, adId) => {
     e.stopPropagation();
     if (!token) {
@@ -120,6 +104,7 @@ const CarCard = () => {
       .finally(() => setLoadingFavoriteId(null));
   };
 
+  // ******** وقت النشر ********
   const timeSince = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -129,6 +114,23 @@ const CarCard = () => {
     if (seconds < 86400) return `منذ ${Math.floor(seconds / 3600)} ساعة`;
     if (seconds < 604800) return `منذ ${Math.floor(seconds / 86400)} يوم`;
     return `منذ ${Math.floor(seconds / 604800)} أسبوع`;
+  };
+
+  // ******** تحميل المزيد ********
+  const loadMore = async () => {
+    if (currentPage >= lastPage) return;
+
+    const nextPage = currentPage + 1;
+    try {
+      const res = await axios.get(
+        `https://api.maaashi.com/api/ads/featured?page=${nextPage}&limit=12`
+      );
+      const newAds = Array.isArray(res.data.data) ? res.data.data : [];
+      setAdsCard((prev) => [...prev, ...newAds]); // دمج الإعلانات الجديدة
+      setCurrentPage(nextPage);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   if (loading) return <p>جارِ تحميل الإعلانات...</p>;
@@ -236,24 +238,17 @@ const CarCard = () => {
           )}
         </div>
 
-        {/* ****** أزرار الباجينيشن ****** */}
-        <div className="paginationBtns">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
+        {/* ******** زر عرض المزيد ******** */}
+        {currentPage < lastPage && (
+          <div
+            className="loadMoreContainer"
+            style={{ textAlign: "center", marginTop: "20px" }}
           >
-            السابق
-          </button>
-
-          <span>{currentPage} / {lastPage}</span>
-
-          <button
-            disabled={currentPage === lastPage}
-            onClick={() => setCurrentPage(currentPage + 1)}
-          >
-            التالي
-          </button>
-        </div>
+            <button className="btn loadMoreBtn" onClick={loadMore}>
+              عرض المزيد
+            </button>
+          </div>
+        )}
       </div>
 
       {showToast && (

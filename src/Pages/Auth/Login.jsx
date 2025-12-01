@@ -73,6 +73,7 @@ export function LoginForm() {
             sameSite: "lax",
             secure: process.env.NODE_ENV === "production",
           });
+          // localStorage.setItem("token", data.token);
           navigate("/");
         } else if (data.errors) {
           const hasEmailError = data.errors.email;
