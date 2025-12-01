@@ -24,6 +24,10 @@
   gap: 10px;
 }
 
+.attribute_item_icon {
+  font-size: 20px;
+}
+
 /* الهيدر: الصورة + الاسم + منذ */
 .comment_header {
   display: flex;

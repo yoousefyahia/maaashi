@@ -14,7 +14,27 @@ import { useCookies } from "react-cookie";
 import { LoginForm } from "../Auth/Login";
 import { parseAuthCookie } from "../../utils/auth";
 import { timeSince } from "../SpecificCategory/SpecificCategory";
+import { BiCategory } from "react-icons/bi";
+import { MdOutlineDriveFileRenameOutline, MdDescription } from "react-icons/md";
+import { AiOutlineDollar, AiOutlineInfoCircle, AiOutlineCalendar, AiOutlinePhone } from "react-icons/ai";
+import { FaUser } from "react-icons/fa";
+import { RiFileTextLine } from "react-icons/ri";
 
+
+
+
+const iconsMap = {
+  "الفئة": <BiCategory />,
+  "نوع الإعلان": <MdOutlineDriveFileRenameOutline />,
+  "السعر": <AiOutlineDollar />,
+  "معلومات إضافية": <AiOutlineInfoCircle />,
+  "العنوان": <RiFileTextLine />,
+  "الوصف": <MdDescription />,
+  "اسم البائع": <FaUser />,
+  "رقم البائع": <AiOutlinePhone />,
+  "تاريخ الإنشاء": <AiOutlineCalendar />,
+  "تاريخ التعديل": <AiOutlineCalendar />,
+};
 export function formatFullDate(dateString) {
   const date = new Date(dateString);
   return date.toLocaleString("ar-EG", {
@@ -28,20 +48,26 @@ export function formatFullDate(dateString) {
 
 export function attributeMapForDetails(ad) {
   if (!ad) return {};
+
   const map = {};
+
+  // ترجمة ثابتة للحقول الرئيسية
   if (ad.category?.name) map.category = { label: "الفئة", value: ad.category.name };
   if (ad.type) map.type = { label: "نوع الإعلان", value: ad.type };
   if (ad.price) map.price = { label: "السعر", value: `${ad.price} ريال` };
   if (ad.additional_info) map.additional_info = { label: "معلومات إضافية", value: ad.additional_info };
+  if (ad.title) map.title = { label: "العنوان", value: ad.title };
+  if (ad.description) map.description = { label: "الوصف", value: ad.description };
+  if (ad.seller_name) map.seller_name = { label: "اسم البائع", value: ad.seller_name };
+  if (ad.seller_phone) map.seller_phone = { label: "رقم البائع", value: ad.seller_phone };
 
-  Object.keys(ad).forEach((key) => {
-    if (!map[key] && typeof ad[key] === "string" && ad[key]) {
-      map[key] = { icon: "/icons/default.svg", label: key.replace(/_/g, " "), value: ad[key] };
-    }
-  });
+  // صيغة التاريخ العربي
+  if (ad.created_at) map.created_at = { label: "تاريخ الإنشاء", value: formatFullDate(ad.created_at) };
+  if (ad.updated_at) map.updated_at = { label: "تاريخ التعديل", value: formatFullDate(ad.updated_at) };
 
   return map;
 }
+
 
 export function handleWhatsApp(seller, title) {
   if (!seller || !seller.phone) return;
@@ -120,7 +146,7 @@ const DetailsLayout = () => {
 
         const likedState = {};
         commentsData.forEach(c => {
-          likedState[c.id] = c.is_liked_by_user || false; // لازم الـ API يرسل is_liked_by_user
+          likedState[c.id] = c.is_liked || false; 
         });
 
         setLikedComments(likedState);
@@ -286,6 +312,7 @@ const DetailsLayout = () => {
                 <div className="attributes">
                   {attributesArray.map((item, index) => (
                     <div className="attribute_item" key={index}>
+                      <div className="attribute_item_icon">{iconsMap[item.label]}</div>
                       <div className="attribute_item_text">
                         <span>{item.label}</span>
                         <span>{item.value}</span>
@@ -402,7 +429,7 @@ const DetailsLayout = () => {
                     <img src={cmt.user?.image_profile || "https://api.maaashi.com/storage/users/covers/OnlzSpVMpIsd69gUrrBZ6GzWProUDBwnqcEfyTop.webp"} alt={cmt.user?.name} className="comment_user_img" />
                     <div className="comment_user_info">
                       <h5 className="comment_user_name">{cmt.user?.name}</h5>
-                      <span className="comment_date">{timeSince(cmt.created_at)}</span>
+                      <span className="comment_date"> منذ:{" "}{timeSince(cmt.created_at)}</span>
                     </div>
                   </div>
 
