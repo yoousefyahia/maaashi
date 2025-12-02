@@ -258,6 +258,7 @@ a.mobile_loginBTN{
   }
   .menu-mobile-toggle {
     gap: 10px;
+    flex-wrap: nowrap;
   }
   a.mobile_loginBTN{
     display: block;
