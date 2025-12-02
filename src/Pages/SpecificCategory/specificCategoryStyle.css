@@ -11,7 +11,115 @@
     margin-bottom: 20px;
     border-bottom: 2px solid #dbdbdb;
 }
+/* === Toast Warning === */
+.toast-warning-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 20px;
+}
 
+.toast-warning {
+    background: white;
+    border-radius: 12px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.toast-content {
+    display: flex;
+    align-items: flex-start;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.toast-content svg {
+    color: #ff9800;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.toast-text {
+    flex-grow: 1;
+}
+
+.toast-text strong {
+    display: block;
+    color: #333;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.toast-text p {
+    color: #666;
+    font-size: 14px;
+    margin: 0;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toast-close:hover {
+    color: #333;
+}
+
+.toast-actions {
+    display: flex;
+    padding: 15px 20px;
+    gap: 10px;
+}
+
+.toast-login-btn {
+    flex: 1;
+    background: var(--main-color);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.toast-login-btn:hover {
+    background: #0056b3;
+}
+
+.toast-cancel-btn {
+    flex: 1;
+    background: #f0f0f0;
+    color: #666;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.toast-cancel-btn:hover {
+    background: #e0e0e0;
+}
 .top_section_container {
     max-width: 1160px;
     margin: auto;

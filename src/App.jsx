@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import { parseAuthCookie } from "./utils/auth";
 
-// Layouts بدون lazy
+// Layouts
 import LayoutDashboard from "./LayoutDashboard/LayoutProfile";
 import MainLayout from "./Layouts/MainLayout";
 
@@ -15,7 +15,7 @@ import DetailsLayout from "./Pages/DetailsLayout/DetailsLayout";
 import SettingsUser from "./Pages/DashboardUser/SettingsUser/SettingsUser";
 import AccountUser from "./Pages/DashboardUser/AccountUser/AccountUser";
 
-// Lazy load الباقي
+// Lazy pages
 const AboutUs = lazy(() => import("./Pages/AboutUs/AboutUs"));
 const Blog = lazy(() => import("./Pages/Blog/Blog"));
 const ContactUs = lazy(() => import("./Pages/ContactUs/ContactUs"));
@@ -37,15 +37,18 @@ const App = () => {
   return (
     <Suspense fallback={<div className="lazy_loader" />}>
       <Routes>
+
         {/* صفحات عامة داخل MainLayout */}
         <Route path="/" element={<MainLayout><Home /></MainLayout>} />
         <Route path="/aboutUs" element={<MainLayout><AboutUs /></MainLayout>} />
         <Route path="/blog" element={<MainLayout><Blog /></MainLayout>} />
         <Route path="/contactUs" element={<MainLayout><ContactUs /></MainLayout>} />
-        <Route path="/:details/:id" element={<MainLayout><DetailsLayout /></MainLayout>} />
-        <Route path="/:category" element={<MainLayout><SpecificCategory /></MainLayout>} />
 
-        {/* show any user data */}
+        {/* صفحات الإعلانات */}
+<Route path="/category/:id" element={<MainLayout><SpecificCategory /></MainLayout>} />
+        <Route path="/ad/:id" element={<MainLayout><DetailsLayout /></MainLayout>} />
+
+        {/* show any user */}
         <Route path="/user/:name/:userID" element={<MainLayout><ShowAnyUser /></MainLayout>} />
 
         {/* صفحات Dashboard */}
@@ -57,10 +60,10 @@ const App = () => {
         <Route path="/blogUser" element={<LayoutDashboard><BlogUser /></LayoutDashboard>} />
         <Route path="/helpUser" element={<LayoutDashboard><HelpUser /></LayoutDashboard>} />
 
-        {/* صفحات الإعلانات */}
-        <Route path="/Advertisements" element={<Advertisements />} />
+        {/* صفحة كل الإعلانات */}
+        <Route path="/advertisements" element={<Advertisements />} />
 
-        {/* صفحات تسجيل الدخول */}
+        {/* صفحات Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgotPassword" element={<ForgotPassword />} />

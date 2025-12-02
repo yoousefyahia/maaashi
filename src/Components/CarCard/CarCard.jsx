@@ -146,7 +146,7 @@ const CarCard = () => {
               <div
                 key={ad.id}
                 className="category_card"
-                onClick={() => navigate(`/${ad.category_id}/${ad.id}`)}
+                  onClick={() => navigate(`/ad/${ad.id}`)}
               >
                 <div className="card_image">
                   <img src={ad.images?.[0] || "/placeholder.png"} alt={ad.title} />

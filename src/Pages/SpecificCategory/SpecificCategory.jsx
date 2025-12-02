@@ -6,123 +6,187 @@ import { attributesMap, specificCategoriesData } from '../../data';
 import SaudiRegionsDropdown from '../../Components/AdvertisementsComponents/SaudiRegionsDropdown/SaudiRegionsDropdown';
 import SkeletonCard from '../../Components/SkeletonCard/SkeletonCard';
 import NotFound from '../../Components/NotFound/NotFound';
-import "./specificCategoryStyle.css"
+import "./specificCategoryStyle.css";
 import DatePicker from '../../Components/DatePicker/DatePicker';
 import { useCookies } from 'react-cookie';
 import { ToastWarning } from '../../Components/Header/Header';
 import { parseAuthCookie } from '../../utils/auth';
 
 export default function SpecificCategory() {
-    const { category } = useParams();
+    const { id } = useParams();
     const navigate = useNavigate();
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState(false);
+    const [serverError, setServerError] = useState(false);
     const [categoryData, setCategoryData] = useState([]);
-    const specificCate = specificCategoriesData.find((cat) => category === cat.key) || "اسم الفئة";
+    const [categoryName, setCategoryName] = useState("اسم الفئة");
+    
+    const category = id;
+    
+    // جلب التوكن
+    const [cookies] = useCookies(["token"]);
+    const authData = parseAuthCookie(cookies?.token);
+    const token = authData?.token;
+    
+    // البحث عن اسم الفئة
+    useEffect(() => {
+        if (id) {
+            const fetchCategoryName = async () => {
+                try {
+                    const response = await fetch('https://api.maaashi.com/api/categories');
+                    const data = await response.json();
+                    if (data?.data && Array.isArray(data.data)) {
+                        const foundCategory = data.data.find(cat => cat.id == id);
+                        if (foundCategory) {
+                            setCategoryName(foundCategory.name);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching category name:', error);
+                }
+            };
+            
+            fetchCategoryName();
+        }
+    }, [id]);
 
-    // filtered type
     const [date, setDate] = useState("");
-    const filteredCategoriesDataByDate = categoryData.filter((item) => {
-        if (!date) return true;
-        const itemDate = item.created_at.split(" ")[0];
-        return itemDate === date;
-    });
-
     const [filteredAttributes, setFilteredAttributes] = useState(null);
     const [attributeValue, setAttributeValue] = useState("");
-    const filteredCategoriesData = filteredCategoriesDataByDate.filter((item) => {
-        if (!filteredAttributes) return true;
-        return item.attributes?.[filteredAttributes] === attributeValue;
-    });
-
     const [region, setRegion] = useState("");
-    const filteredCategoriesDataByregion = filteredCategoriesData.filter((item) => {
-        if (!region || region === "كل المناطق") return true;
-        return item?.user?.area === region;
-    });
-
     const [city, setCity] = useState("");
-    const filteredCategoriesDataByCity = filteredCategoriesDataByregion.filter((item) => {
-        if (!city || city === "كل المدن") return true;
-        return item?.user?.city === city;
-    });
-
-    // handle search bar
     const searchInputRef = useRef(null);
     const [searchInput, setSearchInput] = useState("");
+
+    const [showToast, setShowToast] = useState(false);
+    const [favorites, setFavorites] = useState({});
+    const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+
     const handleSearchButton = () => {
         const value = searchInputRef.current.value.trim();
         setSearchInput(value);
     };
 
     const handleSearchKeyDown = (e) => {
-        if (e.key === "Enter") {
-            const value = searchInputRef.current.value.trim();
-            setSearchInput(value);
-        }
+        if (e.key === "Enter") handleSearchButton();
     };
 
-    // Filtered categories by search bar (case-insensitive)
-    const filteredCategoriesDataByTitle = filteredCategoriesDataByCity.filter((item) => item?.information?.title?.toLowerCase().includes(searchInput.toLowerCase().trim()))
     useEffect(() => {
         window.scrollTo(0, 0);
+
+        if (!category) return;
+
         const fetchCategoryData = async () => {
             try {
-                setIsLoading(true)
-                const response = await fetch(`https://api.maaashi.com/api/ealans?category=${category}&per_page=20`);
+                setIsLoading(true);
+                setServerError(false);
+                setErrorMessage(false);
+                
+                const response = await fetch(`https://api.maaashi.com/api/ads/category?category_id=${category}`);
+                
+                if (!response.ok) {
+                    throw new Error(`خطأ في السيرفر: ${response.status}`);
+                }
+                
                 const data = await response.json();
-                if (data.success) {
-                    setCategoryData(data.data.data.ads);
-                    setIsLoading(false);
+                
+                let adsData = [];
+                
+                if (Array.isArray(data)) {
+                    adsData = data;
+                } else if (data?.data && Array.isArray(data.data)) {
+                    adsData = data.data;
+                }
+                
+                if (adsData.length > 0) {
+                    const initialFavorites = {};
+                    adsData.forEach(ad => {
+                        initialFavorites[ad.id] = ad.is_liked || false;
+                    });
+                    setFavorites(initialFavorites);
+                    setCategoryData(adsData);
+                } else {
+                    setCategoryData([]);
                 }
             } catch (error) {
+                console.error("خطأ في جلب البيانات:", error);
+                setServerError(true);
                 setErrorMessage(true);
-                console.log(error);
+                setCategoryData([]);
             } finally {
-                setIsLoading(false)
+                setIsLoading(false);
             }
-        }
+        };
 
         fetchCategoryData();
     }, [category]);
 
-    // 💖 handle favorite toggle
-    const [cookies] = useCookies(["token"]);
-    const { token } = parseAuthCookie(cookies?.token);
-    const [showToast, setShowToast] = useState(false);
-    const [favorites, setFavorites] = useState({});
-    const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
-    const toggleFavorite = (e, id) => {
-        e.stopPropagation();
+    const toggleFavorite = (adId) => {
         setFavorites((prev) => ({
             ...prev,
-            [id]: !prev[id],
+            [adId]: !prev[adId],
         }));
     };
 
-    const addToFavorites = async (category, adId) => {
+    const addToFavorites = async (adId) => {
+        // فقط إذا كان هناك توكن
+        if (!token) {
+            setShowToast(true);
+            return;
+        }
+        
         try {
             setIsFavoriteLoading(true);
-
-            const response = await fetch(
-                `https://api.maaashi.com/api/favorites/${category}/${adId}`,
-                {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-
+            
+            const response = await fetch(`https://api.maaashi.com/api/favorites`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    ad_id: adId
+                })
+            });
+            
             const data = await response.json();
-            console.log(data.data);
-
+            
             if (!response.ok) {
-                setErrorMessage(data?.message || "حدث خطأ أثناء الإضافة للمفضلة.");
+                toggleFavorite(adId); // نرجع الحالة إذا فشلت
+                console.error('Error adding to favorites:', data);
             }
-        } catch {
-            setErrorMessage("فشل الاتصال بالسيرفر أثناء الإضافة.");
+        } catch (error) {
+            console.error("Error adding to favorites:", error);
+            toggleFavorite(adId); // نرجع الحالة إذا فشلت
+        } finally {
+            setIsFavoriteLoading(false);
+        }
+    };
+
+    const removeFromFavorites = async (adId) => {
+        // فقط إذا كان هناك توكن
+        if (!token) {
+            setShowToast(true);
+            return;
+        }
+        
+        try {
+            setIsFavoriteLoading(true);
+            
+            const response = await fetch(`https://api.maaashi.com/api/favorites/${adId}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                }
+            });
+            
+            if (!response.ok) {
+                const data = await response.json();
+                console.error('Error removing from favorites:', data);
+            }
+        } catch (error) {
+            console.error("Error removing from favorites:", error);
         } finally {
             setIsFavoriteLoading(false);
         }
@@ -130,32 +194,97 @@ export default function SpecificCategory() {
 
     const handleFavoriteClick = (e, adID) => {
         e.stopPropagation();
+        
+        // إذا لم يكن هناك توكن، عرض الرسالة فقط
         if (!token) {
             setShowToast(true);
             return;
         }
-        toggleFavorite(e, adID);
-        addToFavorites(category, adID);
+        
+        const isCurrentlyFavorite = favorites[adID];
+        
+        // تغيير الحالة أولاً لتحديث الواجهة مباشرة
+        toggleFavorite(adID);
+        
+        // ثم إرسال الطلب للخادم
+        if (isCurrentlyFavorite) {
+            // إذا كانت مفضلة بالفعل، قم بإزالتها
+            removeFromFavorites(adID);
+        } else {
+            // إذا لم تكن مفضلة، أضفها
+            addToFavorites(adID);
+        }
     };
+
+    // فلترة البيانات
+    const filteredData = React.useMemo(() => {
+        let result = [...categoryData];
+        
+        if (date) {
+            result = result.filter(item => item.created_at && item.created_at.split("T")[0] === date);
+        }
+        
+        if (filteredAttributes && attributeValue) {
+            result = result.filter(item => item.attributes && item.attributes[filteredAttributes] === attributeValue);
+        }
+        
+        if (region && region !== "كل المناطق") {
+            result = result.filter(item => item?.user?.area === region);
+        }
+        
+        if (city && city !== "كل المدن") {
+            result = result.filter(item => item?.user?.city === city);
+        }
+        
+        if (searchInput.trim()) {
+            result = result.filter(item => 
+                item?.title?.toLowerCase().includes(searchInput.toLowerCase().trim())
+            );
+        }
+        
+        return result;
+    }, [categoryData, date, filteredAttributes, attributeValue, region, city, searchInput]);
+
+    const handleRetry = () => {
+        setServerError(false);
+        window.location.reload();
+    };
+
     return (
         <div className='categoryData_container'>
             {isLoading && (
-                <div className='isLoading'>{Array.from({ length: 4 }, (_, i) => (<SkeletonCard key={i} />))}</div>
+                <div className='isLoading'>
+                    <p>جاري تحميل الإعلانات...</p>
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <SkeletonCard key={i} />
+                    ))}
+                </div>
             )}
-            {errorMessage && <NotFound />}
-            {!isLoading && !errorMessage && (
+            
+            {!isLoading && serverError && (
+                <div className="server-error-message">
+                    <div className="error-content">
+                        <h3>لا يمكن الاتصال بالخادم</h3>
+                        <p>يبدو أن هناك مشكلة في الاتصال بالخادم الآن.<br />
+                        يجب التحقق من اتصالك بالإنترنت أو المحاولة لاحقاً.</p>
+                        <button className="retry-button" onClick={handleRetry}>
+                            إعادة المحاولة
+                        </button>
+                    </div>
+                </div>
+            )}
+            
+            {!isLoading && !serverError && (
                 <>
                     <section className='top_section'>
                         <div className="top_section_container">
                             <div className="categoryData_links">
                                 <Link to="/" className="main_link">الرئيسيه </Link>
                                 <IoIosArrowBack className='arr_icon' />
-                                <span className="category_link">{specificCate?.title}</span>
+                                <span className="category_link">{categoryName}</span>
                             </div>
 
                             <div className="categoryData_header">
-                                {/* <h2>{specificCate?.title}</h2>
-                                <p>{specificCate?.desc}</p> */}
                                 <div className="search_input">
                                     <input
                                         type="search"
@@ -163,7 +292,7 @@ export default function SpecificCategory() {
                                         ref={searchInputRef}
                                         onKeyDown={handleSearchKeyDown}
                                         id="searchByTitle"
-                                        placeholder={specificCate.search}
+                                        placeholder={`ابحث في ${categoryName}...`}
                                     />
                                     <button type='button' onClick={handleSearchButton}>
                                         <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-search-icon lucide-search"><path d="m21 21-4.34-4.34" /><circle cx={11} cy={11} r={8} /></svg>
@@ -174,31 +303,24 @@ export default function SpecificCategory() {
                             <div className="attributes_map">
                                 <button
                                     className={!filteredAttributes ? "attri_btn_active" : ""}
-                                    onClick={() => {
-                                        setFilteredAttributes(null);
-                                        setAttributeValue("");
-                                    }}
+                                    onClick={() => { setFilteredAttributes(null); setAttributeValue(""); }}
                                 >
                                     عرض الكل
                                 </button>
-
                                 {attributesMap[category]?.data?.map((item, index) => (
                                     <button
                                         key={index}
-                                        className={filteredAttributes === attributesMap[category].key && attributeValue === item ? "attri_btn_active" : ""}
-                                        onClick={() => { setFilteredAttributes(attributesMap[category].key); setAttributeValue(item); }}
+                                        className={filteredAttributes === attributesMap[category]?.key && attributeValue === item ? "attri_btn_active" : ""}
+                                        onClick={() => { 
+                                            if (attributesMap[category]?.key) {
+                                                setFilteredAttributes(attributesMap[category].key); 
+                                                setAttributeValue(item); 
+                                            }
+                                        }}
                                     >
                                         {item}
                                     </button>
                                 ))}
-
-
-                                {category === "vehicles" &&
-                                    [...new Set(categoryData.map((item) => item.attributes.brand))]
-                                        .map((brand, index) => (
-                                            <button key={index}>{brand}</button>
-                                        ))
-                                }
                             </div>
 
                             <div className="data_Region">
@@ -212,84 +334,167 @@ export default function SpecificCategory() {
 
                     <section className='bottom_section_categoryData'>
                         <div className="bottom_section_categoryData_header">
-                            <div className="">وجدنا لك {filteredCategoriesDataByTitle?.length} خيارًا</div>
-                            <div className=""></div>
+                            <div>وجدنا لك <strong style={{color: 'var(--main-color)'}}>{filteredData.length}</strong> خيارًا</div>
                         </div>
                         <div className="categories_items">
-                            {filteredCategoriesDataByTitle.map((cat) => (
-                                <div
-                                    key={cat.id_ads}
-                                    className={`category_card`}
-                                    onClick={() => navigate(`/${category}/${cat.id_ads}`)}
-                                >
-                                    <div className="card_image">
-                                        <img
-                                            src={cat.images?.[0] ? `https://api.maaashi.com/storage/${cat.images[0]}` : "/placeholder.png"}
-                                            alt={cat?.information?.title}
-                                        />
-                                    </div>
-
-                                    <div className="card_user" onClick={(e) => { e.stopPropagation(); navigate(`/user/${cat?.seller?.name}/${cat?.user?.id_user}`) }}>
-                                        {cat.user?.profile_image ? (
-                                            <img src={cat.user.profile_image} alt="user" />
-                                        ) : (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-circle-user-round-icon lucide-circle-user-round"><path d="M18 20a6 6 0 0 0-12 0" /><circle cx={12} cy={10} r={4} /><circle cx={12} cy={12} r={10} /></svg>
-                                            // <div className="avatar_placeholder">
-                                            //     {cat?.seller?.name?.split(" ").map(word => word[0]).join(" ").toUpperCase()}
-                                            // </div>
-                                        )}
-                                        <span>{cat.seller?.name?.split(" ").slice(0, 2).join(" ")}</span>
-                                    </div>
-
-                                    <div className="card_body">
-                                        <h3>{cat?.information?.title.substring(0, 18)}...</h3>
-                                        <div className="card_meta">
-                                            <div className="ciLocationOn">
-                                                <CiLocationOn style={{ color: "var(--main-color)", fontSize: "12px", fontWeight: "bold" }} />
-                                                <span>{cat?.user?.area || "غير محدد"}</span>
-                                            </div>
-                                            <div className="ciStopwatch">
-                                                <CiStopwatch style={{ color: "var(--main-color)", fontSize: "12px", fontWeight: "bold" }} />
-                                                <span>{timeSince(cat.created_at)}</span>
-                                            </div>
+                            {filteredData.length === 0 ? (
+                                <div className="no-results">
+                                    {categoryData.length === 0 ? (
+                                        <div className="empty-state">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                            </svg>
+                                            <h3>لا توجد إعلانات حالياً</h3>
+                                            <p>لم يتم إضافة إعلانات في قسم {categoryName} بعد.</p>
                                         </div>
-                                    </div>
-                                    <div className="card_footer">
-                                        <div className="card_footer_price">
-                                            <span className=''>{cat?.information?.price} ر.س</span>
+                                    ) : (
+                                        <div className="empty-state">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                                <circle cx="11" cy="11" r="8"></circle>
+                                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                            </svg>
+                                            <h3>لا توجد نتائج</h3>
+                                            <p>لا توجد إعلانات تطابق معايير البحث المحددة.</p>
+                                            <button 
+                                                className="clear-filters-btn"
+                                                onClick={() => {
+                                                    setSearchInput("");
+                                                    setRegion("");
+                                                    setCity("");
+                                                    setDate("");
+                                                    setFilteredAttributes(null);
+                                                    setAttributeValue("");
+                                                    if (searchInputRef.current) {
+                                                        searchInputRef.current.value = "";
+                                                    }
+                                                }}
+                                            >
+                                                مسح جميع الفلاتر
+                                            </button>
                                         </div>
-                                        <div className="hart_icon" onClick={(e) => handleFavoriteClick(e, cat.id_ads)}>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill={favorites[cat.id_ads] ? "red" : "none"} stroke={favorites[cat.id_ads] ? "red" : "currentColor"} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-heart-icon lucide-heart"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg>
-                                        </div>
-                                    </div>
-                                    {/* <Link to={`/${category}/${cat.id_ads}`} className="details_link">
-                                        عرض التفاصيل
-                                    </Link> */}
+                                    )}
                                 </div>
-                            ))}
+                            ) : (
+                                filteredData.map((cat) => (
+                                    <div key={cat.id} className="category_card" onClick={() => navigate(`/ad/${cat.id}`)}>
+                                        <div className="card_image">
+                                            <img 
+                                                src={cat.images?.[0] || "/placeholder.png"} 
+                                                alt={cat?.title || 'إعلان'} 
+                                                onError={(e) => {
+                                                    e.target.src = "/placeholder.png";
+                                                }}
+                                            />
+                                        </div>
+
+                                        <div className="card_user" onClick={(e) => { e.stopPropagation(); navigate(`/user/${cat?.seller_name}/${cat?.user?.id}`) }}>
+                                            {cat.user?.image_profile ? (
+                                                <img src={cat.user.image_profile} alt="user" />
+                                            ) : (
+                                                <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-circle-user-round-icon lucide-circle-user-round">
+                                                    <path d="M18 20a6 6 0 0 0-12 0" />
+                                                    <circle cx={12} cy={10} r={4} />
+                                                    <circle cx={12} cy={12} r={10} />
+                                                </svg>
+                                            )}
+                                            <span>{cat.seller_name?.split(" ").slice(0, 2).join(" ") || "مستخدم"}</span>
+                                        </div>
+
+                                        <div className="card_body">
+                                            <h3>{cat?.title?.substring(0, 18) || "بدون عنوان"}...</h3>
+                                            <div className="card_meta">
+                                                <div className="ciLocationOn">
+                                                    <CiLocationOn style={{ color: "var(--main-color)", fontSize: "12px", fontWeight: "bold" }} />
+                                                    <span>{cat?.user?.area || "غير محدد"}</span>
+                                                </div>
+                                                <div className="ciStopwatch">
+                                                    <CiStopwatch style={{ color: "var(--main-color)", fontSize: "12px", fontWeight: "bold" }} />
+                                                    <span>{cat.created_at ? timeSince(cat.created_at) : "غير محدد"}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="card_footer">
+                                            <div className="card_footer_price">
+                                                <span>{cat?.price || "0"} ر.س</span>
+                                            </div>
+                                            <div className="hart_icon" onClick={(e) => handleFavoriteClick(e, cat.id)}>
+                                                {isFavoriteLoading ? (
+                                                    <span style={{fontSize: '12px'}}>...</span>
+                                                ) : (
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill={favorites[cat.id] ? "red" : "none"} stroke={favorites[cat.id] ? "red" : "currentColor"} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-heart-icon lucide-heart">
+                                                        <path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </section>
                 </>
             )}
+            
+            {/* عرض رسالة التسجيل */}
             {showToast && (
-                <ToastWarning
-                    message="قم بتسجيل الدخول أولاً"
-                    onClose={() => setShowToast(false)}
-                />
+                <div className="toast-warning-overlay">
+                    <div className="toast-warning">
+                        <div className="toast-content">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <div className="toast-text">
+                                <strong>يجب تسجيل الدخول</strong>
+                                <p>قم بتسجيل الدخول أولاً لإضافة الإعلانات إلى المفضلة</p>
+                            </div>
+                            <button 
+                                className="toast-close"
+                                onClick={() => setShowToast(false)}
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <div className="toast-actions">
+                            <button 
+                                className="toast-login-btn"
+                                onClick={() => {
+                                    setShowToast(false);
+                                    navigate('/login');
+                                }}
+                            >
+                                تسجيل الدخول
+                            </button>
+                            <button 
+                                className="toast-cancel-btn"
+                                onClick={() => setShowToast(false)}
+                            >
+                                إلغاء
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
-    )
-};
+    );
+}
 
+// تحويل الأرقام للعربي
 function toArabicNumbers(number) {
     const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
     return number.toString().split("").map(d => arabicNumbers[d] || d).join("");
 }
 
+// تحويل الوقت منذ تاريخ
 export function timeSince(dateString) {
+    if (!dateString) return "غير محدد";
+    
     const now = new Date();
     const past = new Date(dateString.replace(" ", "T"));
-    const dateOnly = dateString.split(" ")[0];
+    const dateOnly = dateString.split("T")[0];
     const diff = now - past;
 
     const seconds = Math.floor(diff / 1000);

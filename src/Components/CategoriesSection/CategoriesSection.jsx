@@ -40,18 +40,25 @@ const CategoriesSection = () => {
         </p>
       </div>
 
-      <div className="categories-grid">
-        {categories.map((cat) => (
-          <Link to={`/category/${cat.id}`} key={cat.id} className="category-card">
-            <div className="icon-box">
-              <img src={cat.image} alt={cat.name} />
-            </div>
-            <h2>{cat.name}</h2>
-            <p>{cat.description}</p>
-            <span className="browse-spen">تصفح القسم</span>
-          </Link>
-        ))}
+<div className="categories-grid">
+  {categories.map((cat) => (
+    <Link
+      key={cat.id}               
+      to={`/category/${cat.id}`}
+      className="category-card"
+    >
+      <div className="icon-box">
+        <img src={cat.image} alt={cat.name} />
       </div>
+
+      <h2>{cat.name}</h2>
+      <p>{cat.description}</p>
+
+      <span className="browse-spen">تصفح القسم</span>
+    </Link>
+  ))}
+</div>
+
     </section>
   );
 };
