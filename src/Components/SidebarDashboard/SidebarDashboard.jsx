@@ -106,6 +106,14 @@ const res = await fetch(
             </li>
             <li onClick={()=>setToggleSidebar(false)}>
               <NavLink
+                to="/MessageUser"
+                className={({ isActive }) => (isActive ? "active" : "")}
+              >
+                <PiTagSimple />
+الرسائل              </NavLink>
+            </li>
+            <li onClick={()=>setToggleSidebar(false)}>
+              <NavLink
                 to="/notifactionsUser"
                 className={({ isActive }) => (isActive ? "active" : "")}
               >

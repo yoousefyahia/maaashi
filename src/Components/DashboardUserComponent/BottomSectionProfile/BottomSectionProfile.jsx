@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./bottomSectionProfile.css";
-import { MdOutlineTimer } from "react-icons/md";
+import { MdOutlineTimer, MdLocationOn } from "react-icons/md";
 import { useCookies } from "react-cookie";
 import { parseAuthCookie } from "../../../utils/auth";
 
 const BottomSectionProfile = () => {
   const [inputDate, setInputDate] = useState("");
-  const [filterDate, setFilterDate] = useState(""); // التاريخ المطبق للفلترة
+  const [filterDate, setFilterDate] = useState("");
   const [showUserAds, setShowUserAds] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -16,6 +17,7 @@ const BottomSectionProfile = () => {
   const [selectedAd, setSelectedAd] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const navigate = useNavigate();
 
   // -------------------- جلب الإعلانات --------------------
   useEffect(() => {
@@ -34,8 +36,8 @@ const BottomSectionProfile = () => {
         );
 
         const dataAds = await response.json();
-        console.log("Data from server:", dataAds); // للتأكد
-        setShowUserAds(dataAds.data || []); // <== هنا المفتاح الصح
+        console.log("Data from server:", dataAds);
+        setShowUserAds(dataAds.data || []);
       } catch {
         setError("فشل الاتصال بالسيرفر.");
       } finally {
@@ -115,8 +117,13 @@ const BottomSectionProfile = () => {
 
   const filteredAds = showUserAds.filter((ad) => {
     if (!filterDate) return true;
-    return ad.created_at.split("T")[0] === filterDate; // فلترة التاريخ مباشرة
+    return ad.created_at.split("T")[0] === filterDate;
   });
+
+  // -------------------- عرض تفاصيل الإعلان --------------------
+  const handleViewAd = (adId) => {
+    navigate(`/ad/${adId}`);
+  };
 
   // -------------------- JSX --------------------
   return (
@@ -147,33 +154,55 @@ const BottomSectionProfile = () => {
               <div className="ad_image_wrapper">
                 <img
                   src={ad.images[0]}
-                  alt={ad.seller_name}
+                  alt={ad.title}
                   className="ad_image"
                 />
               </div>
 
               <div className="ad_content">
-                <div>
+                <div className="ad_info">
                   <h5 className="ad_title">{ad.title}</h5>
-                  <p>{ad.description}</p>
+                  <p className="ad_description">{ad.description}</p>
+                  
                   <div className="ad_meta">
                     <span className="ad_time">
                       <MdOutlineTimer /> {formatTime(ad.created_at)}
                     </span>
+                    {ad.location && (
+                      <span className="ad_location">
+                        <MdLocationOn /> {ad.location}
+                      </span>
+                    )}
+                    {ad.city && (
+                      <span className="ad_city">
+                        <MdLocationOn /> {ad.city}
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                <div className="ad_actions">
-                  <button className="edit_btn">تعديل</button>
-                  <button
-                    className="delete_btn"
-                    onClick={() => {
-                      setSelectedAd({ id: ad.id });
-                      setShowModal(true);
-                    }}
-                  >
-                    حذف
-                  </button>
+                <div className="ad_actions_container">
+                  <div className="ad_actions_right">
+                    <button
+                      className="show_ad_btn"
+                      onClick={() => handleViewAd(ad.id)}
+                    >
+                      عرض الإعلان
+                    </button>
+                  </div>
+                  
+                  <div className="ad_actions_left">
+                    <button className="edit_btn">تعديل</button>
+                    <button
+                      className="delete_btn"
+                      onClick={() => {
+                        setSelectedAd({ id: ad.id });
+                        setShowModal(true);
+                      }}
+                    >
+                      حذف
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

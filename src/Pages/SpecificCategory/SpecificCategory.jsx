@@ -2,14 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { CiLocationOn, CiStopwatch } from 'react-icons/ci';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { IoIosArrowBack } from 'react-icons/io';
-import { attributesMap, specificCategoriesData } from '../../data';
+import { attributesMap } from '../../data';
 import SaudiRegionsDropdown from '../../Components/AdvertisementsComponents/SaudiRegionsDropdown/SaudiRegionsDropdown';
 import SkeletonCard from '../../Components/SkeletonCard/SkeletonCard';
-import NotFound from '../../Components/NotFound/NotFound';
 import "./specificCategoryStyle.css";
 import DatePicker from '../../Components/DatePicker/DatePicker';
 import { useCookies } from 'react-cookie';
-import { ToastWarning } from '../../Components/Header/Header';
 import { parseAuthCookie } from '../../utils/auth';
 
 export default function SpecificCategory() {
@@ -21,14 +19,12 @@ export default function SpecificCategory() {
     const [categoryData, setCategoryData] = useState([]);
     const [categoryName, setCategoryName] = useState("اسم الفئة");
     
-    const category = id;
-    
-    // جلب التوكن
+    // التوكن
     const [cookies] = useCookies(["token"]);
     const authData = parseAuthCookie(cookies?.token);
     const token = authData?.token;
     
-    // البحث عن اسم الفئة
+    // جلب اسم الفئة
     useEffect(() => {
         if (id) {
             const fetchCategoryName = async () => {
@@ -45,7 +41,6 @@ export default function SpecificCategory() {
                     console.error('Error fetching category name:', error);
                 }
             };
-            
             fetchCategoryName();
         }
     }, [id]);
@@ -62,19 +57,27 @@ export default function SpecificCategory() {
     const [favorites, setFavorites] = useState({});
     const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
+    // البحث الفوري عند الكتابة
+    const handleSearchChange = (e) => {
+        setSearchInput(e.target.value);
+    };
+
+    const handleSearchKeyDown = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleSearchButton();
+        }
+    };
+
     const handleSearchButton = () => {
         const value = searchInputRef.current.value.trim();
         setSearchInput(value);
     };
 
-    const handleSearchKeyDown = (e) => {
-        if (e.key === "Enter") handleSearchButton();
-    };
-
     useEffect(() => {
         window.scrollTo(0, 0);
 
-        if (!category) return;
+        if (!id) return;
 
         const fetchCategoryData = async () => {
             try {
@@ -82,7 +85,7 @@ export default function SpecificCategory() {
                 setServerError(false);
                 setErrorMessage(false);
                 
-                const response = await fetch(`https://api.maaashi.com/api/ads/category?category_id=${category}`);
+                const response = await fetch(`https://api.maaashi.com/api/ads/category?category_id=${id}`);
                 
                 if (!response.ok) {
                     throw new Error(`خطأ في السيرفر: ${response.status}`);
@@ -119,7 +122,7 @@ export default function SpecificCategory() {
         };
 
         fetchCategoryData();
-    }, [category]);
+    }, [id]);
 
     const toggleFavorite = (adId) => {
         setFavorites((prev) => ({
@@ -129,7 +132,6 @@ export default function SpecificCategory() {
     };
 
     const addToFavorites = async (adId) => {
-        // فقط إذا كان هناك توكن
         if (!token) {
             setShowToast(true);
             return;
@@ -152,19 +154,18 @@ export default function SpecificCategory() {
             const data = await response.json();
             
             if (!response.ok) {
-                toggleFavorite(adId); // نرجع الحالة إذا فشلت
+                toggleFavorite(adId);
                 console.error('Error adding to favorites:', data);
             }
         } catch (error) {
             console.error("Error adding to favorites:", error);
-            toggleFavorite(adId); // نرجع الحالة إذا فشلت
+            toggleFavorite(adId);
         } finally {
             setIsFavoriteLoading(false);
         }
     };
 
     const removeFromFavorites = async (adId) => {
-        // فقط إذا كان هناك توكن
         if (!token) {
             setShowToast(true);
             return;
@@ -195,7 +196,6 @@ export default function SpecificCategory() {
     const handleFavoriteClick = (e, adID) => {
         e.stopPropagation();
         
-        // إذا لم يكن هناك توكن، عرض الرسالة فقط
         if (!token) {
             setShowToast(true);
             return;
@@ -203,16 +203,25 @@ export default function SpecificCategory() {
         
         const isCurrentlyFavorite = favorites[adID];
         
-        // تغيير الحالة أولاً لتحديث الواجهة مباشرة
         toggleFavorite(adID);
         
-        // ثم إرسال الطلب للخادم
         if (isCurrentlyFavorite) {
-            // إذا كانت مفضلة بالفعل، قم بإزالتها
             removeFromFavorites(adID);
         } else {
-            // إذا لم تكن مفضلة، أضفها
             addToFavorites(adID);
+        }
+    };
+
+    // دالة لمسح جميع الفلاتر
+    const clearAllFilters = () => {
+        setSearchInput("");
+        setRegion("");
+        setCity("");
+        setDate("");
+        setFilteredAttributes(null);
+        setAttributeValue("");
+        if (searchInputRef.current) {
+            searchInputRef.current.value = "";
         }
     };
 
@@ -249,6 +258,9 @@ export default function SpecificCategory() {
         setServerError(false);
         window.location.reload();
     };
+
+    // تحقق إذا كانت جميع الفلاتر مفعلة
+    const isAllFiltersActive = !filteredAttributes && !region && !city && !date && !searchInput;
 
     return (
         <div className='categoryData_container'>
@@ -290,6 +302,8 @@ export default function SpecificCategory() {
                                         type="search"
                                         name="searchByTitle"
                                         ref={searchInputRef}
+                                        value={searchInput}
+                                        onChange={handleSearchChange}
                                         onKeyDown={handleSearchKeyDown}
                                         id="searchByTitle"
                                         placeholder={`ابحث في ${categoryName}...`}
@@ -302,18 +316,18 @@ export default function SpecificCategory() {
 
                             <div className="attributes_map">
                                 <button
-                                    className={!filteredAttributes ? "attri_btn_active" : ""}
-                                    onClick={() => { setFilteredAttributes(null); setAttributeValue(""); }}
+                                    className={isAllFiltersActive ? "attri_btn_active" : ""}
+                                    onClick={clearAllFilters}
                                 >
                                     عرض الكل
                                 </button>
-                                {attributesMap[category]?.data?.map((item, index) => (
+                                {attributesMap[id]?.data?.map((item, index) => (
                                     <button
                                         key={index}
-                                        className={filteredAttributes === attributesMap[category]?.key && attributeValue === item ? "attri_btn_active" : ""}
+                                        className={filteredAttributes === attributesMap[id]?.key && attributeValue === item ? "attri_btn_active" : ""}
                                         onClick={() => { 
-                                            if (attributesMap[category]?.key) {
-                                                setFilteredAttributes(attributesMap[category].key); 
+                                            if (attributesMap[id]?.key) {
+                                                setFilteredAttributes(attributesMap[id].key); 
                                                 setAttributeValue(item); 
                                             }
                                         }}
@@ -335,6 +349,15 @@ export default function SpecificCategory() {
                     <section className='bottom_section_categoryData'>
                         <div className="bottom_section_categoryData_header">
                             <div>وجدنا لك <strong style={{color: 'var(--main-color)'}}>{filteredData.length}</strong> خيارًا</div>
+                            {!isAllFiltersActive && (
+                                <button 
+                                    className="clear-filters-btn"
+                                    onClick={clearAllFilters}
+                                    style={{marginRight: '10px', fontSize: '14px', padding: '5px 10px'}}
+                                >
+                                    ✕ مسح الفلاتر
+                                </button>
+                            )}
                         </div>
                         <div className="categories_items">
                             {filteredData.length === 0 ? (
@@ -359,17 +382,7 @@ export default function SpecificCategory() {
                                             <p>لا توجد إعلانات تطابق معايير البحث المحددة.</p>
                                             <button 
                                                 className="clear-filters-btn"
-                                                onClick={() => {
-                                                    setSearchInput("");
-                                                    setRegion("");
-                                                    setCity("");
-                                                    setDate("");
-                                                    setFilteredAttributes(null);
-                                                    setAttributeValue("");
-                                                    if (searchInputRef.current) {
-                                                        searchInputRef.current.value = "";
-                                                    }
-                                                }}
+                                                onClick={clearAllFilters}
                                             >
                                                 مسح جميع الفلاتر
                                             </button>
@@ -437,7 +450,7 @@ export default function SpecificCategory() {
                 </>
             )}
             
-            {/* عرض رسالة التسجيل */}
+            {/* رسالة التسجيل */}
             {showToast && (
                 <div className="toast-warning-overlay">
                     <div className="toast-warning">

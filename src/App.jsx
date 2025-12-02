@@ -29,6 +29,7 @@ const NotifactionsUser = lazy(() => import("./Pages/DashboardUser/NotifactionsUs
 const FavoritesUser = lazy(() => import("./Pages/DashboardUser/FavoritesUser/FavoritesUser"));
 const BlogUser = lazy(() => import("./Pages/DashboardUser/BlogUser/BlogUser"));
 const HelpUser = lazy(() => import("./Pages/DashboardUser/HelpUser/HelpUser"));
+const MessageUser = lazy(() => import("./Pages/DashboardUser/MessageUser/MessageUser"));
 
 const App = () => {
   const [cookies] = useCookies(["token"]);
@@ -45,7 +46,7 @@ const App = () => {
         <Route path="/contactUs" element={<MainLayout><ContactUs /></MainLayout>} />
 
         {/* صفحات الإعلانات */}
-<Route path="/category/:id" element={<MainLayout><SpecificCategory /></MainLayout>} />
+        <Route path="/category/:id" element={<MainLayout><SpecificCategory /></MainLayout>} />
         <Route path="/ad/:id" element={<MainLayout><DetailsLayout /></MainLayout>} />
 
         {/* show any user */}
@@ -59,7 +60,12 @@ const App = () => {
         <Route path="/settingsUser" element={<LayoutDashboard><SettingsUser /></LayoutDashboard>} />
         <Route path="/blogUser" element={<LayoutDashboard><BlogUser /></LayoutDashboard>} />
         <Route path="/helpUser" element={<LayoutDashboard><HelpUser /></LayoutDashboard>} />
-
+       <Route 
+          path="/MessageUser" 
+          element={
+              <LayoutDashboard><MessageUser /></LayoutDashboard>
+          } 
+        />
         {/* صفحة كل الإعلانات */}
         <Route path="/advertisements" element={<Advertisements />} />
 
