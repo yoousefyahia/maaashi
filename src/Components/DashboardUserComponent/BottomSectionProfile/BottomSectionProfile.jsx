@@ -9,7 +9,7 @@ const BottomSectionProfile = () => {
   const [inputDate, setInputDate] = useState("");
   const [filterDate, setFilterDate] = useState("");
   const [showUserAds, setShowUserAds] = useState([]);
-  const [userData, setUserData] = useState(null); // حالة جديدة لبيانات المستخدم
+  const [userData, setUserData] = useState(null); 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [Cookies] = useCookies(["token"]);
@@ -163,7 +163,6 @@ const BottomSectionProfile = () => {
     }
   };
 
-  // -------------------- JSX --------------------
   return (
     <div className="bottom_section">
       <div className="section_header">

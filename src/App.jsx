@@ -29,7 +29,7 @@ const NotifactionsUser = lazy(() => import("./Pages/DashboardUser/NotifactionsUs
 const FavoritesUser = lazy(() => import("./Pages/DashboardUser/FavoritesUser/FavoritesUser"));
 const BlogUser = lazy(() => import("./Pages/DashboardUser/BlogUser/BlogUser"));
 const HelpUser = lazy(() => import("./Pages/DashboardUser/HelpUser/HelpUser"));
-const MessageUser = lazy(() => import("./Pages/DashboardUser/MessageUser/MessageUser"));
+const ChatApp = lazy(() => import("./Pages/DashboardUser/Chat/ChatApp"));
 
 const App = () => {
   const [cookies] = useCookies(["token"]);
@@ -61,9 +61,9 @@ const App = () => {
         <Route path="/blogUser" element={<LayoutDashboard><BlogUser /></LayoutDashboard>} />
         <Route path="/helpUser" element={<LayoutDashboard><HelpUser /></LayoutDashboard>} />
        <Route 
-          path="/MessageUser" 
+          path="/ChatApp" 
           element={
-              <LayoutDashboard><MessageUser /></LayoutDashboard>
+              <LayoutDashboard><ChatApp /></LayoutDashboard>
           } 
         />
         {/* صفحة كل الإعلانات */}

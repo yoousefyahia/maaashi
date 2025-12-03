@@ -107,7 +107,7 @@ const res = await fetch(
             </li>
             <li onClick={()=>setToggleSidebar(false)}>
               <NavLink
-                to="/MessageUser"
+                to="/ChatApp"
                 className={({ isActive }) => (isActive ? "active" : "")}
               >
                 <TiMessage />

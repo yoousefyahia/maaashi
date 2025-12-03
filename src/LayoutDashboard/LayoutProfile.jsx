@@ -15,7 +15,7 @@ const LayoutProfile = ({ children }) => {
   const location = useLocation();
 
   // الصفحات اللي مش عاوز يظهر فيها الناف بار
-  const navNone = ["/messageUser"];
+  const navNone = ["/ChatApp"];
 
   const [toggleSidebar, setToggleSidebar] = useState(false);
   const sidebarRef = useRef(null);
@@ -73,7 +73,7 @@ const LayoutProfile = ({ children }) => {
       title: "مركز المساعده ",
       desc: "اعثر على إجابات لأسئلتك وتعلّم كيف تستخدم ماشي بسهولة",
     },
-      "/MessageUser": {
+      "/ChatApp": {
       title: "مركز الرسائل ",
       desc:" تواصل مع المشترين والبائعين بسهولة من خلال مركز الرسائل الخاص بك",
     },

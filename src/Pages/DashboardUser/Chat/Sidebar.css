@@ -1,0 +1,498 @@
+/* متغيرات الألوان */
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --primary-color: #667eea;
+  --danger-color: #ff4757;
+  --text-dark: #333;
+  --text-light: #666;
+  --text-lighter: #999;
+  --bg-white: #ffffff;
+  --bg-light: #f8f9fa;
+  --border-color: #e0e0e0;
+  --shadow-light: rgba(0, 0, 0, 0.05);
+  --shadow-medium: rgba(0, 0, 0, 0.1);
+  --shadow-dark: rgba(0, 0, 0, 0.15);
+  --transition-speed: 0.3s;
+  --border-radius: 8px;
+}
+
+/* الوضع الداكن */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-white: #1e1e1e;
+    --bg-light: #2d2d2d;
+    --text-dark: #ffffff;
+    --text-light: #aaa;
+    --text-lighter: #777;
+    --border-color: #333;
+    --shadow-light: rgba(0, 0, 0, 0.2);
+    --shadow-medium: rgba(0, 0, 0, 0.3);
+    --shadow-dark: rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* الشريط الجانبي - جميع الشاشات */
+.sidebar {
+  width: 350px;
+  background-color: var(--bg-white);
+  border-left: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition-speed) ease;
+  height: 100vh;
+  position: relative;
+  direction: rtl;
+  box-shadow: 2px 0 10px var(--shadow-light);
+  z-index: 1000;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+/* هيدر الشريط */
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-white);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 5px var(--shadow-light);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  color: var(--text-dark);
+  font-size: 22px;
+  font-weight: 600;
+  transition: opacity var(--transition-speed) ease;
+}
+
+.sidebar.collapsed .sidebar-header h2 {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+/* زر التبديل */
+.toggle-btn {
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all var(--transition-speed) ease;
+  flex-shrink: 0;
+  box-shadow: 0 4px 6px rgba(102, 126, 234, 0.2);
+  position: relative;
+}
+
+.toggle-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 8px rgba(102, 126, 234, 0.3);
+}
+
+.toggle-btn:active {
+  transform: scale(0.95);
+}
+
+/* محتوى الشريط */
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  transition: opacity var(--transition-speed) ease;
+}
+
+.sidebar.collapsed .sidebar-content {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* شارة الرسائل غير المقروءة */
+.unread-badge {
+  background: linear-gradient(135deg, #ff6b6b 0%, var(--danger-color) 100%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 12px;
+  min-width: 20px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+}
+
+/* التحميل */
+.loading {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-light);
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* حالة عدم وجود محادثات */
+.no-chats {
+  padding: 60px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  opacity: 0.5;
+  margin-bottom: 10px;
+}
+
+.no-chats p {
+  color: var(--text-light);
+  margin: 0;
+  font-size: 16px;
+}
+
+/* ========== تحسينات للجوال ========== */
+
+/* الجوال - الشاشات الصغيرة */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 85vw;
+    max-width: 320px;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    transform: translateX(0);
+    transition: transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 20px var(--shadow-medium);
+    z-index: 1001;
+    border-left: none;
+    border-radius: 0;
+  }
+  
+  .sidebar.mobile.collapsed {
+    transform: translateX(100%);
+  }
+  
+  .sidebar-header {
+    padding: 16px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .header-content {
+    width: 100%;
+  }
+  
+  .sidebar-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+  }
+  
+  .toggle-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.25);
+  }
+  
+  /* محتوى الشريط على الجوال */
+  .sidebar-content {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* شريط التمرير على الجوال */
+  .sidebar-content::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .sidebar-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .sidebar-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+  }
+}
+
+/* الجوال - الشاشات الصغيرة جداً */
+@media (max-width: 480px) {
+  .sidebar {
+    width: 90vw;
+    max-width: 300px;
+  }
+  
+  .sidebar-header {
+    padding: 14px;
+  }
+  
+  .sidebar-header h2 {
+    font-size: 18px;
+  }
+  
+  .toggle-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+  
+  .unread-badge {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+}
+
+/* الجوال - الوضع الأفقي */
+@media (max-height: 500px) and (max-width: 768px) {
+  .sidebar {
+    height: 100vh;
+    overflow-y: auto;
+  }
+  
+  .sidebar-header {
+    position: relative;
+  }
+}
+
+/* زر عائم للجوال */
+.floating-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  z-index: 1000;
+  box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3);
+  transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+  position: fixed;
+  animation: floatIn 0.5s ease;
+}
+
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.floating-toggle:hover {
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+}
+
+.floating-toggle:active {
+  transform: scale(0.95);
+}
+
+.floating-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: var(--danger-color);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 12px;
+  min-width: 20px;
+  text-align: center;
+  border: 2px solid var(--bg-white);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* طبقة شفافة لإغلاق الشريط */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  animation: fadeIn var(--transition-speed) ease;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.sidebar-overlay.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* دعم حواف الآيفون */
+@supports (padding: max(0px)) {
+  .floating-toggle {
+    top: max(100px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
+  }
+}
+
+/* تحسينات الأداء للجوال */
+@media (max-width: 768px) {
+  .sidebar,
+  .sidebar-overlay,
+  .floating-toggle {
+    will-change: transform, opacity;
+  }
+}
+
+/* تحسينات اللمس للجوال */
+@media (hover: none) and (pointer: coarse) {
+  .toggle-btn,
+  .floating-toggle {
+    min-height: 44px; /* الحد الأدنى لمساحة اللمس */
+    min-width: 44px;
+  }
+  
+  .toggle-btn:hover,
+  .floating-toggle:hover {
+    transform: none;
+  }
+  
+  .toggle-btn:active,
+  .floating-toggle:active {
+    transform: scale(0.95);
+  }
+}
+
+/* تحسينات للوضع الداكن على الجوال */
+@media (prefers-color-scheme: dark) and (max-width: 768px) {
+  .sidebar {
+    box-shadow: 4px 0 20px var(--shadow-dark);
+  }
+  
+  .floating-toggle {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  }
+  
+  .sidebar-overlay {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+  
+  .sidebar-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* تأثيرات إضافية للجوال */
+.sidebar.mobile:not(.collapsed) {
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.sidebar.mobile.collapsed {
+  animation: slideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* تحسينات للأجهزة ذات الشاشات الكبيرة (تابلت) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sidebar {
+    width: 300px;
+  }
+  
+  .floating-toggle {
+    display: none;
+  }
+  
+  .sidebar-overlay {
+    display: none !important;
+  }
+}
+
+/* تحسينات التمرير السلس */
+.sidebar-content {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* منع التكبير على الحقول النصية على الجوال */
+@media (max-width: 768px) {
+  .sidebar-content * {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+}
