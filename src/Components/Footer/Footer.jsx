@@ -140,7 +140,7 @@ const Footer = () => {
             <span>الاشعارات</span>
           </Link>
         </div>
-        <div>
+        <div  onClick={() => handleCheckLogout("/MessageUser")}>
           <Link>
             <TiMessage />
             <span>الرسائل</span>

@@ -226,7 +226,53 @@
   color: var(--color);
   transform: translateY(-2px);
 }
+/* أنماط معلومات موقع المستخدم */
+.user_location_info {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
+.location_header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #495057;
+  font-weight: 600;
+}
+
+.location_details {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.location_item {
+  background-color: #e9ecef;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #495057;
+}
+
+/* أنماط موقع الإعلان */
+.ad_location_info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.ad_location_info svg {
+  color: #dc3545;
+}
 .edit_btn {
   background-color: transparent;
   border: 1px solid#1ABC9C;

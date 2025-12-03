@@ -9,6 +9,7 @@ import {
 } from "react-icons/io";
 import { MdFavoriteBorder } from "react-icons/md";
 import { AiOutlineSetting } from "react-icons/ai";
+import { TiMessage } from "react-icons/ti";
 import { RiBloggerLine } from "react-icons/ri";
 import { useCookies } from "react-cookie";
 import { parseAuthCookie } from "../../utils/auth";
@@ -109,7 +110,7 @@ const res = await fetch(
                 to="/MessageUser"
                 className={({ isActive }) => (isActive ? "active" : "")}
               >
-                <PiTagSimple />
+                <TiMessage />
 الرسائل              </NavLink>
             </li>
             <li onClick={()=>setToggleSidebar(false)}>
