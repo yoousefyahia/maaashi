@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import ChatWindow from './ChatWindow';
 import { useCookies } from 'react-cookie';
-import { parseAuthCookie } from '../../../utils/auth';
+import { parseAuthCookie } from '../../../utils/auth'; // استخدم النسخة الجديدة
 import './ChatApp.css';
 import axios from 'axios';
 
@@ -13,7 +13,9 @@ const ChatApp = () => {
   const { user_id } = useParams();
   const navigate = useNavigate();
   const [cookies] = useCookies(["token"]);
-  const { token: userToken } = parseAuthCookie(cookies?.token);
+  
+  // 🔥 هنا نجيب التوكن + الـ User ID + بيانات اليوزر كلها
+  const { token: userToken, userId: currentUserId, user: currentUser } = parseAuthCookie(cookies?.token);
   
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
@@ -21,30 +23,24 @@ const ChatApp = () => {
   const [loading, setLoading] = useState(true);
   const [conversationId, setConversationId] = useState(null);
   const [isStartingNewChat, setIsStartingNewChat] = useState(false);
-  const [currentUserInfo, setCurrentUserInfo] = useState(null);
 
-  // 🔧 دالة لتفكيك الـ JWT Token والحصول على الـ ID
-  const getUserIdFromToken = () => {
-    if (!userToken) return null;
-    
-    try {
-      // الـ JWT Token بيكون بالشكل: header.payload.signature
-      const payload = userToken.split('.')[1];
-      const decodedPayload = JSON.parse(atob(payload));
-      
-      // هنا بيكون الـ ID موجود في الـ token
-      // ممكن يكون في حقل: id, user_id, sub (subject)
-      return decodedPayload.id || decodedPayload.user_id || decodedPayload.sub;
-    } catch (error) {
-      console.error('Error decoding token:', error);
-      return null;
+  // تحقق من التوكن أولاً
+  useEffect(() => {
+    if (!userToken) {
+      navigate('/login');
+      return;
     }
-  };
+  }, [userToken, navigate]);
 
-  // 🔧 أو نستخدم API لجلب المعلومات
-  const fetchCurrentUser = async () => {
-    if (!userToken) return null;
+  // 🌟 رهان آمن: الـ currentUserId هي من التوكن مباشرة
+  // وإذا كانت null، نستخدم API كـ backup
+  const getCurrentUserId = async () => {
+    // 1. الأولوية: الـ User ID من التوكن
+    if (currentUserId) {
+      return currentUserId;
+    }
     
+    // 2. إذا مفيش من التوكن، نجيب من الـ API
     try {
       const response = await axios.get(`${BASE_URL}/user/profile`, {
         headers: { 
@@ -53,18 +49,17 @@ const ChatApp = () => {
         }
       });
       
-      if (response.data.data) {
-        setCurrentUserInfo(response.data.data);
+      if (response.data.data?.id) {
         return response.data.data.id;
       }
-      return null;
     } catch (error) {
-      console.error('Error fetching current user:', error);
-      return null;
+      console.error('Error fetching user profile:', error);
     }
+    
+    return null;
   };
 
-  // جلب المحادثات
+  // 🔧 جلب المحادثات
   const fetchConversations = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/conversations`, {
@@ -81,7 +76,7 @@ const ChatApp = () => {
     }
   };
 
-  // إنشاء محادثة جديدة
+  // 🔧 إنشاء محادثة جديدة
   const startConversation = async (userId) => {
     try {
       setIsStartingNewChat(true);
@@ -104,7 +99,7 @@ const ChatApp = () => {
     }
   };
 
-  // جلب رسائل محادثة معينة
+  // 🔧 جلب رسائل محادثة
   const fetchMessages = async (convId) => {
     try {
       const response = await axios.get(
@@ -123,7 +118,7 @@ const ChatApp = () => {
     }
   };
 
-  // إرسال رسالة
+  // 🔧 إرسال رسالة
   const sendMessage = async (convId, messageContent) => {
     try {
       const response = await axios.post(
@@ -149,17 +144,12 @@ const ChatApp = () => {
 
   // 🌟 تحميل البيانات الأولية
   useEffect(() => {
-    if (!userToken) {
-      navigate('/login');
-      return;
-    }
-
     const loadInitialData = async () => {
       try {
         setLoading(true);
         
-        // 1. جلب معلومات المستخدم الحالي
-        const currentUserId = await fetchCurrentUser();
+        // 1. جلب الـ User ID (من التوكن أولاً)
+        const myUserId = await getCurrentUserId();
         
         // 2. جلب المحادثات
         const conversations = await fetchConversations();
@@ -179,9 +169,9 @@ const ChatApp = () => {
         
         setChats(formattedChats);
 
-        // التعامل مع user_id إذا كان موجوداً في الـ URL
+        // 3. التعامل مع user_id من الـ URL
         if (user_id) {
-          await handleUserChat(user_id, formattedChats, currentUserId);
+          await handleUserChat(user_id, formattedChats, myUserId);
         } else if (formattedChats.length > 0) {
           await selectChat(formattedChats[0]);
         }
@@ -192,29 +182,31 @@ const ChatApp = () => {
       }
     };
 
-    loadInitialData();
+    if (userToken) {
+      loadInitialData();
+    }
   }, [userToken, user_id]);
 
   // 🌟 التعامل مع محادثة مستخدم معين
-  const handleUserChat = async (userId, existingChats = chats, currentUserId) => {
+  const handleUserChat = async (targetUserId, existingChats = chats, myUserId) => {
     try {
-      const targetUserId = parseInt(userId);
+      const targetId = parseInt(targetUserId);
       
-      if (isNaN(targetUserId)) {
-        console.error('Invalid user ID:', userId);
+      if (isNaN(targetId)) {
+        console.error('Invalid user ID:', targetUserId);
         return;
       }
       
-      // 🔧 التحقق من أن المستخدم لا يحاول إنشاء محادثة مع نفسه
-      // هنا نحتاج الـ currentUserId من الـ API
-      if (currentUserId && currentUserId === targetUserId) {
+      // 🔥 التحقق من عدم المحادثة مع النفس
+      if (myUserId && myUserId === targetId) {
         alert('لا يمكنك إنشاء محادثة مع نفسك');
+        navigate('/ChatApp'); // نرجع للصفحة الرئيسية للمحادثات
         return;
       }
 
-      // البحث عن محادثة موجودة مع هذا المستخدم
+      // البحث عن محادثة موجودة
       const existingChat = existingChats.find(
-        chat => chat.other_user?.id === targetUserId
+        chat => chat.other_user?.id === targetId
       );
 
       if (existingChat) {
@@ -222,7 +214,7 @@ const ChatApp = () => {
       } else {
         try {
           setIsStartingNewChat(true);
-          const newConversation = await startConversation(targetUserId);
+          const newConversation = await startConversation(targetId);
           
           const newChat = {
             id: newConversation.conversation_id,
@@ -254,7 +246,7 @@ const ChatApp = () => {
     }
   };
 
-  // اختيار محادثة و تحميل رسائلها
+  // اختيار محادثة
   const selectChat = async (chat) => {
     try {
       setSelectedChat(chat);
@@ -262,12 +254,11 @@ const ChatApp = () => {
       
       const chatMessages = await fetchMessages(chat.conversation_id);
       
-      // 🌟 هنا الباكند هو الذي يحدد is_mine
-      // لا نحتاج لمقارنة IDs في الفرونتند
+      // الباكند هو اللي بيحدد is_mine
       const formattedMessages = chatMessages.map(msg => ({
         id: msg.id,
         content: msg.message,
-        is_mine: msg.is_mine,  // 🔥 هذا يأتي من الباكند
+        is_mine: msg.is_mine, // 🔥 دا من الباكند
         sender: msg.sender,
         timestamp: msg.created_at,
         timestampHuman: msg.created_at_human || msg.created_at,
@@ -285,12 +276,12 @@ const ChatApp = () => {
     if (!selectedChat || !content.trim() || !conversationId) return;
 
     try {
-      // إنشاء رسالة مؤقتة للعرض الفوري
+      // إنشاء رسالة مؤقتة
       const tempMessage = {
         id: Date.now(),
         content,
-        is_mine: true,  // 🔥 نفترض أنها رسالتي لأني أنا الذي أرسل
-        sender: currentUserInfo,
+        is_mine: true, // نفترض إنها رسالتي
+        sender: currentUser, // بياناتي من التوكن
         timestamp: new Date().toISOString(),
         timestampHuman: 'الآن',
         is_read: false
@@ -298,10 +289,10 @@ const ChatApp = () => {
 
       setMessages(prev => [...prev, tempMessage]);
 
-      // إرسال الرسالة للخادم
+      // إرسال للخادم
       const sentMessage = await sendMessage(conversationId, content);
 
-      // تحديث قائمة المحادثات
+      // تحديث القائمة
       setChats(prev => 
         prev.map(chat => 
           chat.conversation_id === conversationId
@@ -318,13 +309,13 @@ const ChatApp = () => {
         )
       );
       
-      // استبدال الرسالة المؤقتة بالرسالة الرسمية
+      // استبدال الرسالة المؤقتة
       setMessages(prev => 
         prev.filter(msg => msg.id !== tempMessage.id).concat([{
           id: sentMessage.id,
           content: sentMessage.message,
-          is_mine: sentMessage.is_mine || true,  // 🔥 تأتي من الباكند
-          sender: sentMessage.sender || currentUserInfo,
+          is_mine: sentMessage.is_mine || true,
+          sender: sentMessage.sender || currentUser,
           timestamp: sentMessage.created_at,
           timestampHuman: sentMessage.created_at_human,
           is_read: sentMessage.is_read
@@ -338,7 +329,7 @@ const ChatApp = () => {
     }
   };
 
-  // تحديث المحادثات تلقائياً
+  // تحديث تلقائي
   useEffect(() => {
     if (!userToken || !selectedChat) return;
 
