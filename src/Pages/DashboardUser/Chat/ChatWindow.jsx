@@ -1,4 +1,3 @@
-// ChatWindow.jsx
 import React, { useRef, useEffect } from 'react';
 import Message from './Message';
 import MessageInput from './MessageInput';
@@ -16,34 +15,27 @@ const ChatWindow = ({ chat, messages, onSendMessage }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // تنسيق تاريخ آخر ظهور
   const getLastSeen = () => {
-    // يمكنك إضافة منطق لجلب آخر وقت ظهور للمستخدم
-    // حالياً نعرض الوقت الأخير للنشاط
     if (chat.last_message_at) {
       return `آخر نشاط: ${chat.last_message_at}`;
     }
     return 'غير متصل';
   };
 
-  // دالة لعرض الصورة أو الحرف الأول
   const renderAvatar = () => {
     if (chat.image_profile) {
-      // إذا كانت هناك صورة
       return (
         <img 
           src={chat.image_profile} 
           alt={chat.name}
           className="chat-avatar-image"
           onError={(e) => {
-            // إذا فشل تحميل الصورة، نعرض الحرف الأول
             e.target.style.display = 'none';
             e.target.parentNode.querySelector('.avatar-fallback').style.display = 'flex';
           }}
         />
       );
     }
-    // إذا لم تكن هناك صورة، نعرض الحرف الأول
     return (
       <div className="avatar-fallback">
         {chat.avatar}
@@ -83,7 +75,7 @@ const ChatWindow = ({ chat, messages, onSendMessage }) => {
                 <Message 
                   key={message.id} 
                   message={message}
-                  isUser={message.sender === 'user'}
+                  isUser={message.is_mine}
                 />
               ))}
               <div ref={messagesEndRef} />

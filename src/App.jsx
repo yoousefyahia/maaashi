@@ -65,7 +65,7 @@ const App = () => {
         {/* صفحة كل الإعلانات */}
         <Route path="/advertisements" element={<Advertisements />} />
 
-        {/* صفحات Auth */}
+        {/* صفحات Auth */} 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgotPassword" element={<ForgotPassword />} />

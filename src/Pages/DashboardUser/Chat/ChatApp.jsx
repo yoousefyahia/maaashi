@@ -1,6 +1,5 @@
-// ChatApp.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import ChatWindow from './ChatWindow';
 import { useCookies } from 'react-cookie';
@@ -12,7 +11,6 @@ const BASE_URL = 'https://api.maaashi.com/api';
 
 const ChatApp = () => {
   const { user_id } = useParams();
-  const location = useLocation();
   const navigate = useNavigate();
   const [cookies] = useCookies(["token"]);
   const { token: userToken } = parseAuthCookie(cookies?.token);
@@ -23,8 +21,50 @@ const ChatApp = () => {
   const [loading, setLoading] = useState(true);
   const [conversationId, setConversationId] = useState(null);
   const [isStartingNewChat, setIsStartingNewChat] = useState(false);
+  const [currentUserInfo, setCurrentUserInfo] = useState(null);
 
-  // جلب المحادثات الموجودة
+  // 🔧 دالة لتفكيك الـ JWT Token والحصول على الـ ID
+  const getUserIdFromToken = () => {
+    if (!userToken) return null;
+    
+    try {
+      // الـ JWT Token بيكون بالشكل: header.payload.signature
+      const payload = userToken.split('.')[1];
+      const decodedPayload = JSON.parse(atob(payload));
+      
+      // هنا بيكون الـ ID موجود في الـ token
+      // ممكن يكون في حقل: id, user_id, sub (subject)
+      return decodedPayload.id || decodedPayload.user_id || decodedPayload.sub;
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return null;
+    }
+  };
+
+  // 🔧 أو نستخدم API لجلب المعلومات
+  const fetchCurrentUser = async () => {
+    if (!userToken) return null;
+    
+    try {
+      const response = await axios.get(`${BASE_URL}/user/profile`, {
+        headers: { 
+          Authorization: `Bearer ${userToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.data.data) {
+        setCurrentUserInfo(response.data.data);
+        return response.data.data.id;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching current user:', error);
+      return null;
+    }
+  };
+
+  // جلب المحادثات
   const fetchConversations = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/conversations`, {
@@ -100,54 +140,49 @@ const ChatApp = () => {
         }
       );
       
-      // تحويل الاستجابة لتتوافق مع الشكل المطلوب
-      const sentMessage = response.data.data;
-      return {
-        id: sentMessage.id,
-        content: sentMessage.message,
-        sender_id: sentMessage.sender_id,
-        created_at: sentMessage.created_at,
-        created_at_human: sentMessage.created_at_human
-      };
+      return response.data.data;
     } catch (error) {
       console.error('Error sending message:', error);
       throw error;
     }
   };
 
-  // تحميل المحادثات عند فتح التطبيق
+  // 🌟 تحميل البيانات الأولية
   useEffect(() => {
     if (!userToken) {
       navigate('/login');
       return;
     }
 
-    const loadChats = async () => {
+    const loadInitialData = async () => {
       try {
         setLoading(true);
+        
+        // 1. جلب معلومات المستخدم الحالي
+        const currentUserId = await fetchCurrentUser();
+        
+        // 2. جلب المحادثات
         const conversations = await fetchConversations();
         
-              // تحويل البيانات لتتوافق مع المكونات
-      const formattedChats = conversations.map(conv => ({
-        id: conv.conversation_id,
-        conversation_id: conv.conversation_id,
-        name: conv.other_user.name,
-        avatar: conv.other_user.name?.charAt(0) || 'U',
-        image_profile: conv.other_user.image_profile,
-        lastMessage: conv.last_message?.message || 'بدأ المحادثة',
-        lastTime: conv.last_message_at || 'الآن',
-        unreadCount: conv.unread_count || 0,
-        other_user: conv.other_user,
-        last_message: conv.last_message
-      }));
+        const formattedChats = conversations.map(conv => ({
+          id: conv.conversation_id,
+          conversation_id: conv.conversation_id,
+          name: conv.other_user.name,
+          avatar: conv.other_user.name?.charAt(0) || 'U',
+          image_profile: conv.other_user.image_profile,
+          lastMessage: conv.last_message?.message || 'بدأ المحادثة',
+          lastTime: conv.last_message_at || 'الآن',
+          unreadCount: conv.unread_count || 0,
+          other_user: conv.other_user,
+          last_message: conv.last_message
+        }));
         
         setChats(formattedChats);
 
-        // إذا كان هناك user_id في الـ URL، نتعامل مع محادثة مستخدم معين
+        // التعامل مع user_id إذا كان موجوداً في الـ URL
         if (user_id) {
-          await handleUserChat(user_id, formattedChats);
+          await handleUserChat(user_id, formattedChats, currentUserId);
         } else if (formattedChats.length > 0) {
-          // إذا لا يوجد user_id، نفتح أول محادثة
           await selectChat(formattedChats[0]);
         }
       } catch (error) {
@@ -157,43 +192,61 @@ const ChatApp = () => {
       }
     };
 
-    loadChats();
+    loadInitialData();
   }, [userToken, user_id]);
 
-  // التعامل مع محادثة مستخدم معين
-  const handleUserChat = async (userId, existingChats = chats) => {
+  // 🌟 التعامل مع محادثة مستخدم معين
+  const handleUserChat = async (userId, existingChats = chats, currentUserId) => {
     try {
+      const targetUserId = parseInt(userId);
+      
+      if (isNaN(targetUserId)) {
+        console.error('Invalid user ID:', userId);
+        return;
+      }
+      
+      // 🔧 التحقق من أن المستخدم لا يحاول إنشاء محادثة مع نفسه
+      // هنا نحتاج الـ currentUserId من الـ API
+      if (currentUserId && currentUserId === targetUserId) {
+        alert('لا يمكنك إنشاء محادثة مع نفسك');
+        return;
+      }
+
       // البحث عن محادثة موجودة مع هذا المستخدم
       const existingChat = existingChats.find(
-        chat => chat.other_user?.id.toString() === userId.toString()
+        chat => chat.other_user?.id === targetUserId
       );
 
       if (existingChat) {
-        // إذا كانت المحادثة موجودة، نفتحها
         await selectChat(existingChat);
       } else {
-        // إذا لم تكن موجودة، ننشئ محادثة جديدة
         try {
-          const newConversation = await startConversation(userId);
+          setIsStartingNewChat(true);
+          const newConversation = await startConversation(targetUserId);
           
           const newChat = {
             id: newConversation.conversation_id,
             conversation_id: newConversation.conversation_id,
             name: newConversation.other_user.name,
             avatar: newConversation.other_user.name?.charAt(0) || 'U',
+            image_profile: newConversation.other_user.image_profile,
             lastMessage: 'بدأ المحادثة',
             lastTime: 'الآن',
             unreadCount: 0,
             other_user: newConversation.other_user
           };
           
-          // إضافة المحادثة الجديدة في البداية
           setChats(prev => [newChat, ...prev]);
           await selectChat(newChat);
         } catch (error) {
           console.error('Failed to start conversation:', error);
-          // عرض رسالة خطأ للمستخدم
-          alert('فشل في بدء المحادثة. يرجى المحاولة مرة أخرى.');
+          if (error.response?.status === 400) {
+            alert('لا يمكن إنشاء محادثة مع هذا المستخدم');
+          } else {
+            alert('فشل في بدء المحادثة. يرجى المحاولة مرة أخرى.');
+          }
+        } finally {
+          setIsStartingNewChat(false);
         }
       }
     } catch (error) {
@@ -209,15 +262,16 @@ const ChatApp = () => {
       
       const chatMessages = await fetchMessages(chat.conversation_id);
       
-      // تحويل الرسائل لتتوافق مع مكون Message
+      // 🌟 هنا الباكند هو الذي يحدد is_mine
+      // لا نحتاج لمقارنة IDs في الفرونتند
       const formattedMessages = chatMessages.map(msg => ({
         id: msg.id,
         content: msg.message,
-        sender: msg.sender_id === chat.other_user?.id ? 'other' : 'user',
-        senderName: msg.sender_id === chat.other_user?.id ? chat.name : 'أنت',
+        is_mine: msg.is_mine,  // 🔥 هذا يأتي من الباكند
+        sender: msg.sender,
         timestamp: msg.created_at,
         timestampHuman: msg.created_at_human || msg.created_at,
-        read: msg.is_read || true
+        is_read: msg.is_read || true
       }));
       
       setMessages(formattedMessages);
@@ -231,21 +285,17 @@ const ChatApp = () => {
     if (!selectedChat || !content.trim() || !conversationId) return;
 
     try {
-      // معرف المستخدم الحالي (يجب أن يكون متوفراً من الـ API)
-      const currentUserId = 41; 
-      
       // إنشاء رسالة مؤقتة للعرض الفوري
       const tempMessage = {
         id: Date.now(),
         content,
-        sender: 'user',
-        senderName: 'أنت',
+        is_mine: true,  // 🔥 نفترض أنها رسالتي لأني أنا الذي أرسل
+        sender: currentUserInfo,
         timestamp: new Date().toISOString(),
         timestampHuman: 'الآن',
-        read: true
+        is_read: false
       };
 
-      // إضافة الرسالة المؤقتة
       setMessages(prev => [...prev, tempMessage]);
 
       // إرسال الرسالة للخادم
@@ -258,57 +308,53 @@ const ChatApp = () => {
             ? { 
                 ...chat, 
                 lastMessage: content,
-                lastTime: 'الآن'
+                lastTime: 'الآن',
+                last_message: {
+                  message: content,
+                  created_at: new Date().toISOString()
+                }
               }
             : chat
         )
       );
       
       // استبدال الرسالة المؤقتة بالرسالة الرسمية
-      const newMessage = {
-        id: sentMessage.id,
-        content: sentMessage.content,
-        sender: sentMessage.sender_id === currentUserId ? 'user' : 'other',
-        senderName: sentMessage.sender_id === currentUserId ? 'أنت' : selectedChat.name,
-        timestamp: sentMessage.created_at,
-        timestampHuman: sentMessage.created_at_human,
-        read: true
-      };
-      
-      // استبدال الرسالة المؤقتة بالرسالة الحقيقية
       setMessages(prev => 
-        prev.map(msg => 
-          msg.id === tempMessage.id ? newMessage : msg
-        ).filter(msg => msg.id !== tempMessage.id) // إزالة الرسالة المؤقتة إذا لم تكن موجودة
+        prev.filter(msg => msg.id !== tempMessage.id).concat([{
+          id: sentMessage.id,
+          content: sentMessage.message,
+          is_mine: sentMessage.is_mine || true,  // 🔥 تأتي من الباكند
+          sender: sentMessage.sender || currentUserInfo,
+          timestamp: sentMessage.created_at,
+          timestampHuman: sentMessage.created_at_human,
+          is_read: sentMessage.is_read
+        }])
       );
       
     } catch (error) {
       console.error('Error sending message:', error);
-      // إزالة الرسالة المؤقتة في حالة الخطأ
       setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
       alert('فشل في إرسال الرسالة. يرجى المحاولة مرة أخرى.');
     }
   };
 
-  // تحديث المحادثات تلقائياً كل 30 ثانية
+  // تحديث المحادثات تلقائياً
   useEffect(() => {
-    if (!userToken) return;
+    if (!userToken || !selectedChat) return;
 
     const interval = setInterval(async () => {
-      if (selectedChat) {
-        const updatedMessages = await fetchMessages(selectedChat.conversation_id);
-        const formattedMessages = updatedMessages.map(msg => ({
-          id: msg.id,
-          content: msg.message,
-          sender: msg.sender_id === selectedChat.other_user?.id ? 'other' : 'user',
-          senderName: msg.sender_id === selectedChat.other_user?.id ? selectedChat.name : 'أنت',
-          timestamp: msg.created_at,
-          timestampHuman: msg.created_at_human || msg.created_at,
-          read: msg.is_read || true
-        }));
-        setMessages(formattedMessages);
-      }
-    }, 30000); // كل 30 ثانية
+      const updatedMessages = await fetchMessages(selectedChat.conversation_id);
+      const formattedMessages = updatedMessages.map(msg => ({
+        id: msg.id,
+        content: msg.message,
+        is_mine: msg.is_mine,
+        sender: msg.sender,
+        timestamp: msg.created_at,
+        timestampHuman: msg.created_at_human || msg.created_at,
+        is_read: msg.is_read || true
+      }));
+      setMessages(formattedMessages);
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [userToken, selectedChat]);

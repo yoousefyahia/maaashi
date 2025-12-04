@@ -1,12 +1,23 @@
-// Message.jsx
 import React from 'react';
 import './Message.css';
 
 const Message = ({ message, isUser }) => {
+  // تحديد إذا كانت الرسالة من المستخدم الحالي
+  const isUserMessage = () => {
+    if (typeof isUser !== 'undefined') return isUser;
+    if (typeof message.is_mine !== 'undefined') return message.is_mine;
+    return false;
+  };
+
+  const userMessage = isUserMessage();
+  
   const formatTime = (timestamp) => {
+    if (message.created_at_human) {
+      return message.created_at_human;
+    }
+    
     if (!timestamp) return 'الآن';
     
-    // إذا كان التنسيق "X hours ago"
     if (typeof timestamp === 'string' && timestamp.includes('ago')) {
       return timestamp;
     }
@@ -37,17 +48,17 @@ const Message = ({ message, isUser }) => {
 
   // عرض صورة المرسل (للرسائل من الآخرين فقط)
   const renderSenderAvatar = () => {
-    if (isUser) return null;
+    if (userMessage) return null;
     
-    // يمكنك تمرير صورة المرسل مع الرسالة أو استخدام صورة افتراضية
-    const senderImage = message.senderImage || null;
+    const senderImage = message.sender?.image_profile || null;
+    const senderName = message.sender?.name || 'مرسل';
     
     if (senderImage) {
       return (
         <div className="message-sender-avatar">
           <img 
             src={senderImage} 
-            alt={message.senderName}
+            alt={senderName}
             className="avatar-image-small"
             onError={(e) => {
               e.target.style.display = 'none';
@@ -55,7 +66,7 @@ const Message = ({ message, isUser }) => {
             }}
           />
           <div className="avatar-fallback-small" style={{ display: 'none' }}>
-            {message.senderName?.charAt(0) || '?'}
+            {senderName?.charAt(0) || '?'}
           </div>
         </div>
       );
@@ -64,34 +75,34 @@ const Message = ({ message, isUser }) => {
     return (
       <div className="message-sender-avatar">
         <div className="avatar-fallback-small">
-          {message.senderName?.charAt(0) || '?'}
+          {senderName?.charAt(0) || '?'}
         </div>
       </div>
     );
   };
 
   return (
-    <div className={`message-container ${isUser ? 'user-message' : 'other-message'}`}>
-      {!isUser && renderSenderAvatar()}
+    <div className={`message-container ${userMessage ? 'user-message' : 'other-message'}`}>
+      {!userMessage && renderSenderAvatar()}
       
       <div className="message-content-wrapper">
-        {!isUser && (
+        {!userMessage && (
           <div className="message-sender-name">
-            <span>{message.senderName}</span>
+            <span>{message.sender?.name || 'مرسل'}</span>
           </div>
         )}
         
         <div className="message-content">
           <div className="message-text">
-            <p>{message.content}</p>
+            <p>{message.message || message.content}</p>
           </div>
           <div className="message-meta">
             <span className="message-time">
-              {message.timestampHuman || formatTime(message.timestamp)}
+              {formatTime(message.created_at || message.timestamp)}
             </span>
-            {isUser && (
+            {userMessage && (
               <span className="message-status">
-                {message.read ? '✓✓' : '✓'}
+                {message.is_read ? '✓✓' : '✓'}
               </span>
             )}
           </div>

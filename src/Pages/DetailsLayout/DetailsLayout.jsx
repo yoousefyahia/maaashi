@@ -8,7 +8,7 @@ import { MdOutlineShield } from "react-icons/md";
 import { AiOutlineSend } from "react-icons/ai";
 import { IoCallOutline } from "react-icons/io5";
 import { LuMessageCircleMore } from "react-icons/lu";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import { LoginForm } from "../Auth/Login";
@@ -19,9 +19,6 @@ import { MdOutlineDriveFileRenameOutline, MdDescription } from "react-icons/md";
 import { AiOutlineDollar, AiOutlineInfoCircle, AiOutlineCalendar, AiOutlinePhone } from "react-icons/ai";
 import { FaUser } from "react-icons/fa";
 import { RiFileTextLine } from "react-icons/ri";
-
-
-
 
 const iconsMap = {
   "الفئة": <BiCategory />,
@@ -35,6 +32,7 @@ const iconsMap = {
   "تاريخ الإنشاء": <AiOutlineCalendar />,
   "تاريخ التعديل": <AiOutlineCalendar />,
 };
+
 export function formatFullDate(dateString) {
   const date = new Date(dateString);
   return date.toLocaleString("ar-EG", {
@@ -68,7 +66,6 @@ export function attributeMapForDetails(ad) {
   return map;
 }
 
-
 export function handleWhatsApp(seller, title) {
   if (!seller || !seller.phone) return;
   let phone = seller.phone.trim().replace(/\s+/g, "").replace(/^\+/, "");
@@ -82,6 +79,7 @@ const DetailsLayout = () => {
   const [cookies] = useCookies(["token"]);
   const { token: userToken } = parseAuthCookie(cookies?.token);
   const [loginModel, setLoginModel] = useState(false);
+  const navigate = useNavigate();
 
   const { details, id } = useParams();
   const [categories, setCategories] = useState([]);
@@ -91,7 +89,7 @@ const DetailsLayout = () => {
 
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
-  const [likedComments, setLikedComments] = useState({}); // لتخزين حالة اللايك
+  const [likedComments, setLikedComments] = useState({});
 
   const images = ad_details?.images || [];
 
@@ -146,7 +144,7 @@ const DetailsLayout = () => {
 
         const likedState = {};
         commentsData.forEach(c => {
-          likedState[c.id] = c.is_liked || false; 
+          likedState[c.id] = c.is_liked || false;
         });
 
         setLikedComments(likedState);
@@ -162,6 +160,22 @@ const DetailsLayout = () => {
     document.body.style.overflow = loginModel ? "hidden" : "auto";
     return () => (document.body.style.overflow = "auto");
   }, [loginModel]);
+
+  // دالة التعامل مع زر الرسالة
+  const handleMessageClick = () => {
+    if (!userToken) {
+      setLoginModel(true);
+      return;
+    }
+
+    if (!ad_details?.user?.id) {
+      console.error('User ID not found in ad details');
+      alert('لا يمكن العثور على معلومات البائع');
+      return;
+    }
+
+    navigate(`/ChatApp/${ad_details.user.id}`);
+  };
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
@@ -193,7 +207,7 @@ const DetailsLayout = () => {
     }));
     setComments(prev =>
       prev.map(c =>
-        c.id === commentId 
+        c.id === commentId
           ? { ...c, likes_count: c.likes_count + (isLiked ? -1 : 1) }
           : c
       )
@@ -215,14 +229,13 @@ const DetailsLayout = () => {
       }
     } catch (err) {
       console.error("Error updating like:", err);
-      // لو حصل خطأ، نرجع الحالة زي ما كانت
       setLikedComments(prev => ({
         ...prev,
         [commentId]: isLiked,
       }));
       setComments(prev =>
         prev.map(c =>
-          c.id === commentId 
+          c.id === commentId
             ? { ...c, likes_count: c.likes_count + (isLiked ? 1 : -1) }
             : c
         )
@@ -381,11 +394,12 @@ const DetailsLayout = () => {
                   <button className="details-left-top-user-btn1" onClick={() => setLoginModel(true)}>
                     <IoCallOutline /> تواصل
                   </button>
-                    <Link to={`/ChatApp/${ad_details?.user_id}`}>
-                    <button className="details-left-top-user-btn2">
-                      <LuMessageCircleMore /> رساله
-                    </button>
-                  </Link>
+                  <button
+                    className="details-left-top-user-btn2"
+                    onClick={handleMessageClick}
+                  >
+                    <LuMessageCircleMore /> رساله
+                  </button>
                 </div>
               </div>
 
@@ -463,11 +477,28 @@ const DetailsLayout = () => {
               <div className="model_content">
                 <p>التواصل مع العارض</p>
                 <a href={`tel:${ad_details?.user?.phone}`} className="sellerPhone">{ad_details?.user?.phone}</a>
+                <button
+                  className="message-button"
+                  onClick={() => {
+                    setLoginModel(false);
+                    navigate(`/ChatApp/${ad_details?.user?.id}`);
+                  }}
+                >
+                  <LuMessageCircleMore /> إرسال رسالة
+                </button>
               </div>
             ) : (
-              <div>
+              <div className="login-modal-content">
                 <h1>تسجيل الدخول</h1>
-                <LoginForm />
+                <p>يجب تسجيل الدخول لإرسال رسالة</p>
+                <LoginForm
+                  onLoginSuccess={() => {
+                    setLoginModel(false);
+                    if (ad_details?.user?.id) {
+                      navigate(`/ChatApp/${ad_details.user.id}`);
+                    }
+                  }}
+                />
               </div>
             )}
           </div>

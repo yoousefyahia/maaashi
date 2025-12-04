@@ -5,7 +5,236 @@
   max-width: 70%;
   animation: fadeIn 0.3s ease;
 }
+.message-container {
+  display: flex;
+  flex-direction: column;
+  margin: 8px 15px;
+  max-width: 70%;
+  animation: fadeIn 0.3s ease;
+}
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* رسائل المستخدم (على اليمين - لون أزرق) */
+.user-message {
+  align-self: flex-end;
+  align-items: flex-end;
+  margin-left: auto;
+  flex-direction: row-reverse;
+}
+
+.user-message .message-content {
+  background: linear-gradient(135deg, #0084ff 0%, #0066cc 100%);
+  color: white;
+  border-radius: 18px 18px 4px 18px;
+  box-shadow: 0 2px 5px rgba(0, 132, 255, 0.2);
+  position: relative;
+  padding: 12px 16px;
+  margin-bottom: 4px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: fit-content;
+  margin-right: 0;
+}
+
+.user-message .message-content::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: -8px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid #0084ff;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+
+.user-message .message-text p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: right;
+  direction: rtl;
+  white-space: pre-wrap;
+}
+
+.user-message .message-meta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  direction: ltr;
+}
+
+.user-message .message-time {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  opacity: 0.8;
+}
+
+.user-message .message-status {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* رسائل الآخرين (على اليسار - لون أبيض/فاتح) */
+.other-message {
+  align-self: flex-start;
+  align-items: flex-start;
+  margin-right: auto;
+  flex-direction: row;
+}
+
+.other-message .message-content {
+  background-color: #ffffff;
+  color: #333;
+  border-radius: 18px 18px 18px 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  position: relative;
+  padding: 12px 16px;
+  margin-bottom: 4px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: fit-content;
+  margin-left: 0;
+}
+
+.other-message .message-content::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -8px;
+  width: 0;
+  height: 0;
+  border-right: 8px solid #ffffff;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+
+.other-message .message-text p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: right;
+  direction: rtl;
+  white-space: pre-wrap;
+}
+
+.other-message .message-meta {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  direction: ltr;
+}
+
+.other-message .message-time {
+  font-size: 11px;
+  color: #666;
+  opacity: 0.8;
+}
+
+/* معلومات المرسل للرسائل من الآخرين */
+.message-sender-avatar {
+  margin-left: 8px;
+  margin-right: 8px;
+  align-self: flex-start;
+  margin-top: 5px;
+}
+
+.avatar-image-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-fallback-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.message-sender-name {
+  margin-bottom: 4px;
+  padding-right: 4px;
+}
+
+.message-sender-name span {
+  font-size: 13px;
+  color: #555;
+  font-weight: 600;
+}
+
+.message-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+
+/* تحسين للوضع الداكن */
+@media (prefers-color-scheme: dark) {
+  .other-message .message-content {
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+    border-color: #404040;
+  }
+  
+  .other-message .message-content::before {
+    border-right-color: #2d2d2d;
+  }
+  
+  .other-message .message-time {
+    color: #aaa;
+  }
+  
+  .message-sender-name span {
+    color: #bbb;
+  }
+}
+
+/* التجاوب مع الشاشات الصغيرة */
+@media (max-width: 768px) {
+  .message-container {
+    max-width: 85%;
+    margin: 6px 10px;
+  }
+  
+  .user-message .message-content,
+  .other-message .message-content {
+    padding: 10px 14px;
+  }
+  
+  .user-message .message-text p,
+  .other-message .message-text p {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .message-container {
+    max-width: 90%;
+  }
+}
 @keyframes fadeIn {
   from {
     opacity: 0;
