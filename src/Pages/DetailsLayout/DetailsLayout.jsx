@@ -381,9 +381,11 @@ const DetailsLayout = () => {
                   <button className="details-left-top-user-btn1" onClick={() => setLoginModel(true)}>
                     <IoCallOutline /> تواصل
                   </button>
-                  <button className="details-left-top-user-btn2">
-                    <LuMessageCircleMore /> رساله
-                  </button>
+                    <Link to={`/ChatApp/${ad_details?.user_id}`}>
+                    <button className="details-left-top-user-btn2">
+                      <LuMessageCircleMore /> رساله
+                    </button>
+                  </Link>
                 </div>
               </div>
 

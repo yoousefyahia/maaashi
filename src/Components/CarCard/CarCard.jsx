@@ -152,31 +152,26 @@ const CarCard = () => {
                   <img src={ad.images?.[0] || "/placeholder.png"} alt={ad.title} />
                 </div>
 
-                <div
-                  className="card_user"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/user/${ad.seller_name}/${ad.user_id}`);
-                  }}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width={22}
-                    height={22}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide-circle-user-round-icon"
-                  >
-                    <path d="M18 20a6 6 0 0 0-12 0" />
-                    <circle cx={12} cy={10} r={4} />
-                    <circle cx={12} cy={12} r={10} />
-                  </svg>
-                  <span>{ad.seller_name}</span>
-                </div>
+                <div className="card_user">
+                  { ad?.user.image_profile ? (
+                      <img
+                          src={ad?.user.image_profile }
+                          alt="user"
+                      />
+                  ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 20a6 6 0 0 0-12 0" />
+                          <circle cx={12} cy={10} r={4} />
+                          <circle cx={12} cy={12} r={10} />
+                      </svg>
+                  )}
+
+                  <span>
+                      {ad?.seller_name.split(" ").slice(0, 2).join(" ") ||
+                          "مستخدم"}
+                  </span>
+              </div>
+
 
                 <div className="card_body">
                   <h2>{ad.title.substring(0, 18)}...</h2>

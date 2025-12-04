@@ -60,12 +60,8 @@ const App = () => {
         <Route path="/settingsUser" element={<LayoutDashboard><SettingsUser /></LayoutDashboard>} />
         <Route path="/blogUser" element={<LayoutDashboard><BlogUser /></LayoutDashboard>} />
         <Route path="/helpUser" element={<LayoutDashboard><HelpUser /></LayoutDashboard>} />
-       <Route 
-          path="/ChatApp" 
-          element={
-              <LayoutDashboard><ChatApp /></LayoutDashboard>
-          } 
-        />
+       <Route path="/ChatApp"element={<LayoutDashboard><ChatApp /></LayoutDashboard>}/>
+        <Route path="/ChatApp/:user_id" element={<LayoutDashboard><ChatApp /></LayoutDashboard>}/>
         {/* صفحة كل الإعلانات */}
         <Route path="/advertisements" element={<Advertisements />} />
 

@@ -189,7 +189,11 @@
   margin: 0;
   font-size: 16px;
 }
-
+.sidebar-content.no-scrollbar {
+  overflow-y: scroll; 
+  -ms-overflow-style: none; 
+  scrollbar-width: none;
+}
 /* ========== تحسينات للجوال ========== */
 
 /* الجوال - الشاشات الصغيرة */
