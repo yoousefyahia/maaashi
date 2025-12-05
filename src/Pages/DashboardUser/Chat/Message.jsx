@@ -16,24 +16,38 @@ const Message = ({ message, isUser }) => {
       return message.created_at_human;
     }
     
+    if (message.timestampHuman) {
+      return message.timestampHuman;
+    }
+    
     if (!timestamp) return 'الآن';
     
-    if (typeof timestamp === 'string' && timestamp.includes('ago')) {
-      return timestamp;
+    if (typeof timestamp === 'string') {
+      if (timestamp.includes('ago')) {
+        return timestamp;
+      }
+      
+      // تحويل من API format
+      if (timestamp.includes('seconds')) {
+        return 'الآن';
+      }
     }
     
     try {
       const date = new Date(timestamp);
-      if (isNaN(date.getTime())) return timestamp;
+      if (isNaN(date.getTime())) return 'الآن';
       
       const now = new Date();
       const diffMs = now - date;
       const diffMins = Math.floor(diffMs / 60000);
       const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / (3600000 * 24));
       
       if (diffMins < 1) return 'الآن';
       if (diffMins < 60) return `قبل ${diffMins} دقيقة`;
       if (diffHours < 24) return `قبل ${diffHours} ساعة`;
+      if (diffDays === 1) return 'أمس';
+      if (diffDays < 7) return `قبل ${diffDays} أيام`;
       
       return date.toLocaleDateString('ar-EG', {
         day: 'numeric',
@@ -42,16 +56,31 @@ const Message = ({ message, isUser }) => {
         minute: '2-digit'
       });
     } catch {
-      return timestamp;
+      return 'الآن';
     }
+  };
+
+  // الحصول على نص الرسالة
+  const getMessageText = () => {
+    return message.message || message.content || '';
+  };
+
+  // الحصول على اسم المرسل
+  const getSenderName = () => {
+    return message.sender?.name || message.sender_name || 'مرسل';
+  };
+
+  // الحصول على صورة المرسل
+  const getSenderImage = () => {
+    return message.sender?.image_profile || message.image_profile;
   };
 
   // عرض صورة المرسل (للرسائل من الآخرين فقط)
   const renderSenderAvatar = () => {
     if (userMessage) return null;
     
-    const senderImage = message.sender?.image_profile || null;
-    const senderName = message.sender?.name || 'مرسل';
+    const senderImage = getSenderImage();
+    const senderName = getSenderName();
     
     if (senderImage) {
       return (
@@ -62,7 +91,8 @@ const Message = ({ message, isUser }) => {
             className="avatar-image-small"
             onError={(e) => {
               e.target.style.display = 'none';
-              e.target.parentNode.querySelector('.avatar-fallback-small').style.display = 'flex';
+              const fallback = e.target.parentNode.querySelector('.avatar-fallback-small');
+              if (fallback) fallback.style.display = 'flex';
             }}
           />
           <div className="avatar-fallback-small" style={{ display: 'none' }}>
@@ -88,13 +118,13 @@ const Message = ({ message, isUser }) => {
       <div className="message-content-wrapper">
         {!userMessage && (
           <div className="message-sender-name">
-            <span>{message.sender?.name || 'مرسل'}</span>
+            <span>{getSenderName()}</span>
           </div>
         )}
         
         <div className="message-content">
           <div className="message-text">
-            <p>{message.message || message.content}</p>
+            <p>{getMessageText()}</p>
           </div>
           <div className="message-meta">
             <span className="message-time">

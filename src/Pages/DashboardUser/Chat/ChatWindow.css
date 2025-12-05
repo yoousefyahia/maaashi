@@ -7,12 +7,30 @@
     font-family: 'Segoe UI', 'Noto Sans Arabic', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* الرسائل */
+.message.mine { background-color: #DCF8C6; align-self: flex-end; }
+.message.other { background-color: #FFF; align-self: flex-start; }
+
+.message-content {
+    padding: 10px 15px;
+    border-radius: 15px;
+    max-width: 70%;
+    position: relative;
+}
+
+.message-time {
+    font-size: 12px;
+    color: #999;
+    margin-top: 3px;
+    display: block;
+    text-align: right;
+}
+
 /* رأس الشات */
 .chat-header {
     background-color: #ffffff;
     padding: 15px 20px;
     border-bottom: 1px solid #e0e0e0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -21,11 +39,7 @@
     z-index: 100;
 }
 
-.chat-header-info {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
+.chat-header-info { display: flex; align-items: center; gap: 15px; }
 
 .chat-avatar {
     width: 45px;
@@ -38,15 +52,9 @@
     justify-content: center;
     font-size: 18px;
     font-weight: bold;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.chat-header-info h3 {
-    margin: 0;
-    color: #333;
-    font-size: 18px;
-    font-weight: 600;
-}
+.chat-header-info h3 { margin: 0; color: #333; font-size: 18px; font-weight: 600; }
 
 .status {
     margin: 5px 0 0 0;
@@ -66,77 +74,21 @@
     display: inline-block;
 }
 
-.status.offline::before {
-    background-color: #9e9e9e;
-}
-
-.status.typing::before {
-    background-color: #ff9800;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
-
-.chat-actions {
-    display: flex;
-    gap: 15px;
-}
-
-.chat-actions button {
-    background: none;
-    border: none;
-    color: #666;
-    cursor: pointer;
-    font-size: 18px;
-    padding: 5px;
-    border-radius: 50%;
-    transition: all 0.2s;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.chat-actions button:hover {
-    background-color: #f0f0f0;
-    color: #333;
-}
+.status.offline::before { background-color: #9e9e9e; }
 
 /* منطقة الرسائل */
 .messages-container {
     flex: 1;
     overflow-y: auto;
     padding: 20px;
-    background: 
-        linear-gradient(rgba(248, 249, 250, 0.9), rgba(248, 249, 250, 0.9)),
-        url('data:image/svg+xml,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M30,30 Q50,20 70,30 T90,50 Q80,70 70,70 T50,90 Q20,80 30,30" fill="%23e0e0e0" opacity="0.05"/></svg>');
-    background-size: 200px;
+    background: #f8f9fa;
     scroll-behavior: smooth;
 }
 
 /* شريط التمرير */
-.messages-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.messages-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-.messages-container::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-.messages-container::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
-}
+.messages-container::-webkit-scrollbar { width: 6px; }
+.messages-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+.messages-container::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
 
 /* رسالة "لا توجد محادثة" */
 .no-messages {
@@ -150,411 +102,65 @@
     padding: 40px;
 }
 
-.no-messages p {
-    font-size: 18px;
-    margin-bottom: 20px;
-    color: #999;
-}
-
-.start-conversation-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 25px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 500;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 6px rgba(102, 126, 234, 0.2);
-}
-
-.start-conversation-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 8px rgba(102, 126, 234, 0.3);
-}
-
-/* تاريخ الفاصل */
-.date-separator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 20px 0;
-}
-
-.date-separator span {
-    background-color: rgba(0, 0, 0, 0.1);
-    color: #666;
-    padding: 5px 15px;
-    border-radius: 15px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-/* رسالة أول رسالة */
-.first-message {
-    text-align: center;
-    margin: 30px auto;
-    padding: 20px;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-    border-radius: 15px;
-    max-width: 400px;
-    border: 2px dashed rgba(102, 126, 234, 0.3);
-}
-
-.first-message h4 {
-    color: #667eea;
-    margin-bottom: 10px;
-}
-
-.first-message p {
-    color: #666;
-    font-size: 14px;
-}
-
-/* مؤشر التحميل */
-.loading-messages {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-}
-
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #667eea;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 15px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
 /* المنطقة السفلية للشات */
 .chat-footer {
     background-color: #ffffff;
     padding: 15px 20px;
     border-top: 1px solid #e0e0e0;
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
-}
-
-/* حالة الاتصال */
-.connection-status {
-    padding: 8px 15px;
-    text-align: center;
-    font-size: 13px;
-    border-radius: 10px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-    from {
-        transform: translateY(10px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-.connection-status.online {
-    background-color: rgba(76, 175, 80, 0.1);
-    color: #2e7d32;
-}
-
-.connection-status.offline {
-    background-color: rgba(158, 158, 158, 0.1);
-    color: #616161;
-}
-
-.connection-status.reconnecting {
-    background-color: rgba(255, 152, 0, 0.1);
-    color: #ef6c00;
-}
-
-/* إخفاء المحادثة المحددة */
-.hidden-chat {
-    opacity: 0.5;
-    filter: blur(1px);
-    pointer-events: none;
-    user-select: none;
-}
-
-/* مؤشر الرسائل الجديدة */
-.new-messages-indicator {
-    position: sticky;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    animation: bounce 2s infinite;
-    z-index: 10;
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(-5px); }
-}
-
-/* رسائل منسوخة */
-.message-copied {
-    position: fixed;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 14px;
-    animation: fadeInOut 2s ease;
-    z-index: 1000;
-}
-
-@keyframes fadeInOut {
-    0%, 100% { opacity: 0; transform: translateX(-50%) translateY(10px); }
-    20%, 80% { opacity: 1; transform: translateX(-50%) translateY(0); }
-}
-
-/* تأثيرات دخول الرسائل */
-.message-enter {
-    opacity: 0;
-    transform: translateY(20px);
-}
-
-.message-enter-active {
-    opacity: 1;
-    transform: translateY(0);
-    transition: opacity 300ms, transform 300ms;
-}
-
-/* أدوات الرسالة */
-.message-tools {
-    position: absolute;
-    top: -30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    display: flex;
-    gap: 5px;
-    padding: 5px;
-    z-index: 10;
-}
-
-.message-tool {
-    background: none;
-    border: none;
-    padding: 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    color: #666;
-    font-size: 16px;
-    transition: all 0.2s;
-}
-
-.message-tool:hover {
-    background-color: #f0f0f0;
-    color: #333;
 }
 
 /* التجاوب مع الشاشات */
 @media (max-width: 768px) {
-    .chat-window {
-        height: calc(100vh - 60px);
-    }
-    
-    .chat-header {
-        padding: 12px 15px;
-    }
-    
-    .chat-avatar {
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
-    }
-    
-    .chat-header-info h3 {
-        font-size: 16px;
-    }
-    
-    .messages-container {
-        padding: 15px 10px;
-    }
-    
-    .chat-actions button {
-        width: 35px;
-        height: 35px;
-        font-size: 16px;
-    }
-    
-    .first-message {
-        margin: 20px 10px;
-        padding: 15px;
-    }
+    .chat-window { height: calc(100vh - 60px); }
+    .chat-header { padding: 12px 15px; }
+    .chat-avatar { width: 40px; height: 40px; font-size: 16px; }
+    .chat-header-info h3 { font-size: 16px; }
+    .messages-container { padding: 15px 10px; }
 }
 
 @media (max-width: 480px) {
-    .chat-header {
-        padding: 10px;
-    }
-    
-    .chat-avatar {
-        width: 35px;
-        height: 35px;
-        font-size: 14px;
-    }
-    
-    .chat-header-info h3 {
-        font-size: 14px;
-    }
-    
-    .status {
-        font-size: 11px;
-    }
-    
-    .messages-container {
-        padding: 10px 5px;
-    }
-    
-    .new-messages-indicator {
-        font-size: 11px;
-        padding: 6px 12px;
-    }
+    .chat-header { padding: 10px; }
+    .chat-avatar { width: 35px; height: 35px; font-size: 14px; }
+    .chat-header-info h3 { font-size: 14px; }
+    .status { font-size: 11px; }
+    .messages-container { padding: 10px 5px; }
+}
+/* تحميل الرسائل */
+.messages-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+  text-align: center;
+  animation: fadeIn 0.5s ease;
 }
 
-/* الوضع الداكن */
-@media (prefers-color-scheme: dark) {
-    .chat-window {
-        background-color: #121212;
-    }
-    
-    .chat-header {
-        background-color: #1e1e1e;
-        border-bottom-color: #333;
-    }
-    
-    .chat-header-info h3 {
-        color: #ffffff;
-    }
-    
-    .status {
-        color: #b0b0b0;
-    }
-    
-    .messages-container {
-        background: 
-            linear-gradient(rgba(18, 18, 18, 0.95), rgba(18, 18, 18, 0.95)),
-            url('data:image/svg+xml,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M30,30 Q50,20 70,30 T90,50 Q80,70 70,70 T50,90 Q20,80 30,30" fill="%23333" opacity="0.05"/></svg>');
-    }
-    
-    .messages-container::-webkit-scrollbar-track {
-        background: #2d2d2d;
-    }
-    
-    .messages-container::-webkit-scrollbar-thumb {
-        background: #555;
-    }
-    
-    .messages-container::-webkit-scrollbar-thumb:hover {
-        background: #777;
-    }
-    
-    .no-messages p {
-        color: #999;
-    }
-    
-    .date-separator span {
-        background-color: rgba(255, 255, 255, 0.1);
-        color: #aaa;
-    }
-    
-    .first-message {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
-        border-color: rgba(102, 126, 234, 0.3);
-    }
-    
-    .first-message h4 {
-        color: #8a9eff;
-    }
-    
-    .first-message p {
-        color: #aaa;
-    }
-    
-    .loading-spinner {
-        border-color: #444;
-        border-top-color: #667eea;
-    }
-    
-    .chat-footer {
-        background-color: #1e1e1e;
-        border-top-color: #333;
-    }
-    
-    .connection-status {
-        background-color: rgba(255, 255, 255, 0.05);
-    }
-    
-    .message-tools {
-        background-color: #2d2d2d;
-    }
-    
-    .message-tool {
-        color: #aaa;
-    }
-    
-    .message-tool:hover {
-        background-color: #3d3d3d;
-        color: #fff;
-    }
+.messages-loading .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
 }
 
-/* تحسينات للطباعة */
-@media print {
-    .chat-header,
-    .chat-footer,
-    .new-messages-indicator,
-    .connection-status,
-    .chat-actions {
-        display: none;
-    }
-    
-    .chat-window {
-        height: auto;
-        background: none;
-    }
-    
-    .messages-container {
-        overflow: visible;
-        height: auto;
-        padding: 0;
-    }
-    
-    .message-container {
-        break-inside: avoid;
-    }
+.messages-loading .loading-spinner.large {
+  width: 60px;
+  height: 60px;
+  border-width: 4px;
+}
+
+.messages-loading p {
+  color: var(--text-dark);
+  font-size: 18px;
+  margin: 0 0 10px 0;
+  font-weight: 500;
+}
+
+.messages-loading small {
+  color: var(--text-light);
+  font-size: 14px;
 }

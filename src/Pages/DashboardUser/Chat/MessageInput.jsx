@@ -19,19 +19,21 @@ const MessageInput = ({ onSendMessage }) => {
   };
 
   return (
-    <form className="message-input-form" onSubmit={handleSubmit}>
-      <input
-        type="text"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyPress={handleKeyPress}
-        placeholder="اكتب رسالتك هنا..."
-        dir="rtl"
-      />
-      <button type="submit" disabled={!message.trim()}>
-        إرسال
-      </button>
-    </form>
+    <div className="message-input-container">
+      <form className="message-input-form" onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="اكتب رسالتك هنا..."
+          dir="rtl"
+        />
+        <button type="submit" disabled={!message.trim()}>
+          إرسال
+        </button>
+      </form>
+    </div>
   );
 };
 
