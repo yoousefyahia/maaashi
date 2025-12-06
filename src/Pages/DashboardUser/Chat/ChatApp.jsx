@@ -27,14 +27,6 @@ const ChatApp = () => {
   const [isStartingNewChat, setIsStartingNewChat] = useState(false);
   const [messagesLoading, setMessagesLoading] = useState(false);
 
-  // Authentication Check
-  useEffect(() => {
-    if (!userToken) {
-      toast.error('يرجى تسجيل الدخول أولاً');
-      navigate('/login');
-    }
-  }, [userToken, navigate]);
-
   // API Service Functions
   const apiService = {
     get: async (endpoint) => {
