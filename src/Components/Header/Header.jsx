@@ -256,6 +256,18 @@ const Header = () => {
 
         {/* أزرار الديسكتوب */}
         <div className="header-button">
+          {/* إضافة البحث في الديسكتوب أيضًا */}
+          {/* <div className="desktop-search">
+            <input 
+              type="search" 
+              placeholder="ابحث هنا..." 
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
+            />
+            <CiSearch className="search_icon" onClick={handleSearchSubmit} />
+          </div> */}
+          
           {token ? (
             <div>
               <Link
@@ -323,32 +335,32 @@ export function ProfileCard({ toggleProfileCard, userData, removeCookie, onClose
 
   const initials = userData?.name
     ? userData.name
-    : "مستخدم جديد";
+    : "مستحدم جديد";
 
   return (
     <div
       className="profile-card"
       style={{
+        height: "280px",
         opacity: toggleProfileCard ? 1 : 0,
-        visibility: toggleProfileCard ? "visible" : "hidden",
-        pointerEvents: toggleProfileCard ? "auto" : "none",
-        transition: "opacity 0.3s, visibility 0.3s"
+        transition: "opacity 0.3s"
       }}
     >
       <div className="user-info">
-        {userData?.image_profile ? (
-          <img src={userData.image_profile} alt={userData?.name} className="user_img" />
-        ) : (
-          <span className="two_char">{initials}</span>
-        )}
+{userData?.image_profile ? (
+  <img src={userData.image_profile} alt={userData?.name} className="user_img" />
+) : (
+  <span className="two_char">{initials}</span>
+)}
+
         <div>
           <p className="greeting">أهلا</p>
         </div>
       </div>
-      <Link to="/accountUser" className="show_accountUser" onClick={onClose}>
+      <Link to="/accountUser" className="show_accountUser">
         عرض الملف الشخصي
       </Link>
-      <Link to="/settingsUser" className="settings" onClick={onClose}>
+      <Link to="/settingsUser" className="settings">
         إعدادات الحساب
       </Link>
       <button className="logout-btn" onClick={handleLogout}>

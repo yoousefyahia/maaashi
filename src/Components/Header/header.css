@@ -344,6 +344,7 @@ a.mobile_loginBTN{
 }
 .settings {
   display: flex;
+  justify-content: center;
   gap: 5px;
   align-items: center;
   font-size: 14px;
@@ -353,6 +354,7 @@ a.mobile_loginBTN{
   border-bottom: 2px solid #eee;
   padding: 15px 0px;
 }
+
 .logout-btn {
   background: none;
   border: none;
