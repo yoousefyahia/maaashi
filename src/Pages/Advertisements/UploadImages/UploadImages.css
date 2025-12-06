@@ -184,7 +184,7 @@
         font-size: 12px;
     }
     .image_error{
-        top:200px;
-        left: 40px;
+        top: 200px !important;;
+        left: 40px !important;
     }
 }
