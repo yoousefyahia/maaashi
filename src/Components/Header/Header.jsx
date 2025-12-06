@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import "./header.css";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { CiSearch } from "react-icons/ci";
 import { navLinks } from "../../Constants/NavLinks.js";
 import { useCookies } from "react-cookie";
@@ -10,9 +10,15 @@ const Header = () => {
   const [cookies, , removeCookie] = useCookies(["token"]);
   const { token, user } = parseAuthCookie(cookies?.token);
   const userID = user?.id;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialSearch = queryParams.get('search') || '';
 
   const [userData, setUserData] = useState({});
   const [showToast, setShowToast] = useState(true);
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [typingTimeout, setTypingTimeout] = useState(null);
 
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const [desktopProfileOpen, setDesktopProfileOpen] = useState(false);
@@ -24,9 +30,74 @@ const Header = () => {
   const desktopProfileRef = useRef(null);
   const inputRef = useRef(null);
 
-  const navigate = useNavigate();
   const handleFocus = () => inputRef.current.focus();
   const closeMenu = () => setMenuOpen(false);
+
+  // تحديث البحث عند تغيير الـ URL
+  useEffect(() => {
+    setSearchQuery(initialSearch);
+  }, [initialSearch]);
+
+  // دالة البحث مع Debounce
+  const performSearch = useCallback((query) => {
+    const trimmedQuery = query.trim();
+    
+    // إذا كان البحث فارغًا، ارجع للصفحة الرئيسية
+    if (!trimmedQuery) {
+      navigate('/');
+      return;
+    }
+    
+    // إذا كان البحث في الصفحة الرئيسية، قم بتحديث URL فقط
+    if (location.pathname === '/') {
+      navigate(`/?search=${encodeURIComponent(trimmedQuery)}`);
+    } else {
+      // إذا كان في صفحة أخرى، اذهب للصفحة الرئيسية مع البحث
+      navigate(`/?search=${encodeURIComponent(trimmedQuery)}`);
+    }
+    closeMenu();
+  }, [navigate, location.pathname]);
+
+  // معالجة تغيير حقل البحث مع Debounce
+  const handleSearchChange = (value) => {
+    setSearchQuery(value);
+    
+    // إلغاء الوقت السابق
+    if (typingTimeout) {
+      clearTimeout(typingTimeout);
+    }
+    
+    // إذا كان الحقل فارغًا، امسح البحث فورًا
+    if (!value.trim()) {
+      performSearch('');
+      return;
+    }
+    
+    // تأخير البحث لـ 500ms بعد توقف الكتابة
+    const timeout = setTimeout(() => {
+      performSearch(value);
+    }, 500);
+    
+    setTypingTimeout(timeout);
+  };
+
+  // البحث عند الضغط على Enter أو الأيقونة (اختياري)
+  const handleSearchSubmit = (e) => {
+    e?.preventDefault?.();
+    if (typingTimeout) {
+      clearTimeout(typingTimeout);
+    }
+    performSearch(searchQuery);
+  };
+
+  // تنظيف timeout عند unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeout) {
+        clearTimeout(typingTimeout);
+      }
+    };
+  }, [typingTimeout]);
 
   // إغلاق المينيو وكارت البروفايل عند الضغط خارجهم أو scroll
   useEffect(() => {
@@ -87,15 +158,26 @@ const Header = () => {
       <div className="header-container">
         {/* اللوجو */}
         <div className="logo">
-          <NavLink to="/" onClick={closeMenu}>
+          <NavLink to="/" onClick={() => { 
+            closeMenu(); 
+            setSearchQuery('');
+            performSearch('');
+          }}>
             <img src="/images/logo.svg" alt="logo" />
           </NavLink>
         </div>
 
         {/* البحث في الموبايل */}
         <div className="mobile-search">
-          <CiSearch className="search_icon" onClick={handleFocus} />
-          <input type="search" placeholder="ابحث هنا..." ref={inputRef} />
+          <CiSearch className="search_icon" onClick={handleSearchSubmit} />
+          <input 
+            type="search" 
+            placeholder="ابحث هنا..." 
+            ref={inputRef}
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
+          />
         </div>
 
         {/* أيقونة الموبايل والبروفايل */}
@@ -107,20 +189,19 @@ const Header = () => {
                 className="header_profile_img"
                 ref={mobileProfileRef}
               >
-{userData?.image_profile ? (
-  <img
-    src={userData.image_profile}
-    alt={userData?.name}
-    className="user_img"
-  />
-) : (
-  <span className="two_char">
-    {userData?.name
-      ? userData.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
-      : "US"}
-  </span>
-)}
-
+                {userData?.image_profile ? (
+                  <img
+                    src={userData.image_profile}
+                    alt={userData?.name}
+                    className="user_img"
+                  />
+                ) : (
+                  <span className="two_char">
+                    {userData?.name
+                      ? userData.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
+                      : "US"}
+                  </span>
+                )}
               </Link>
               <ProfileCard
                 toggleProfileCard={mobileProfileOpen}
@@ -175,6 +256,18 @@ const Header = () => {
 
         {/* أزرار الديسكتوب */}
         <div className="header-button">
+          {/* إضافة البحث في الديسكتوب أيضًا */}
+          {/* <div className="desktop-search">
+            <input 
+              type="search" 
+              placeholder="ابحث هنا..." 
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
+            />
+            <CiSearch className="search_icon" onClick={handleSearchSubmit} />
+          </div> */}
+          
           {token ? (
             <div>
               <Link
@@ -215,6 +308,7 @@ const Header = () => {
 };
 
 export default Header;
+
 
 // =======================
 // ProfileCard Component

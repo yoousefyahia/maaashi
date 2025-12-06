@@ -18,14 +18,19 @@
 .loadMoreBtn:hover {
   opacity: 0.85;
 }
-
-.paginationBtns{
+.loadMoreContainer{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin-top:20px;
+}
+/* .paginationBtns{
   display:flex;
   justify-content:center;
   align-items:center;
   gap:10px;
   margin-top:20px;
-}
+} */
 .car_card_container {
   max-width: 1195px;
   padding: 0 20px;

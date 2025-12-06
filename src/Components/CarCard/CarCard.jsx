@@ -1,5 +1,6 @@
+// في CarCard.js
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { CiLocationOn, CiStopwatch } from "react-icons/ci";
 import { useCookies } from "react-cookie";
 import axios from "axios";
@@ -11,6 +12,9 @@ const CarCard = () => {
   const [cookies] = useCookies(["token"]);
   const { token } = parseAuthCookie(cookies?.token);
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const searchQuery = queryParams.get('search') || '';
 
   const [adsCard, setAdsCard] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,26 +26,36 @@ const CarCard = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
 
-  // ******** تحميل أول صفحة ********
+  // ******** تحميل الإعلانات مع البحث ********
   useEffect(() => {
-    const fetchFirstPage = async () => {
+    const fetchAds = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(
-          `https://api.maaashi.com/api/ads/featured?page=1&limit=12`
-        );
+        setCurrentPage(1); // إعادة التعيين للصفحة الأولى
+        
+        let url = `https://api.maaashi.com/api/ads/featured?page=1&limit=12`;
+        if (searchQuery) {
+          url += `&search=${encodeURIComponent(searchQuery)}`;
+        }
+        
+        const res = await axios.get(url);
         const ads = Array.isArray(res.data.data) ? res.data.data : [];
-        setAdsCard(ads); // نعين فقط
+        setAdsCard(ads);
         setLastPage(res.data.last_page || 1);
-      } catch {
+        setHasMore(res.data.current_page < res.data.last_page);
+        setError("");
+      } catch (err) {
+        console.error(err);
         setError("حدث خطأ أثناء تحميل الإعلانات.");
+        setAdsCard([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchFirstPage();
-  }, []);
+    fetchAds();
+  }, [searchQuery]); // إعادة التحميل عند تغيير البحث
 
   // ******** تحميل المفضلات ********
   useEffect(() => {
@@ -122,41 +136,61 @@ const CarCard = () => {
 
     const nextPage = currentPage + 1;
     try {
-      const res = await axios.get(
-        `https://api.maaashi.com/api/ads/featured?page=${nextPage}&limit=12`
-      );
+      let url = `https://api.maaashi.com/api/ads/featured?page=${nextPage}&limit=12`;
+      if (searchQuery) {
+        url += `&search=${encodeURIComponent(searchQuery)}`;
+      }
+      
+      const res = await axios.get(url);
       const newAds = Array.isArray(res.data.data) ? res.data.data : [];
       setAdsCard((prev) => [...prev, ...newAds]); // دمج الإعلانات الجديدة
       setCurrentPage(nextPage);
+      setHasMore(res.data.current_page < res.data.last_page);
     } catch (err) {
       console.error(err);
     }
   };
 
-  if (loading) return <p>جارِ تحميل الإعلانات...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading) return <p className="loading-text">جارِ تحميل الإعلانات...</p>;
+  if (error) return <p className="error-text">{error}</p>;
 
   return (
     <section className="car-card">
       <div className="car_card_container">
-        <h2 className="section-title">اكتشف الجديد أولًا</h2>
+        {/* إظهار نص البحث إن وجد */}
+        {searchQuery && (
+          <div className="search-results-header">
+            <h2 className="section-title">
+              نتائج البحث عن: "{searchQuery}"
+            </h2>
+            <span className="results-count">
+              {adsCard.length} {adsCard.length === 1 ? 'نتيجة' : 'نتائج'}
+            </span>
+          </div>
+        )}
+        
+        {!searchQuery && (
+          <h2 className="section-title">اكتشف الجديد أولًا</h2>
+        )}
+        
         <div className="categories_items">
           {adsCard.length > 0 ? (
             adsCard.map((ad) => (
               <div
                 key={ad.id}
                 className="category_card"
-                  onClick={() => navigate(`/ad/${ad.id}`)}
+                onClick={() => navigate(`/ad/${ad.id}`)}
               >
                 <div className="card_image">
                   <img src={ad.images?.[0] || "/placeholder.png"} alt={ad.title} />
                 </div>
 
                 <div className="card_user">
-                  { ad?.user.image_profile ? (
+                  { ad?.user?.image_profile ? (
                       <img
-                          src={ad?.user.image_profile }
+                          src={ad.user.image_profile}
                           alt="user"
+                          className="user-avatar"
                       />
                   ) : (
                       <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -167,11 +201,10 @@ const CarCard = () => {
                   )}
 
                   <span>
-                      {ad?.seller_name.split(" ").slice(0, 2).join(" ") ||
+                      {ad?.seller_name?.split(" ").slice(0, 2).join(" ") ||
                           "مستخدم"}
                   </span>
-              </div>
-
+                </div>
 
                 <div className="card_body">
                   <h2>{ad.title.substring(0, 18)}...</h2>
@@ -229,16 +262,27 @@ const CarCard = () => {
               </div>
             ))
           ) : (
-            <p className="no-ads">لا توجد إعلانات حالياً</p>
+            <div className="no-results">
+              <p className="no-ads">
+                {searchQuery 
+                  ? `لا توجد نتائج عن "${searchQuery}"`
+                  : "لا توجد إعلانات حالياً"}
+              </p>
+              {searchQuery && (
+                <button 
+                  className="btn clear-search-btn"
+                  onClick={() => navigate('/')}
+                >
+                  مسح البحث
+                </button>
+              )}
+            </div>
           )}
         </div>
 
         {/* ******** زر عرض المزيد ******** */}
-        {currentPage < lastPage && (
-          <div
-            className="loadMoreContainer"
-            style={{ textAlign: "center", marginTop: "20px" }}
-          >
+        {hasMore && (
+          <div className="loadMoreContainer">
             <button className="btn loadMoreBtn" onClick={loadMore}>
               عرض المزيد
             </button>
