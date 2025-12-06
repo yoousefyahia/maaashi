@@ -264,7 +264,7 @@
   flex-shrink: 0;
 }
 
-.chat-avatar-image {
+.chat-avatar-img {
   width: 50px;
   height: 50px;
   border-radius: 50%;
@@ -272,7 +272,7 @@
   border: 2px solid var(--border-color);
 }
 
-.avatar-fallback {
+.avatar-fallbaack {
   width: 50px;
   height: 50px;
   border-radius: 50%;
@@ -453,8 +453,8 @@
     padding: 10px 14px;
   }
   
-  .chat-avatar-image,
-  .avatar-fallback {
+  .chat-avatar-img,
+  .avatar-fallbaack {
     width: 35px;
     height: 35px;
   }

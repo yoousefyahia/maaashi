@@ -159,10 +159,10 @@ const Sidebar = ({ chats, selectedChat, onSelectChat, loading }) => {
                             <img
                               src={chat.image_profile}
                               alt={chat.name}
-                              className="chat-avatar-image"
+                              className="chat-avatar-img"
                               onError={handleImageError}
                             />
-                            <div className="avatar-fallback" style={{ display: 'none' }}>
+                            <div className="avatar-fallbaack" style={{ display: 'none' }}>
                               {avatarFallback}
                             </div>
                           </>
