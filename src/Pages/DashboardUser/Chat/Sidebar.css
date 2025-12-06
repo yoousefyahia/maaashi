@@ -455,8 +455,8 @@
   
   .chat-avatar-image,
   .avatar-fallback {
-    width: 45px;
-    height: 45px;
+    width: 35px;
+    height: 35px;
   }
   .chat-header h4 {
     font-size: 11px;

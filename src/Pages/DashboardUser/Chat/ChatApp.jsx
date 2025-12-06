@@ -38,7 +38,6 @@ const ChatApp = () => {
       } catch (error) {
         console.error(`Error fetching ${endpoint}:`, error);
         const errorMsg = error.response?.data?.message || error.message;
-        toast.error(`خطأ في جلب البيانات: ${errorMsg}`);
         throw error;
       }
     },
