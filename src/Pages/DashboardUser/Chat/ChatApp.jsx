@@ -256,7 +256,6 @@ const ChatApp = () => {
       toast.success('تم بدء المحادثة بنجاح');
     } catch (e) {
       console.error('Error starting new chat:', e);
-      // لا تظهر toast لأنها تظهر في apiService
     } finally {
       setIsStartingNewChat(false);
     }
@@ -304,9 +303,7 @@ const ChatApp = () => {
           }
         })])
       );
-      
-      toast.success('تم إرسال الرسالة');
-      
+            
     } catch (e) {
       console.error('Error sending message:', e);
       // إزالة الرسالة المؤقتة في حالة الخطأ
@@ -395,7 +392,7 @@ const ChatApp = () => {
       }
     };
     
-    const interval = setInterval(updateMessages, 10000);
+    const interval = setInterval(updateMessages, 7000);
     updateMessages();
     
     return () => clearInterval(interval);
