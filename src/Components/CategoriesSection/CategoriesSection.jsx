@@ -24,7 +24,7 @@ const CategoriesSection = () => {
     fetchCategories();
   }, []);
 
-  if (loading) return <p>جاري تحميل الأقسام...</p>;
+  if (loading) return <p className="loadCat">جاري تحميل الأقسام...</p>;
   if (error) return <p>{error}</p>;
 
   return (

@@ -144,11 +144,47 @@
 }
 
 /* للأجهزة الصغيرة (mobile) */
-@media (max-width: 540px) {
+@media (max-width: 768px) {
+    .upload_container {
+        padding: 15px;
+        margin-top: 10px;
+    }
+    
+    .upload-box {
+        padding: 20px 15px;
+    }
+    
+    .preview {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
     .preview-image {
-        margin: auto;
-        min-width: 220px;
-        /* width: max-content; */
-        height: 200px;
+        aspect-ratio: 1/0.75;
+    }
+    
+    .remove_btn {
+        width: 36px; /* أكبر لللمس */
+        height: 36px;
+        top: 6px;
+        left: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .preview {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .upload_header h3 {
+        font-size: 14px;
+    }
+    
+    .upload_header p {
+        font-size: 12px;
+    }
+    .image_error{
+        top:200px;
+        left: 40px;
     }
 }

@@ -10,6 +10,11 @@
   margin-right: auto;
   margin-left: auto;
 }
+.loadCat{
+  text-align: center;
+  font-size: 18px;
+  color: var(--parg-color);
+}
 .categories-header h1 {
   font-size: var(--h1-font);
   margin-bottom: 15px;
