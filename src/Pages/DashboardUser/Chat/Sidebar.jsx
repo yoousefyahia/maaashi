@@ -6,7 +6,6 @@ const Sidebar = ({ chats, selectedChat, onSelectChat, loading }) => {
   const [isMobile, setIsMobile] = useState(false);
   const sidebarRef = useRef(null);
 
-  // اكتشاف حجم الشاشة
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth <= 768;
@@ -26,23 +25,66 @@ const Sidebar = ({ chats, selectedChat, onSelectChat, loading }) => {
     if (isMobile) setIsCollapsed(true);
   };
 
-  // معالجة خطأ تحميل الصور
   const handleImageError = (e) => {
     e.target.style.display = 'none';
-    e.target.nextElementSibling.style.display = 'flex';
+    const fallback = e.target.nextElementSibling;
+    if (fallback) fallback.style.display = 'flex';
   };
 
-  // استخدام unread_count من البيانات الحقيقية
   const getUnreadCount = (chat) => {
-    return chat.unread_count || chat.unreadCount || 0;
+    return chat.unread_count || 0;
   };
 
-  // حساب إجمالي الرسائل غير المقروءة
   const totalUnreadMessages = chats.reduce((total, chat) => total + getUnreadCount(chat), 0);
+
+  const formatTime = (timeString) => {
+    if (!timeString) return 'الآن';
+    
+    if (typeof timeString === 'string') {
+      if (timeString.includes('minutes ago')) {
+        const minutes = timeString.split(' ')[0];
+        return `منذ ${minutes} دقيقة`;
+      }
+      if (timeString.includes('hours ago')) {
+        const hours = timeString.split(' ')[0];
+        return `منذ ${hours} ساعة`;
+      }
+      if (timeString.includes('day ago')) {
+        return 'أمس';
+      }
+      if (timeString.includes('days ago')) {
+        const days = timeString.split(' ')[0];
+        return `منذ ${days} يوم`;
+      }
+      if (timeString.includes('ساعة') || timeString.includes('دقيقة') || timeString.includes('يوم')) {
+        return timeString;
+      }
+    }
+    
+    return 'الآن';
+  };
+
+  const getLastMessage = (chat) => {
+    if (chat.last_message?.message) {
+      return chat.last_message.message;
+    }
+    if (chat.lastMessage) {
+      return chat.lastMessage;
+    }
+    return 'بدون رسائل';
+  };
+
+  const getAvatarFallback = (name) => {
+    if (!name || name.trim() === '') return '?';
+    const nameParts = name.split(' ');
+    if (nameParts.length >= 2) {
+      return `${nameParts[0].charAt(0)}${nameParts[1].charAt(0)}`;
+    }
+    return name.charAt(0);
+  };
 
   return (
     <>
-      {/* طبقة شفافة لإغلاق الشريط على الجوال */}
       {isMobile && !isCollapsed && (
         <div 
           className="sidebar-overlay"
@@ -50,7 +92,6 @@ const Sidebar = ({ chats, selectedChat, onSelectChat, loading }) => {
         />
       )}
 
-      {/* زر عائم للجوال */}
       {isMobile && isCollapsed && (
         <button 
           className="floating-toggle"
@@ -60,13 +101,12 @@ const Sidebar = ({ chats, selectedChat, onSelectChat, loading }) => {
           ☰
           {totalUnreadMessages > 0 && (
             <span className="floating-badge">
-              {totalUnreadMessages}
+              {totalUnreadMessages > 99 ? '99+' : totalUnreadMessages}
             </span>
           )}
         </button>
       )}
 
-      {/* الشريط الجانبي */}
       <div 
         ref={sidebarRef}
         className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobile ? 'mobile' : ''}`}
@@ -79,7 +119,7 @@ const Sidebar = ({ chats, selectedChat, onSelectChat, loading }) => {
                 <span className="chats-count">({chats.length})</span>
                 {totalUnreadMessages > 0 && (
                   <span className="unread-badge">
-                    {totalUnreadMessages}
+                    {totalUnreadMessages > 99 ? '99+' : totalUnreadMessages}
                   </span>
                 )}
               </div>
@@ -95,7 +135,7 @@ const Sidebar = ({ chats, selectedChat, onSelectChat, loading }) => {
         </div>
 
         {!isCollapsed && (
-          <div className="sidebar-content no-scrollbar">
+          <div className="sidebar-content">
             {loading ? (
               <div className="loading">
                 <div className="spinner"></div>
@@ -104,9 +144,8 @@ const Sidebar = ({ chats, selectedChat, onSelectChat, loading }) => {
             ) : chats.length > 0 ? (
               <div className="chat-list">
                 {chats.map(chat => {
-                  // الحصول على الحرف الأول من الاسم للصورة البديلة
-                  const avatarFallback = chat.name?.charAt(0)?.toUpperCase() || '?';
                   const unreadCount = getUnreadCount(chat);
+                  const avatarFallback = getAvatarFallback(chat.name);
                   
                   return (
                     <div
@@ -132,18 +171,19 @@ const Sidebar = ({ chats, selectedChat, onSelectChat, loading }) => {
                             {avatarFallback}
                           </div>
                         )}
+                        {chat.other_user?.is_online && <span className="online-indicator"></span>}
                         {unreadCount > 0 && <span className="unread-indicator"></span>}
                       </div>
                       <div className="chat-info">
                         <div className="chat-header">
                           <h4>{chat.name}</h4>
-                          <span className="chat-time">{chat.lastTime || chat.last_message_at || 'الآن'}</span>
+                          <span className="chat-time">{formatTime(chat.lastTime || chat.last_message_at)}</span>
                         </div>
                         <p className="last-message">
-                          {chat.last_message?.message || chat.lastMessage || 'بدون رسائل'}
+                          {getLastMessage(chat)}
                         </p>
                         {unreadCount > 0 && (
-                          <span className="unread-count">{unreadCount}</span>
+                          <span className="unread-count">{unreadCount > 99 ? '99+' : unreadCount}</span>
                         )}
                       </div>
                     </div>
@@ -154,7 +194,7 @@ const Sidebar = ({ chats, selectedChat, onSelectChat, loading }) => {
               <div className="no-chats">
                 <div className="empty-icon">💬</div>
                 <p>لا توجد محادثات</p>
-                <small>ابدأ محادثة من أي إعلان</small>
+                <small>ابدأ محادثة جديدة</small>
               </div>
             )}
           </div>

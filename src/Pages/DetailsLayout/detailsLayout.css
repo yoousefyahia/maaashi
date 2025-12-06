@@ -741,3 +741,41 @@
     top: 65%;
   } */
 }
+/* CSS إضافي */
+.login_required_comments {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 20px;
+  border: 1px solid #dee2e6;
+}
+
+.login_required_comments .login_link {
+  background: none;
+  border: none;
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: bold;
+  padding: 0;
+}
+
+.login_required_comments .login_link:hover {
+  color: #0056b3;
+}
+
+.comment_actions .action_item {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.comment_actions .action_item:not(:last-child) {
+  margin-right: 15px;
+}
+
+.toast-container {
+  z-index: 99999;
+}

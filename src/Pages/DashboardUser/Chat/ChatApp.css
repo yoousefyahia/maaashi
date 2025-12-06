@@ -165,3 +165,14 @@
   flex-direction: column;
   gap: 10px;
 }
+.Toastify__toast-body {
+  font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  direction: rtl;
+  text-align: right;
+}
+
+.Toastify__toast {
+  border-radius: 8px;
+  min-height: 50px;
+  z-index: 100;
+}

@@ -5,99 +5,156 @@ import ChatWindow from './ChatWindow';
 import { useCookies } from 'react-cookie';
 import { parseAuthCookie } from '../../../utils/auth';
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './ChatApp.css';
 
 const BASE_URL = 'https://api.maaashi.com/api';
 
 const ChatApp = () => {
+  // Hooks and Authentication
   const { user_id: targetUserId } = useParams();
   const navigate = useNavigate();
   const [cookies] = useCookies(["token"]);
-
   const { token: userToken, userId: currentUserId, user: currentUser } = parseAuthCookie(cookies?.token);
 
+  // State Management
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [conversationId, setConversationId] = useState(null);
   const [isStartingNewChat, setIsStartingNewChat] = useState(false);
-  const [messagesLoading, setMessagesLoading] = useState(false); // حالة جديدة
+  const [messagesLoading, setMessagesLoading] = useState(false);
 
+  // Authentication Check
   useEffect(() => {
-    if (!userToken) navigate('/login');
+    if (!userToken) {
+      toast.error('يرجى تسجيل الدخول أولاً');
+      navigate('/login');
+    }
   }, [userToken, navigate]);
 
+  // API Service Functions
+  const apiService = {
+    get: async (endpoint) => {
+      try {
+        const res = await axios.get(`${BASE_URL}/${endpoint}`, {
+          headers: { Authorization: `Bearer ${userToken}` }
+        });
+        return res.data;
+      } catch (error) {
+        console.error(`Error fetching ${endpoint}:`, error);
+        const errorMsg = error.response?.data?.message || error.message;
+        toast.error(`خطأ في جلب البيانات: ${errorMsg}`);
+        throw error;
+      }
+    },
+
+    post: async (endpoint, data = {}) => {
+      try {
+        const res = await axios.post(`${BASE_URL}/${endpoint}`, data, {
+          headers: { Authorization: `Bearer ${userToken}` }
+        });
+        return res.data;
+      } catch (error) {
+        console.error(`Error posting to ${endpoint}:`, error);
+        const errorMessage = error.response?.data?.message || 'فشل في تنفيذ العملية';
+        toast.error(errorMessage);
+        throw error;
+      }
+    }
+  };
+
+  // Data Formatters
+  const formatMessage = (msg) => ({
+    id: msg.id,
+    message: msg.message, // حفظ الاسم الأصلي
+    content: msg.message, // للتوافق مع المكونات القديمة
+    is_mine: msg.is_mine,
+    sender: msg.sender || { 
+      id: msg.sender_id, 
+      name: currentUser?.name, 
+      image_profile: currentUser?.image_profile 
+    },
+    image_profile: msg.sender?.image_profile,
+    timestamp: msg.created_at,
+    timestampHuman: msg.created_at_human || msg.created_at,
+    is_read: msg.is_read || false,
+    created_at: msg.created_at,
+    created_at_human: msg.created_at_human
+  });
+
+  const formatChat = (chat) => ({
+    id: chat.conversation_id,
+    conversation_id: chat.conversation_id,
+    name: chat.other_user?.name || 'مستخدم غير معروف',
+    avatar: chat.other_user?.name?.charAt(0) || 'U',
+    image_profile: chat.other_user?.image_profile || null,
+    lastMessage: chat.last_message?.message || 'بدون رسائل',
+    lastTime: chat.last_message_at || 'الآن',
+    unread_count: chat.unread_count || 0,
+    other_user: chat.other_user,
+    last_message: chat.last_message,
+    is_online: chat.other_user?.is_online || false,
+    last_seen: chat.other_user?.last_seen || 'غير معروف'
+  });
+
+  // Core API Functions
   const getCurrentUserId = async () => {
     if (currentUserId) return currentUserId;
     try {
-      const res = await axios.get(`${BASE_URL}/user/profile`, {
-        headers: { Authorization: `Bearer ${userToken}` }
-      });
-      return res.data.data?.id || null;
-    } catch (e) { 
-      console.error('Error fetching user profile:', e); 
-      return null; 
+      const response = await apiService.get('user/profile');
+      return response.data?.id || null;
+    } catch (error) {
+      console.error('Error fetching current user ID:', error);
+      return null;
     }
   };
 
   const fetchConversations = useCallback(async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/conversations`, {
-        headers: { Authorization: `Bearer ${userToken}` }
-      });
-      return res.data.data || [];
-    } catch (e) { 
-      console.error('Error fetching conversations:', e); 
-      return []; 
+      const response = await apiService.get('conversations');
+      return response.data || [];
+    } catch (error) {
+      return [];
     }
   }, [userToken]);
 
-  const startConversation = async (userId) => {
-    setIsStartingNewChat(true);
-    try {
-      const res = await axios.post(`${BASE_URL}/conversations/start?user_id=${userId}`, {}, {
-        headers: { Authorization: `Bearer ${userToken}` }
-      });
-      return res.data.data;
-    } catch (e) { 
-      console.error('Error starting conversation:', e); 
-      throw e; 
-    } finally { 
-      setIsStartingNewChat(false); 
-    }
-  };
-
   const fetchMessages = async (convId) => {
     try {
-      const res = await axios.get(`${BASE_URL}/conversations/${convId}/messages`, {
-        headers: { Authorization: `Bearer ${userToken}` }
-      });
-      return res.data.data || [];
-    } catch (e) { 
-      console.error('Error fetching messages:', e); 
-      return []; 
+      const response = await apiService.get(`conversations/${convId}/messages`);
+      return response.data || [];
+    } catch (error) {
+      return [];
     }
   };
 
   const sendMessage = async (convId, message) => {
     try {
-      const res = await axios.post(`${BASE_URL}/messages/send`, {
-        conversation_id: convId,
-        message
-      }, { 
-        headers: { Authorization: `Bearer ${userToken}` } 
+      const response = await apiService.post('messages/send', { 
+        conversation_id: convId, 
+        message: message 
       });
-      return res.data.data;
-    } catch (e) { 
-      console.error('Error sending message:', e); 
-      throw e; 
+      return response.data;
+    } catch (error) {
+      throw error;
     }
   };
 
+  const startConversation = async (userId) => {
+    try {
+      const response = await apiService.post(`conversations/start?user_id=${userId}`, {});
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Chat List Management
   const updateChatsAfterMessage = (conversationId, newMessage, isMine = true) => {
-    setChats(prevChats => 
-      prevChats.map(chat => {
+    setChats(prevChats => {
+      const updatedChats = prevChats.map(chat => {
         if (chat.conversation_id === conversationId) {
           return {
             ...chat,
@@ -105,7 +162,7 @@ const ChatApp = () => {
               message: newMessage,
               created_at: new Date().toISOString(),
               is_read: false,
-              sender_id: isMine ? currentUserId : chat.other_user.id
+              sender_id: isMine ? currentUserId : chat.other_user?.id
             },
             lastMessage: newMessage,
             lastTime: 'الآن',
@@ -113,57 +170,59 @@ const ChatApp = () => {
           };
         }
         return chat;
-      }).sort((a, b) => {
-        const timeA = a.last_message?.created_at ? new Date(a.last_message.created_at) : new Date(0);
-        const timeB = b.last_message?.created_at ? new Date(b.last_message.created_at) : new Date(0);
+      });
+      
+      // ترتيب المحادثات حسب آخر رسالة
+      return updatedChats.sort((a, b) => {
+        const timeA = a.last_message?.created_at ? new Date(a.last_message.created_at).getTime() : 0;
+        const timeB = b.last_message?.created_at ? new Date(b.last_message.created_at).getTime() : 0;
         return timeB - timeA;
-      })
-    );
+      });
+    });
   };
 
+  // Chat Selection
   const selectChat = async (chat) => {
-    if (isStartingNewChat) return; // منع التبديل أثناء بدء محادثة جديدة
+    if (isStartingNewChat || !chat) return;
     
-    setMessagesLoading(true); // بدء تحميل الرسائل
+    setMessagesLoading(true);
     setSelectedChat(chat);
     setConversationId(chat.conversation_id);
     
     try {
       const msgs = await fetchMessages(chat.conversation_id);
       
-      // تحديث حالة الرسائل كمقروءة في قائمة المحادثات
+      // تحديث عدد الرسائل غير المقروءة
       setChats(prev => prev.map(c => 
-        c.conversation_id === chat.conversation_id 
-          ? { ...c, unread_count: 0 }
-          : c
+        c.conversation_id === chat.conversation_id ? { ...c, unread_count: 0 } : c
       ));
       
-      // تنسيق الرسائل
-      setMessages(msgs.map(msg => ({
-        id: msg.id,
-        content: msg.message,
-        is_mine: msg.is_mine,
-        sender: msg.sender,
-        image_profile: msg.sender?.image_profile,
-        timestamp: msg.created_at,
-        timestampHuman: msg.created_at_human || msg.created_at,
-        is_read: msg.is_read || true
-      })));
+      // تحويل الرسائل إلى التنسيق الصحيح
+      const formattedMessages = Array.isArray(msgs) ? msgs.map(formatMessage) : [];
+      setMessages(formattedMessages);
     } catch (error) {
       console.error('Error selecting chat:', error);
+      toast.error('فشل في تحميل المحادثة');
     } finally {
-      setMessagesLoading(false); // انتهاء تحميل الرسائل
+      setMessagesLoading(false);
     }
   };
 
+  // Chat Initialization
   const handleUserChat = async (targetId, existingChats, myUserId) => {
-    if (myUserId === targetId) {
-      alert('لا يمكنك إنشاء محادثة مع نفسك');
+    if (!targetId || !myUserId) return;
+    
+    if (myUserId === parseInt(targetId)) {
+      toast.error('لا يمكنك إنشاء محادثة مع نفسك');
       navigate('/ChatApp'); 
       return;
     }
 
-    const existingChat = existingChats.find(c => c.other_user?.id === targetId);
+    // البحث عن محادثة موجودة
+    const existingChat = existingChats.find(c => 
+      c.other_user && c.other_user.id === parseInt(targetId)
+    );
+    
     if (existingChat) {
       await selectChat(existingChat);
       return;
@@ -173,12 +232,12 @@ const ChatApp = () => {
       setIsStartingNewChat(true);
       const newConv = await startConversation(targetId);
       
+      // إنشاء محادثة جديدة من الرد
       const newChat = {
-        id: newConv.conversation_id,
         conversation_id: newConv.conversation_id,
-        name: newConv.other_user.name,
-        avatar: newConv.other_user.name?.charAt(0) || 'U',
-        image_profile: newConv.other_user.image_profile,
+        id: newConv.conversation_id,
+        name: newConv.other_user?.name || 'مستخدم جديد',
+        image_profile: newConv.other_user?.image_profile || null,
         lastMessage: 'بدأ المحادثة',
         lastTime: 'الآن',
         unread_count: 0,
@@ -187,63 +246,73 @@ const ChatApp = () => {
           message: 'بدأ المحادثة',
           created_at: new Date().toISOString(),
           sender_id: currentUserId
-        }
+        },
+        is_online: newConv.other_user?.is_online || false,
+        last_seen: newConv.other_user?.last_seen || 'الآن'
       };
       
-      setChats(prev => [newChat, ...prev]);
+      setChats(prev => [formatChat(newChat), ...prev]);
       await selectChat(newChat);
+      toast.success('تم بدء المحادثة بنجاح');
     } catch (e) {
       console.error('Error starting new chat:', e);
-      alert('فشل في بدء المحادثة.');
+      // لا تظهر toast لأنها تظهر في apiService
+    } finally {
+      setIsStartingNewChat(false);
     }
   };
 
+  // Message Handling
   const handleSendMessage = async (content) => {
-    if (!selectedChat || !content.trim()) return;
+    if (!selectedChat || !content.trim()) {
+      toast.warning('يرجى كتابة رسالة');
+      return;
+    }
 
-    // إضافة رسالة مؤقتة
+    // إنشاء رسالة مؤقتة
     const tempMessage = {
       id: Date.now(),
-      content,
+      message: content,
+      content: content,
       is_mine: true,
-      sender: currentUser,
+      sender: currentUser || { id: currentUserId, name: 'أنت' },
       image_profile: currentUser?.image_profile,
       timestamp: new Date().toISOString(),
       timestampHuman: 'الآن',
-      is_read: false
+      is_read: false,
+      created_at: new Date().toISOString(),
+      created_at_human: 'الآن'
     };
     
+    // إضافة الرسالة المؤقتة
     setMessages(prev => [...prev, tempMessage]);
-    
-    // تحديث قائمة المحادثات
     updateChatsAfterMessage(conversationId, content, true);
 
     try {
+      // إرسال الرسالة الفعلية
       const sent = await sendMessage(conversationId, content);
       
       // استبدال الرسالة المؤقتة بالرسالة الحقيقية
       setMessages(prev => 
-        prev.filter(m => m.id !== tempMessage.id).concat([{
-          id: sent.id,
-          content: sent.message,
+        prev.filter(m => m.id !== tempMessage.id).concat([formatMessage({
+          ...sent,
           is_mine: true,
           sender: {
-            id: sent.sender_id,
-            name: currentUser?.name,
+            id: sent.sender_id || currentUserId,
+            name: currentUser?.name || 'أنت',
             image_profile: currentUser?.image_profile
-          },
-          image_profile: currentUser?.image_profile,
-          timestamp: sent.created_at,
-          timestampHuman: sent.created_at_human,
-          is_read: false
-        }])
+          }
+        })])
       );
+      
+      toast.success('تم إرسال الرسالة');
       
     } catch (e) {
       console.error('Error sending message:', e);
+      // إزالة الرسالة المؤقتة في حالة الخطأ
       setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
       
-      // التراجع عن تحديث قائمة المحادثات
+      // استعادة الحالة السابقة للمحادثة
       setChats(prev => prev.map(chat => 
         chat.conversation_id === conversationId 
           ? { 
@@ -254,11 +323,10 @@ const ChatApp = () => {
             }
           : chat
       ));
-      
-      alert('فشل في إرسال الرسالة.');
     }
   };
 
+  // Initial Data Load
   useEffect(() => {
     if (!userToken) return;
 
@@ -266,38 +334,35 @@ const ChatApp = () => {
       setLoading(true);
       try {
         const myUserId = await getCurrentUserId();
-        const convs = await fetchConversations();
+        const response = await fetchConversations();
         
-        const formatted = convs.map(c => ({
-          id: c.conversation_id,
-          conversation_id: c.conversation_id,
-          name: c.other_user.name,
-          avatar: c.other_user.name?.charAt(0) || 'U',
-          image_profile: c.other_user.image_profile,
-          lastMessage: c.last_message?.message || 'بدأ المحادثة',
-          lastTime: c.last_message_at || 'الآن',
-          unread_count: c.unread_count || 0,
-          other_user: c.other_user,
-          last_message: c.last_message
-        }));
+        console.log('Conversations loaded:', response); 
         
-        setChats(formatted);
+        const formattedChats = Array.isArray(response) 
+          ? response.map(formatChat) 
+          : [];
         
+        setChats(formattedChats);
+        
+        // إذا كان هناك user_id في الرابط
         if (targetUserId) {
-          await handleUserChat(parseInt(targetUserId), formatted, myUserId);
-        } else if (formatted.length) {
-          await selectChat(formatted[0]);
+          await handleUserChat(parseInt(targetUserId), formattedChats, myUserId);
+        } else if (formattedChats.length > 0) {
+          // اختيار أول محادثة تلقائياً
+          await selectChat(formattedChats[0]);
         }
       } catch (error) {
         console.error('Error loading data:', error);
+        toast.error('فشل في تحميل المحادثات');
       } finally {
         setLoading(false);
       }
     };
 
     loadData();
-  }, [userToken, targetUserId, fetchConversations]);
+  }, [userToken, targetUserId]);
 
+  // Real-time Updates
   useEffect(() => {
     if (!selectedChat) return;
     
@@ -305,23 +370,18 @@ const ChatApp = () => {
       try {
         const msgs = await fetchMessages(selectedChat.conversation_id);
         
-        // التحقق مما إذا كانت هناك رسائل جديدة
-        const lastMessageId = messages.length > 0 ? Math.max(...messages.map(m => m.id)) : 0;
+        if (!Array.isArray(msgs)) return;
+        
+        const lastMessageId = messages.length > 0 
+          ? Math.max(...messages.map(m => m.id)) 
+          : 0;
+        
         const newMessages = msgs.filter(msg => msg.id > lastMessageId);
         
         if (newMessages.length > 0) {
-          setMessages(msgs.map(msg => ({
-            id: msg.id,
-            content: msg.message,
-            is_mine: msg.is_mine,
-            sender: msg.sender,
-            image_profile: msg.sender?.image_profile,
-            timestamp: msg.created_at,
-            timestampHuman: msg.created_at_human || msg.created_at,
-            is_read: msg.is_read || true
-          })));
+          setMessages(msgs.map(formatMessage));
           
-          // تحديث قائمة المحادثات إذا كانت الرسائل ليست من المستخدم الحالي
+          // تحديث قائمة المحادثات إذا كانت الرسالة من الطرف الآخر
           if (newMessages.some(msg => !msg.is_mine)) {
             updateChatsAfterMessage(
               selectedChat.conversation_id, 
@@ -335,21 +395,38 @@ const ChatApp = () => {
       }
     };
     
-    const interval = setInterval(updateMessages, 5000);
-    
+    const interval = setInterval(updateMessages, 10000);
     updateMessages();
     
     return () => clearInterval(interval);
-  }, [selectedChat]);
+  }, [selectedChat, messages]);
 
   return (
     <div className="chat-app">
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={true}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        style={{
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 9999,
+        }}
+      />
+      
       <Sidebar 
         chats={chats} 
         selectedChat={selectedChat} 
         onSelectChat={selectChat} 
         loading={loading} 
-        isStartingNewChat={isStartingNewChat} 
       />
       <div className="chat-main">
         {selectedChat ? (
@@ -362,7 +439,15 @@ const ChatApp = () => {
           />
         ) : (
           <div className="no-chat-selected">
-            {loading ? <p>جاري تحميل المحادثات...</p> : <p>اختر محادثة للبدء</p>}
+            {loading ? (
+              <div className="loading-spinner"></div>
+            ) : (
+              <>
+                <div className="empty-chat-icon">💬</div>
+                <p>اختر محادثة للبدء</p>
+                <small>أو ابدأ محادثة جديدة</small>
+              </>
+            )}
           </div>
         )}
       </div>

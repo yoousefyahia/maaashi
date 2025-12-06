@@ -19,6 +19,7 @@ import { MdOutlineDriveFileRenameOutline, MdDescription } from "react-icons/md";
 import { AiOutlineDollar, AiOutlineInfoCircle, AiOutlineCalendar, AiOutlinePhone } from "react-icons/ai";
 import { FaUser } from "react-icons/fa";
 import { RiFileTextLine } from "react-icons/ri";
+import { toast } from 'react-toastify';
 
 const iconsMap = {
   "الفئة": <BiCategory />,
@@ -74,6 +75,16 @@ export function handleWhatsApp(seller, title) {
   const message = `مرحبًا ${seller.name}! أريد التواصل معك بشأن إعلانك "${title}" على موقع ماشي.`;
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
 }
+
+// دالة مساعدة للتحقق من التوكن
+const checkAuth = (userToken, setLoginModel) => {
+  if (!userToken) {
+    toast.error('يجب تسجيل الدخول أولاً');
+    setLoginModel(true);
+    return false;
+  }
+  return true;
+};
 
 const DetailsLayout = () => {
   const [cookies] = useCookies(["token"]);
@@ -163,14 +174,10 @@ const DetailsLayout = () => {
 
   // دالة التعامل مع زر الرسالة
   const handleMessageClick = () => {
-    if (!userToken) {
-      setLoginModel(true);
-      return;
-    }
+    if (!checkAuth(userToken, setLoginModel)) return;
 
     if (!ad_details?.user?.id) {
-      console.error('User ID not found in ad details');
-      alert('لا يمكن العثور على معلومات البائع');
+      toast.error('لا يمكن العثور على معلومات البائع');
       return;
     }
 
@@ -178,7 +185,14 @@ const DetailsLayout = () => {
   };
 
   const handleAddComment = async () => {
-    if (!newComment.trim()) return;
+    // تحقق من التوكن أولاً
+    if (!checkAuth(userToken, setLoginModel)) return;
+    
+    if (!newComment.trim()) {
+      toast.warning('يرجى كتابة تعليق');
+      return;
+    }
+    
     try {
       const response = await axios.post(
         `https://api.maaashi.com/api/ads/comment`,
@@ -187,16 +201,16 @@ const DetailsLayout = () => {
       );
       setComments([response.data.data, ...comments]);
       setNewComment("");
+      toast.success('تم إضافة التعليق بنجاح');
     } catch (err) {
       console.error("Error adding comment:", err);
+      toast.error('فشل في إضافة التعليق');
     }
   };
 
   const handleLikeComment = async (commentId) => {
-    if (!userToken) {
-      setLoginModel(true);
-      return;
-    }
+    // تحقق من التوكن أولاً
+    if (!checkAuth(userToken, setLoginModel)) return;
 
     const isLiked = likedComments[commentId] || false;
 
@@ -220,12 +234,14 @@ const DetailsLayout = () => {
           { comment_id: commentId, ad_id: id },
           { headers: { Authorization: `Bearer ${userToken}` } }
         );
+        toast.success('تم الإعجاب بالتعليق');
       } else {
         await axios.post(
           `https://api.maaashi.com/api/comments/unlike`,
           { comment_id: commentId, ad_id: id },
           { headers: { Authorization: `Bearer ${userToken}` } }
         );
+        toast.success('تم إلغاء الإعجاب بالتعليق');
       }
     } catch (err) {
       console.error("Error updating like:", err);
@@ -240,7 +256,114 @@ const DetailsLayout = () => {
             : c
         )
       );
+      toast.error('فشل في تحديث الإعجاب');
     }
+  };
+
+  // دالة للاتصال بالبائع
+  const handleCallClick = () => {
+    if (!checkAuth(userToken, setLoginModel)) return;
+    
+    if (!ad_details?.user?.phone) {
+      toast.error('لا يوجد رقم هاتف للبائع');
+      return;
+    }
+    
+    window.open(`tel:${ad_details.user.phone}`);
+  };
+
+  // إخفاء أو تغيير واجهة التعليقات إذا لم يكن المستخدم مسجلًا
+  const renderCommentsSection = () => {
+    if (!userToken) {
+      return (
+        <div className="details_footer_comments">
+          <h3>التعليقات</h3>
+          <div className="login_required_comments">
+            <p>يجب <button className="login_link" onClick={() => setLoginModel(true)}>تسجيل الدخول</button> لإضافة تعليق أو الإعجاب بالتعليقات</p>
+          </div>
+          
+          <div className="comments_list">
+            {comments.length > 0 ? (
+              comments.map((cmt) => (
+                <div className="comment_item" key={cmt.id}>
+                  <div className="comment_header">
+                    <img src={cmt.user?.image_profile || "https://api.maaashi.com/storage/users/covers/OnlzSpVMpIsd69gUrrBZ6GzWProUDBwnqcEfyTop.webp"} alt={cmt.user?.name} className="comment_user_img" />
+                    <div className="comment_user_info">
+                      <h5 className="comment_user_name">{cmt.user?.name}</h5>
+                      <span className="comment_date"> منذ:{" "}{timeSince(cmt.created_at)}</span>
+                    </div>
+                  </div>
+
+                  <p className="comment_text">{cmt.comment}</p>
+
+                  <div className="comment_actions">
+                    <span className="action_item">
+                      <IoIosHeartEmpty /> {cmt.likes_count}
+                    </span>
+                    <span className="action_item" onClick={() => setLoginModel(true)}>
+                      تسجيل الدخول للإعجاب
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p>لا توجد تعليقات بعد</p>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="details_footer_comments">
+        <h3>التعليقات</h3>
+        <p className="comment_subtitle">شارك رأيك أو استفسارك حول هذا الإعلان</p>
+
+        <div className="details-lay-comments-user">
+          <img src={ad_details?.user?.image_profile || "/images/logo.svg"} alt="User" />
+          <input 
+            type="text" 
+            placeholder="اكتب تعليقك هنا..." 
+            value={newComment} 
+            onChange={(e) => setNewComment(e.target.value)} 
+            onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+          />
+        </div>
+
+        <div className="details-lay-comments-actions">
+          <button onClick={handleAddComment}>
+            <AiOutlineSend className="send-icon" /> إضافة تعليق
+          </button>
+        </div>
+
+        <div className="comments_list">
+          {comments.length > 0 ? (
+            comments.map((cmt) => (
+              <div className="comment_item" key={cmt.id}>
+                <div className="comment_header">
+                  <img src={cmt.user?.image_profile || "https://api.maaashi.com/storage/users/covers/OnlzSpVMpIsd69gUrrBZ6GzWProUDBwnqcEfyTop.webp"} alt={cmt.user?.name} className="comment_user_img" />
+                  <div className="comment_user_info">
+                    <h5 className="comment_user_name">{cmt.user?.name}</h5>
+                    <span className="comment_date"> منذ:{" "}{timeSince(cmt.created_at)}</span>
+                  </div>
+                </div>
+
+                <p className="comment_text">{cmt.comment}</p>
+
+                <div className="comment_actions">
+                  <span className="action_item" onClick={() => handleLikeComment(cmt.id)}>
+                    {likedComments[cmt.id] ? <IoIosHeart color="red" /> : <IoIosHeartEmpty />}
+                    {cmt.likes_count}
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p>لا توجد تعليقات بعد</p>
+          )}
+        </div>
+      </div>
+    );
   };
 
   if (isLoading || !ad_details) return <p>جاري تحميل الإعلان...</p>;
@@ -391,7 +514,10 @@ const DetailsLayout = () => {
                 </div>
 
                 <div className="details-left-top-user-buttons">
-                  <button className="details-left-top-user-btn1" onClick={() => setLoginModel(true)}>
+                  <button 
+                    className="details-left-top-user-btn1" 
+                    onClick={handleCallClick}
+                  >
                     <IoCallOutline /> تواصل
                   </button>
                   <button
@@ -403,7 +529,11 @@ const DetailsLayout = () => {
                 </div>
               </div>
 
-              <button type="button" onClick={() => handleWhatsApp(ad_details?.user, ad_details?.title)} className="details-left-top-send">
+              <button 
+                type="button" 
+                onClick={() => handleWhatsApp(ad_details?.user, ad_details?.title)} 
+                className="details-left-top-send"
+              >
                 واتساب
               </button>
             </div>
@@ -422,48 +552,7 @@ const DetailsLayout = () => {
         </div>
 
         {/* التعليقات */}
-        <div className="details_footer_comments">
-          <h3>التعليقات</h3>
-          <p className="comment_subtitle">شارك رايك او استفسارك حول هذا الاعلان</p>
-
-          <div className="details-lay-comments-user">
-            <img src={ad_details?.user?.image_profile || "/images/logo.svg"} alt="User" />
-            <input type="text" placeholder="اكتب تعليقك هنا..." value={newComment} onChange={(e) => setNewComment(e.target.value)} />
-          </div>
-
-          <div className="details-lay-comments-actions">
-            <button onClick={handleAddComment}>
-              <AiOutlineSend className="send-icon" /> اضافه تعليق
-            </button>
-          </div>
-
-          <div className="comments_list">
-            {comments.length > 0 ? (
-              comments.map((cmt) => (
-                <div className="comment_item" key={cmt.id}>
-                  <div className="comment_header">
-                    <img src={cmt.user?.image_profile || "https://api.maaashi.com/storage/users/covers/OnlzSpVMpIsd69gUrrBZ6GzWProUDBwnqcEfyTop.webp"} alt={cmt.user?.name} className="comment_user_img" />
-                    <div className="comment_user_info">
-                      <h5 className="comment_user_name">{cmt.user?.name}</h5>
-                      <span className="comment_date"> منذ:{" "}{timeSince(cmt.created_at)}</span>
-                    </div>
-                  </div>
-
-                  <p className="comment_text">{cmt.comment}</p>
-
-                  <div className="comment_actions">
-                    <span className="action_item" onClick={() => handleLikeComment(cmt.id)}>
-                      {likedComments[cmt.id] ? <IoIosHeart color="red" /> : <IoIosHeartEmpty />}
-                      {cmt.likes_count}
-                    </span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p>لا توجد تعليقات بعد</p>
-            )}
-          </div>
-        </div>
+        {renderCommentsSection()}
       </section>
 
       {/* مودال تسجيل الدخول */}
