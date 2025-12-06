@@ -94,13 +94,13 @@ const Sidebar = ({ chats, selectedChat, onSelectChat, loading }) => {
 
       {isMobile && isCollapsed && (
         <button 
-          className="floating-toggle"
+          className="sidebar-floating-toggle"
           onClick={toggleSidebar}
           aria-label="فتح القائمة"
         >
           ☰
           {totalUnreadMessages > 0 && (
-            <span className="floating-badge">
+            <span className="sidebar-floating-badge">
               {totalUnreadMessages > 99 ? '99+' : totalUnreadMessages}
             </span>
           )}
@@ -112,20 +112,20 @@ const Sidebar = ({ chats, selectedChat, onSelectChat, loading }) => {
         className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobile ? 'mobile' : ''}`}
       >
         <div className="sidebar-header">
-          <div className="header-content">
+          <div className="sidebar-header-content">
             {!isCollapsed && (
-              <div className="header-left">
+              <div className="sidebar-header-left">
                 <h2>المحادثات</h2>
-                <span className="chats-count">({chats.length})</span>
+                <span className="sidebar-chats-count">({chats.length})</span>
                 {totalUnreadMessages > 0 && (
-                  <span className="unread-badge">
+                  <span className="sidebar-unread-badge">
                     {totalUnreadMessages > 99 ? '99+' : totalUnreadMessages}
                   </span>
                 )}
               </div>
             )}
             <button 
-              className="toggle-btn"
+              className="sidebar-toggle-btn"
               onClick={toggleSidebar}
               aria-label={isCollapsed ? "فتح الشريط الجانبي" : "طي الشريط الجانبي"}
             >
@@ -137,12 +137,12 @@ const Sidebar = ({ chats, selectedChat, onSelectChat, loading }) => {
         {!isCollapsed && (
           <div className="sidebar-content">
             {loading ? (
-              <div className="loading">
-                <div className="spinner"></div>
+              <div className="sidebar-loading">
+                <div className="sidebar-spinner"></div>
                 <span>جاري تحميل المحادثات...</span>
               </div>
             ) : chats.length > 0 ? (
-              <div className="chat-list">
+              <div className="sidebar-chat-list">
                 {chats.map(chat => {
                   const unreadCount = getUnreadCount(chat);
                   const avatarFallback = getAvatarFallback(chat.name);
@@ -150,40 +150,40 @@ const Sidebar = ({ chats, selectedChat, onSelectChat, loading }) => {
                   return (
                     <div
                       key={chat.conversation_id || chat.id}
-                      className={`chat-item ${selectedChat?.conversation_id === chat.conversation_id ? 'active' : ''}`}
+                      className={`sidebar-chat-item ${selectedChat?.conversation_id === chat.conversation_id ? 'active' : ''}`}
                       onClick={() => handleSelectChat(chat)}
                     >
-                      <div className="chat-avatar">
+                      <div className="sidebar-chat-avatar">
                         {chat.image_profile ? (
                           <>
                             <img
                               src={chat.image_profile}
                               alt={chat.name}
-                              className="chat-avatar-img"
+                              className="sidebar-avatar-img"
                               onError={handleImageError}
                             />
-                            <div className="avatar-fallbaack" style={{ display: 'none' }}>
+                            <div className="sidebar-avatar-fallback" style={{ display: 'none' }}>
                               {avatarFallback}
                             </div>
                           </>
                         ) : (
-                          <div className="avatar-fallback">
+                          <div className="sidebar-avatar-fallback">
                             {avatarFallback}
                           </div>
                         )}
-                        {chat.other_user?.is_online && <span className="online-indicator"></span>}
-                        {unreadCount > 0 && <span className="unread-indicator"></span>}
+                        {chat.other_user?.is_online && <span className="sidebar-online-indicator"></span>}
+                        {unreadCount > 0 && <span className="sidebar-unread-indicator"></span>}
                       </div>
-                      <div className="chat-info">
-                        <div className="chat-header">
+                      <div className="sidebar-chat-info">
+                        <div className="sidebar-chat-header">
                           <h4>{chat.name}</h4>
-                          <span className="chat-time">{formatTime(chat.lastTime || chat.last_message_at)}</span>
+                          <span className="sidebar-chat-time">{formatTime(chat.lastTime || chat.last_message_at)}</span>
                         </div>
-                        <p className="last-message">
+                        <p className="sidebar-last-message">
                           {getLastMessage(chat)}
                         </p>
                         {unreadCount > 0 && (
-                          <span className="unread-count">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                          <span className="sidebar-unread-count">{unreadCount > 99 ? '99+' : unreadCount}</span>
                         )}
                       </div>
                     </div>
@@ -191,8 +191,8 @@ const Sidebar = ({ chats, selectedChat, onSelectChat, loading }) => {
                 })}
               </div>
             ) : (
-              <div className="no-chats">
-                <div className="empty-icon">💬</div>
+              <div className="sidebar-no-chats">
+                <div className="sidebar-empty-icon">💬</div>
                 <p>لا توجد محادثات</p>
                 <small>ابدأ محادثة جديدة</small>
               </div>

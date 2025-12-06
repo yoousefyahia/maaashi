@@ -58,21 +58,21 @@ const ChatWindow = ({
           <img 
             src={chat.image_profile} 
             alt={chat.name}
-            className="chat-avatar-image"
+            className="chat-window-avatar-image"
             onError={(e) => {
               e.target.style.display = 'none';
-              const fallback = e.target.parentNode.querySelector('.avatar-fallback');
+              const fallback = e.target.parentNode.querySelector('.chat-window-avatar-fallback');
               if (fallback) fallback.style.display = 'flex';
             }}
           />
-          <div className="avatar-fallback" style={{ display: 'none' }}>
+          <div className="chat-window-avatar-fallback" style={{ display: 'none' }}>
             {chat.name?.charAt(0)?.toUpperCase() || '?'}
           </div>
         </>
       );
     }
     return (
-      <div className="avatar-fallback">
+      <div className="chat-window-avatar-fallback">
         {chat.name?.charAt(0)?.toUpperCase() || '?'}
       </div>
     );
@@ -82,15 +82,15 @@ const ChatWindow = ({
   if (isStartingNewChat) {
     return (
       <div className="chat-window">
-        <div className="chat-header">
-          <div className="chat-header-info">
-            <div className="chat-avatar large">
+        <div className="chat-window-header">
+          <div className="chat-window-header-info">
+            <div className="chat-window-avatar">
               {renderAvatar()}
               <span className="status-dot offline"></span>
             </div>
             <div className="chat-user-info">
               <h3>{chat.name}</h3>
-              <p className="status">جاري بدء المحادثة...</p>
+              <p className="chat-window-status">جاري بدء المحادثة...</p>
             </div>
           </div>
         </div>
@@ -110,15 +110,15 @@ const ChatWindow = ({
 
   return (
     <div className="chat-window">
-      <div className="chat-header">
-        <div className="chat-header-info">
-          <div className="chat-avatar large">
+      <div className="chat-window-header">
+        <div className="chat-window-header-info">
+          <div className="chat-window-avatar">
             {renderAvatar()}
             <span className="status-dot offline"></span>
           </div>
           <div className="chat-user-info">
             <h3>{chat.name}</h3>
-            <p className="status">{getUnreadStatus()}</p>
+            <p className="chat-window-status">{getUnreadStatus()}</p>
           </div>
         </div>
       </div>
