@@ -66,15 +66,6 @@ export function attributeMapForDetails(ad) {
   return map;
 }
 
-export function handleWhatsApp(seller, title) {
-  if (!seller || !seller.phone) return;
-  let phone = seller.phone.trim().replace(/\s+/g, "").replace(/^\+/, "");
-  phone = phone.startsWith("966") ? phone : phone.startsWith("0") ? `966${phone.slice(1)}` : `966${phone}`;
-  if (!/^9665\d{8}$/.test(phone)) return;
-  const message = `مرحبًا ${seller.name}! أريد التواصل معك بشأن إعلانك "${title}" على موقع ماشي.`;
-  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
-}
-
 const DetailsLayout = () => {
   const [cookies] = useCookies(["token"]);
   const { token: userToken } = parseAuthCookie(cookies?.token);
@@ -177,22 +168,59 @@ const DetailsLayout = () => {
     navigate(`/ChatApp/${ad_details.user.id}`);
   };
 
-  const handleAddComment = async () => {
-    if (!newComment.trim()) return;
-    try {
-      const response = await axios.post(
-        `https://api.maaashi.com/api/ads/comment`,
-        { ad_id: id, comment: newComment },
-        { headers: { Authorization: `Bearer ${userToken}` } }
-      );
-      setComments([response.data.data, ...comments]);
-      setNewComment("");
-    } catch (err) {
-      console.error("Error adding comment:", err);
+  // دالة التعامل مع زر واتساب
+  const handleWhatsApp = () => {
+    if (!userToken) {
+      setLoginModel(true);
+      return;
     }
+
+    if (!ad_details?.user || !ad_details?.user?.phone) {
+      alert('لا يوجد رقم هاتف للبائع');
+      return;
+    }
+
+    let phone = ad_details.user.phone.trim().replace(/\s+/g, "").replace(/^\+/, "");
+    phone = phone.startsWith("966") ? phone : phone.startsWith("0") ? `966${phone.slice(1)}` : `966${phone}`;
+    
+    if (!/^9665\d{8}$/.test(phone)) {
+      alert('رقم الهاتف غير صالح');
+      return;
+    }
+    
+    const message = `مرحبًا ${ad_details.user.name}! أريد التواصل معك بشأن إعلانك "${ad_details.title}" على موقع ماشي.`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   };
 
-  const handleLikeComment = async (commentId) => {
+  const handleAddComment = () => {
+    // التحقق من وجود التوكن أولاً
+    if (!userToken) {
+      setLoginModel(true);
+      return;
+    }
+
+    // إذا كان التوكن موجود، أكمل إضافة التعليق
+    if (!newComment.trim()) return;
+    
+    const addComment = async () => {
+      try {
+        const response = await axios.post(
+          `https://api.maaashi.com/api/ads/comment`,
+          { ad_id: id, comment: newComment },
+          { headers: { Authorization: `Bearer ${userToken}` } }
+        );
+        setComments([response.data.data, ...comments]);
+        setNewComment("");
+      } catch (err) {
+        console.error("Error adding comment:", err);
+      }
+    };
+    
+    addComment();
+  };
+
+  const handleLikeComment = (commentId) => {
+    // التحقق من وجود التوكن أولاً
     if (!userToken) {
       setLoginModel(true);
       return;
@@ -213,33 +241,44 @@ const DetailsLayout = () => {
       )
     );
 
-    try {
-      if (!isLiked) {
-        await axios.post(
-          `https://api.maaashi.com/api/comments/like`,
-          { comment_id: commentId, ad_id: id },
-          { headers: { Authorization: `Bearer ${userToken}` } }
-        );
-      } else {
-        await axios.post(
-          `https://api.maaashi.com/api/comments/unlike`,
-          { comment_id: commentId, ad_id: id },
-          { headers: { Authorization: `Bearer ${userToken}` } }
+    const updateLike = async () => {
+      try {
+        if (!isLiked) {
+          await axios.post(
+            `https://api.maaashi.com/api/comments/like`,
+            { comment_id: commentId, ad_id: id },
+            { headers: { Authorization: `Bearer ${userToken}` } }
+          );
+        } else {
+          await axios.post(
+            `https://api.maaashi.com/api/comments/unlike`,
+            { comment_id: commentId, ad_id: id },
+            { headers: { Authorization: `Bearer ${userToken}` } }
+          );
+        }
+      } catch (err) {
+        console.error("Error updating like:", err);
+        setLikedComments(prev => ({
+          ...prev,
+          [commentId]: isLiked,
+        }));
+        setComments(prev =>
+          prev.map(c =>
+            c.id === commentId
+              ? { ...c, likes_count: c.likes_count + (isLiked ? 1 : -1) }
+              : c
+          )
         );
       }
-    } catch (err) {
-      console.error("Error updating like:", err);
-      setLikedComments(prev => ({
-        ...prev,
-        [commentId]: isLiked,
-      }));
-      setComments(prev =>
-        prev.map(c =>
-          c.id === commentId
-            ? { ...c, likes_count: c.likes_count + (isLiked ? 1 : -1) }
-            : c
-        )
-      );
+    };
+
+    updateLike();
+  };
+
+  const handleCommentInputClick = () => {
+    // إذا ضغط على حقل الإدخال ولم يكن مسجلاً، افتح نافذة تسجيل الدخول
+    if (!userToken) {
+      setLoginModel(true);
     }
   };
 
@@ -403,7 +442,11 @@ const DetailsLayout = () => {
                 </div>
               </div>
 
-              <button type="button" onClick={() => handleWhatsApp(ad_details?.user, ad_details?.title)} className="details-left-top-send">
+              <button 
+                type="button" 
+                onClick={handleWhatsApp} 
+                className="details-left-top-send"
+              >
                 واتساب
               </button>
             </div>
@@ -428,7 +471,13 @@ const DetailsLayout = () => {
 
           <div className="details-lay-comments-user">
             <img src={ad_details?.user?.image_profile || "/images/logo.svg"} alt="User" />
-            <input type="text" placeholder="اكتب تعليقك هنا..." value={newComment} onChange={(e) => setNewComment(e.target.value)} />
+            <input 
+              type="text" 
+              placeholder="اكتب تعليقك هنا..." 
+              value={newComment} 
+              onChange={(e) => setNewComment(e.target.value)}
+              onClick={handleCommentInputClick}
+            />
           </div>
 
           <div className="details-lay-comments-actions">
@@ -452,7 +501,11 @@ const DetailsLayout = () => {
                   <p className="comment_text">{cmt.comment}</p>
 
                   <div className="comment_actions">
-                    <span className="action_item" onClick={() => handleLikeComment(cmt.id)}>
+                    <span 
+                      className="action_item" 
+                      onClick={() => handleLikeComment(cmt.id)}
+                      style={{ cursor: 'pointer' }}
+                    >
                       {likedComments[cmt.id] ? <IoIosHeart color="red" /> : <IoIosHeartEmpty />}
                       {cmt.likes_count}
                     </span>
@@ -473,34 +526,17 @@ const DetailsLayout = () => {
             <div className="modal_header">
               <button type="button" onClick={() => setLoginModel(false)}>X</button>
             </div>
-            {userToken ? (
-              <div className="model_content">
-                <p>التواصل مع العارض</p>
-                <a href={`tel:${ad_details?.user?.phone}`} className="sellerPhone">{ad_details?.user?.phone}</a>
-                <button
-                  className="message-button"
-                  onClick={() => {
-                    setLoginModel(false);
-                    navigate(`/ChatApp/${ad_details?.user?.id}`);
-                  }}
-                >
-                  <LuMessageCircleMore /> إرسال رسالة
-                </button>
-              </div>
-            ) : (
-              <div className="login-modal-content">
-                <h1>تسجيل الدخول</h1>
-                <p>يجب تسجيل الدخول لإرسال رسالة</p>
-                <LoginForm
-                  onLoginSuccess={() => {
-                    setLoginModel(false);
-                    if (ad_details?.user?.id) {
-                      navigate(`/ChatApp/${ad_details.user.id}`);
-                    }
-                  }}
-                />
-              </div>
-            )}
+            <div className="login-modal-content">
+              <h1>تسجيل الدخول</h1>
+              <p>يجب تسجيل الدخول للتفاعل مع الإعلان</p>
+              <LoginForm
+                onLoginSuccess={() => {
+                  setLoginModel(false);
+                  // إعادة تحميل الصفحة لتحديث حالة المستخدم
+                  window.location.reload();
+                }}
+              />
+            </div>
           </div>
         </section>
       )}
