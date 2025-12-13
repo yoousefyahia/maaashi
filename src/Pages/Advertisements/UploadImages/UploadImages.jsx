@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import "./UploadImages.css";
 
 export default function UploadImages({ formik }) {
-  const { values, setFieldValue, errors } = formik;
+  const { values, setFieldValue } = formik;
   const [previewUrls, setPreviewUrls] = useState([]);
+  const [imageError, setImageError] = useState("");
 
   // تحديث preview عند تغيير الصور
   useEffect(() => {
@@ -16,7 +17,7 @@ export default function UploadImages({ formik }) {
           const reader = new FileReader();
           reader.onload = (e) => {
             urls.push(e.target.result);
-            setPreviewUrls([...urls]); // تحديث preview
+            setPreviewUrls([...urls]);
           };
           reader.readAsDataURL(file);
         }
@@ -30,7 +31,7 @@ export default function UploadImages({ formik }) {
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) {
-      alert("لم يتم اختيار أي صور");
+      setImageError("⚠️ لم يتم اختيار أي صور");
       return;
     }
 
@@ -42,32 +43,30 @@ export default function UploadImages({ formik }) {
         errorsArr.push(`${file.name} حجمها 0`);
       } else if (!["image/jpeg", "image/png"].includes(file.type)) {
         errorsArr.push(`${file.name} ليس JPEG أو PNG`);
+      } else if (file.size > 10 * 1024 * 1024) {
+        errorsArr.push(`${file.name} أكبر من 10MB`);
       } else {
         validFiles.push(file);
       }
     });
 
     if (errorsArr.length) {
-      alert("⚠️ بعض الصور لم يتم قبولها:\n" + errorsArr.join("\n"));
+      setImageError("⚠️ بعض الصور لم يتم قبولها:\n" + errorsArr.join("\n"));
+    } else {
+      setImageError("");
     }
 
     if (!validFiles.length) return;
 
     const combinedFiles = [...(values.images || []), ...validFiles];
     setFieldValue("images", combinedFiles.slice(0, 10));
-
-    alert(
-      "تم رفع الصور بنجاح:\n" +
-        combinedFiles.map((f) => (typeof f === "string" ? f : f.name)).join("\n")
-    );
   };
 
   // حذف صورة
   const handleRemoveImage = (index) => {
     const updatedFiles = [...values.images];
-    const removed = updatedFiles.splice(index, 1);
+    updatedFiles.splice(index, 1);
     setFieldValue("images", updatedFiles);
-    alert(`تم حذف الصورة: ${removed[0].name || removed[0]}`);
   };
 
   return (
@@ -104,8 +103,9 @@ export default function UploadImages({ formik }) {
           <p>إضافة الصور</p>
           <span>JPEG أو PNG حتى 10MB لكل صورة</span>
         </div>
-        {errors.images && <div className="image_error">{errors.images}</div>}
       </label>
+
+      {imageError && <div className="image_error">{imageError}</div>}
 
       <div className="preview">
         {previewUrls.map((src, index) => (
