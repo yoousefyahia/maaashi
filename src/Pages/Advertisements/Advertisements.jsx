@@ -23,9 +23,10 @@ export default function Advertisements() {
     const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
-    const [stepError, setStepError] = useState(""); // هنا هنعرض أي خطأ للمستخدم
     const [successMessage, setSuccessMessage] = useState(false);
     const [dynamicCategories, setDynamicCategories] = useState([]);
+    const [adsId, setAds_id] = useState(null);
+    const [categoryName, setCategoryName] = useState("");
 
     const formik = useFormik({
         initialValues: {
@@ -52,13 +53,6 @@ export default function Advertisements() {
         onSubmit: async () => {
             setIsLoading(true);
             setErrorMessage("");
-            setStepError("");
-
-            if (!formik.values.images || formik.values.images.length === 0) {
-                setStepError("⚠️ يجب رفع صورة واحدة على الأقل قبل الإرسال");
-                setIsLoading(false);
-                return;
-            }
 
             try {
                 const formData = new FormData();
@@ -95,17 +89,22 @@ export default function Advertisements() {
                     }
                 );
 
+                // اعتبر 201 حالة نجاح
                 if (response.status === 201) {
+                    const adData = response.data;
                     setSuccessMessage(true);
                     toast.success("تم إضافة الإعلان بنجاح!");
                     formik.resetForm();
+                    // setStep(1);
+
+                    // توجه للهوم بعد 1.5 ثانية
                     setTimeout(() => navigate("/"), 2000);
                 } else {
-                    setStepError("❌ حدث خطأ أثناء رفع الإعلان، حاول مرة أخرى");
+                    setErrorMessage("❌ Something went wrong while submitting the ad");
                 }
 
             } catch (error) {
-                setStepError(error.response?.data?.message || error.message);
+                setErrorMessage(error.response?.data?.message || error.message);
                 console.error("⚠️ Error submitting ad:", error.response?.data || error.message);
             } finally {
                 setIsLoading(false);
@@ -120,18 +119,13 @@ export default function Advertisements() {
             let schema = validationSchemas[step];
             if (typeof schema === "function") schema = schema(formik.values.category);
             await schema.validate(formik.values, { abortEarly: false });
-
-            if (step === 3 && (!formik.values.images || formik.values.images.length === 0)) {
-                setStepError("⚠️ يجب رفع صورة واحدة على الأقل قبل الانتقال للخطوة التالية");
-                return;
-            }
-
-            setStepError("");
             if (step < 5) setStep(step + 1);
         } catch (err) {
             if (err.inner) {
-                const messages = err.inner.map(e => `${e.path}: ${e.message}`).join("\n");
-                setStepError(messages);
+                err.inner.forEach((e) => {
+                    formik.setFieldError(e.path, e.message);
+                    formik.setFieldTouched(e.path, true, false);
+                });
             }
         }
     };
@@ -171,8 +165,6 @@ export default function Advertisements() {
                             errorMessage={errorMessage}
                         />
                     }
-
-                    {stepError && <div className="step-error">{stepError}</div>}
 
                     <div className="buttons">
                         <button
