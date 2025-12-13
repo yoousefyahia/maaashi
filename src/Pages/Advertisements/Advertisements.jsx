@@ -13,7 +13,7 @@ import { useCookies } from "react-cookie";
 import LoginRequiredCard from '../../Components/AdvertisementsComponents/LoginRequiredCard/LoginRequiredCard';
 import { Link, useNavigate } from 'react-router-dom';
 import { parseAuthCookie } from '../../utils/auth';
-import { toast } from 'react-hot-toast'; // تم الاستيراد
+import { toast } from 'react-hot-toast'; 
 
 export default function Advertisements() {
     const [cookies] = useCookies(["token"]);

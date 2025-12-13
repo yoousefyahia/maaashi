@@ -5,15 +5,14 @@ export default function UploadImages({ formik }) {
     const { values, setFieldValue, errors } = formik;
     const [previewUrls, setPreviewUrls] = useState([]);
 
+    // تحديث الـ preview عند تغيير الصور
     useEffect(() => {
         if (values.images && values.images.length > 0) {
-            const urls = values.images.map(file => {
-                // لو الصورة عبارة عن File object خليها URL، ولو string خليها مباشرة
-                return typeof file === "string" ? file : URL.createObjectURL(file);
-            });
+            const urls = values.images.map(file =>
+                typeof file === "string" ? file : URL.createObjectURL(file)
+            );
             setPreviewUrls(urls);
 
-            // تنظيف الـ object URLs لو فيه Files
             return () => urls.forEach((url, i) => {
                 if (typeof values.images[i] !== "string") URL.revokeObjectURL(url);
             });
@@ -22,18 +21,19 @@ export default function UploadImages({ formik }) {
         }
     }, [values.images]);
 
+    // رفع الصور
     const handleImageUpload = (e) => {
-        const files = Array.from(e.target.files).filter(f =>
-            f.type === "image/jpeg" || f.type === "image/png"
-        );
+        const files = Array.from(e.target.files).filter(f => f.size > 0); // أي ملف حجمه > 0
+        if (files.length === 0) return;
 
-        const combinedFiles = [...(values.images || []), ...files]; // دمج القديم بالجديد
-        setFieldValue("images", combinedFiles.slice(0, 10)); // احتفظ بـ 10 صور كحد أقصى
+        const combinedFiles = [...(values.images || []), ...files]; 
+        setFieldValue("images", combinedFiles.slice(0, 10)); // أقصى 10 صور
 
         console.log("Uploaded files:", files);
         console.log("All images now:", combinedFiles.slice(0, 10));
     };
 
+    // حذف صورة
     const handleRemoveImage = (index) => {
         const updatedFiles = [...values.images];
         updatedFiles.splice(index, 1);
@@ -52,7 +52,7 @@ export default function UploadImages({ formik }) {
             <label className="upload-box">
                 <input
                     type="file"
-                    accept="image/png, image/jpeg"
+                    accept="image/*"   // ✅ يقبل أي صورة
                     multiple
                     onChange={handleImageUpload}
                     hidden
@@ -65,7 +65,7 @@ export default function UploadImages({ formik }) {
                         </svg>
                     </div>
                     <p>إضافة الصور</p>
-                    <span>PNG, JPG, JPEG حتى 10MB لكل صورة</span>
+                    <span>أي نوع صورة، حتى 10MB لكل صورة</span>
                 </div>
                 {errors.images && <div className="image_error">{errors.images}</div>}
             </label>
