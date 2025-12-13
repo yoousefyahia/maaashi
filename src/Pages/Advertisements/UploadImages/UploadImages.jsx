@@ -5,7 +5,6 @@ export default function UploadImages({ formik }) {
     const { values, setFieldValue, errors } = formik;
     const [previewUrls, setPreviewUrls] = useState([]);
 
-    // تحديث الـ preview عند تغيير الصور
     useEffect(() => {
         if (values.images && values.images.length > 0) {
             const urls = values.images.map(file =>
@@ -21,25 +20,44 @@ export default function UploadImages({ formik }) {
         }
     }, [values.images]);
 
-    // رفع الصور
     const handleImageUpload = (e) => {
-        const files = Array.from(e.target.files).filter(f => f.size > 0); // أي ملف حجمه > 0
-        if (files.length === 0) return;
+        const files = Array.from(e.target.files);
+        if (!files.length) {
+            alert("لم يتم اختيار أي ملفات");
+            return;
+        }
 
-        const combinedFiles = [...(values.images || []), ...files]; 
-        setFieldValue("images", combinedFiles.slice(0, 10)); // أقصى 10 صور
+        const validFiles = [];
+        const errors = [];
 
-        console.log("Uploaded files:", files);
-        console.log("All images now:", combinedFiles.slice(0, 10));
+        files.forEach((file) => {
+            if (file.size === 0) {
+                errors.push(`${file.name} حجمها 0`);
+            } else if (!file.type.startsWith("image/")) {
+                errors.push(`${file.name} ليس صورة`);
+            } else {
+                validFiles.push(file);
+            }
+        });
+
+        if (errors.length) {
+            alert("⚠️ بعض الملفات لم يتم قبولها:\n" + errors.join("\n"));
+        }
+
+        if (!validFiles.length) return;
+
+        const combinedFiles = [...(values.images || []), ...validFiles];
+        setFieldValue("images", combinedFiles.slice(0, 10));
+
+        // نعرض أسماء الصور المرفوعة
+        alert("تم رفع الصور:\n" + combinedFiles.map(f => f.name).join("\n"));
     };
 
-    // حذف صورة
     const handleRemoveImage = (index) => {
         const updatedFiles = [...values.images];
-        updatedFiles.splice(index, 1);
+        const removed = updatedFiles.splice(index, 1);
         setFieldValue("images", updatedFiles);
-        console.log("Removed image index:", index);
-        console.log("Remaining images:", updatedFiles);
+        alert(`تم حذف الصورة: ${removed[0].name}`);
     };
 
     return (
@@ -52,7 +70,7 @@ export default function UploadImages({ formik }) {
             <label className="upload-box">
                 <input
                     type="file"
-                    accept="image/*"   // ✅ يقبل أي صورة
+                    accept="image/*"
                     multiple
                     onChange={handleImageUpload}
                     hidden
