@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import "./UploadImages.css";
 
 export default function UploadImages({ formik }) {
-  const { values, setFieldValue } = formik;
+  const { values, setFieldValue, errors } = formik;
   const [previewUrls, setPreviewUrls] = useState([]);
-  const [imageError, setImageError] = useState("");
+  const [imageError, setImageError] = useState(""); // رسالة الخطأ للمستخدم
 
   // تحديث preview عند تغيير الصور
   useEffect(() => {
@@ -17,7 +17,7 @@ export default function UploadImages({ formik }) {
           const reader = new FileReader();
           reader.onload = (e) => {
             urls.push(e.target.result);
-            setPreviewUrls([...urls]);
+            setPreviewUrls([...urls]); // تحديث preview
           };
           reader.readAsDataURL(file);
         }
@@ -31,7 +31,7 @@ export default function UploadImages({ formik }) {
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) {
-      setImageError("⚠️ لم يتم اختيار أي صور");
+      setImageError("لم يتم اختيار أي صور");
       return;
     }
 
@@ -43,8 +43,6 @@ export default function UploadImages({ formik }) {
         errorsArr.push(`${file.name} حجمها 0`);
       } else if (!["image/jpeg", "image/png"].includes(file.type)) {
         errorsArr.push(`${file.name} ليس JPEG أو PNG`);
-      } else if (file.size > 10 * 1024 * 1024) {
-        errorsArr.push(`${file.name} أكبر من 10MB`);
       } else {
         validFiles.push(file);
       }
@@ -53,7 +51,7 @@ export default function UploadImages({ formik }) {
     if (errorsArr.length) {
       setImageError("⚠️ بعض الصور لم يتم قبولها:\n" + errorsArr.join("\n"));
     } else {
-      setImageError("");
+      setImageError(""); // مسح الخطأ لو كله تمام
     }
 
     if (!validFiles.length) return;
@@ -65,7 +63,7 @@ export default function UploadImages({ formik }) {
   // حذف صورة
   const handleRemoveImage = (index) => {
     const updatedFiles = [...values.images];
-    updatedFiles.splice(index, 1);
+    const removed = updatedFiles.splice(index, 1);
     setFieldValue("images", updatedFiles);
   };
 
@@ -105,6 +103,7 @@ export default function UploadImages({ formik }) {
         </div>
       </label>
 
+      {/* عرض رسالة الخطأ مباشرة تحت الصندوق */}
       {imageError && <div className="image_error">{imageError}</div>}
 
       <div className="preview">
