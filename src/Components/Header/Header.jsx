@@ -8,15 +8,15 @@ import { parseAuthCookie } from "../../utils/auth";
 
 const Header = () => {
   const [cookies, , removeCookie] = useCookies(["token"]);
-  const { token, user } = parseAuthCookie(cookies?.token);
-  const userID = user?.id;
+  const { token } = parseAuthCookie(cookies?.token);
+
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const initialSearch = queryParams.get('search') || '';
+  const initialSearch = queryParams.get("search") || "";
 
   const [userData, setUserData] = useState({});
-  const [showToast, setShowToast] = useState(true);
+  const [showToast, setShowToast] = useState(false); 
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [typingTimeout, setTypingTimeout] = useState(null);
 
@@ -28,78 +28,44 @@ const Header = () => {
   const toggleRef = useRef(null);
   const mobileProfileRef = useRef(null);
   const desktopProfileRef = useRef(null);
+  const mobileProfileCardRef = useRef(null);
+  const desktopProfileCardRef = useRef(null);
   const inputRef = useRef(null);
 
-  const handleFocus = () => inputRef.current.focus();
   const closeMenu = () => setMenuOpen(false);
 
-  // تحديث البحث عند تغيير الـ URL
+  // ================= Search =================
   useEffect(() => {
     setSearchQuery(initialSearch);
   }, [initialSearch]);
 
-  // دالة البحث مع Debounce
-  const performSearch = useCallback((query) => {
-    const trimmedQuery = query.trim();
-    
-    // إذا كان البحث فارغًا، ارجع للصفحة الرئيسية
-    if (!trimmedQuery) {
-      navigate('/');
-      return;
-    }
-    
-    // إذا كان البحث في الصفحة الرئيسية، قم بتحديث URL فقط
-    if (location.pathname === '/') {
-      navigate(`/?search=${encodeURIComponent(trimmedQuery)}`);
-    } else {
-      // إذا كان في صفحة أخرى، اذهب للصفحة الرئيسية مع البحث
-      navigate(`/?search=${encodeURIComponent(trimmedQuery)}`);
-    }
-    closeMenu();
-  }, [navigate, location.pathname]);
+  const performSearch = useCallback(
+    (query) => {
+      const q = query.trim();
+      if (!q) {
+        navigate("/");
+      } else {
+        navigate(`/?search=${encodeURIComponent(q)}`);
+      }
+      closeMenu();
+    },
+    [navigate]
+  );
 
-  // معالجة تغيير حقل البحث مع Debounce
   const handleSearchChange = (value) => {
     setSearchQuery(value);
-    
-    // إلغاء الوقت السابق
-    if (typingTimeout) {
-      clearTimeout(typingTimeout);
-    }
-    
-    // إذا كان الحقل فارغًا، امسح البحث فورًا
+    if (typingTimeout) clearTimeout(typingTimeout);
+
     if (!value.trim()) {
-      performSearch('');
+      performSearch("");
       return;
     }
-    
-    // تأخير البحث لـ 500ms بعد توقف الكتابة
-    const timeout = setTimeout(() => {
-      performSearch(value);
-    }, 500);
-    
-    setTypingTimeout(timeout);
+
+    const t = setTimeout(() => performSearch(value), 500);
+    setTypingTimeout(t);
   };
 
-  // البحث عند الضغط على Enter أو الأيقونة (اختياري)
-  const handleSearchSubmit = (e) => {
-    e?.preventDefault?.();
-    if (typingTimeout) {
-      clearTimeout(typingTimeout);
-    }
-    performSearch(searchQuery);
-  };
-
-  // تنظيف timeout عند unmount
-  useEffect(() => {
-    return () => {
-      if (typingTimeout) {
-        clearTimeout(typingTimeout);
-      }
-    };
-  }, [typingTimeout]);
-
-  // إغلاق المينيو وكارت البروفايل عند الضغط خارجهم أو scroll
+  // ================= Click Outside =================
   useEffect(() => {
     const handleClickOutside = (e) => {
       const target = e.target;
@@ -107,50 +73,34 @@ const Header = () => {
       if (toggleRef.current?.contains(target)) return;
       if (mobileProfileRef.current?.contains(target)) return;
       if (desktopProfileRef.current?.contains(target)) return;
+      if (mobileProfileCardRef.current?.contains(target)) return;
+      if (desktopProfileCardRef.current?.contains(target)) return;
 
       setMenuOpen(false);
       setMobileProfileOpen(false);
       setDesktopProfileOpen(false);
     };
 
-    const handleScroll = () => {
-      if (window.innerWidth <= 768) setMenuOpen(false);
-    };
-
     document.addEventListener("mousedown", handleClickOutside);
-    window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // جلب بيانات المستخدم من السيرفر
+  // ================= Fetch User =================
   useEffect(() => {
     if (!token) return;
 
-    const controller = new AbortController();
-
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch(`https://api.maaashi.com/api/profile`, {
-          method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal,
-        });
-
-        if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-
-        const data = await response.json();
-        setUserData(data.data || {});
-      } catch (err) {
-        if (err.name !== "AbortError") console.error(err.message);
-      }
-    };
-
-    fetchUserData();
-    return () => controller.abort();
+    fetch("https://api.maaashi.com/api/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setUserData(data?.data || {});
+        // نعرض التوست فقط لو مفيش area
+        if (!data?.data?.area || data.data.area === "") {
+          setShowToast(true);
+        }
+      })
+      .catch(console.error);
   }, [token]);
 
   return (
@@ -158,25 +108,28 @@ const Header = () => {
       <div className="header-container">
         {/* اللوجو */}
         <div className="logo">
-          <NavLink to="/" onClick={() => { 
-            closeMenu(); 
-            setSearchQuery('');
-            performSearch('');
-          }}>
+          <NavLink
+            to="/"
+            onClick={() => {
+              closeMenu();
+              setSearchQuery("");
+              performSearch("");
+            }}
+          >
             <img src="/images/logo.svg" alt="logo" />
           </NavLink>
         </div>
 
         {/* البحث في الموبايل */}
         <div className="mobile-search">
-          <CiSearch className="search_icon" onClick={handleSearchSubmit} />
-          <input 
-            type="search" 
-            placeholder="ابحث هنا..." 
+          <CiSearch className="search_icon" />
+          <input
+            type="search"
+            placeholder="ابحث هنا..."
             ref={inputRef}
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
+            onKeyDown={(e) => e.key === "Enter" && performSearch(searchQuery)}
           />
         </div>
 
@@ -185,7 +138,7 @@ const Header = () => {
           {token ? (
             <div className="mobile-login">
               <Link
-                onClick={() => setMobileProfileOpen((prev) => !prev)}
+                onClick={() => setMobileProfileOpen((p) => !p)}
                 className="header_profile_img"
                 ref={mobileProfileRef}
               >
@@ -198,16 +151,22 @@ const Header = () => {
                 ) : (
                   <span className="two_char">
                     {userData?.name
-                      ? userData.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
+                      ? userData.name
+                          .split(" ")
+                          .map((w) => w[0])
+                          .slice(0, 2)
+                          .join("")
+                          .toUpperCase()
                       : "US"}
                   </span>
                 )}
               </Link>
+
               <ProfileCard
                 toggleProfileCard={mobileProfileOpen}
                 userData={userData}
                 removeCookie={removeCookie}
-                onClose={() => setMobileProfileOpen(false)}
+                cardRef={mobileProfileCardRef}
               />
             </div>
           ) : (
@@ -220,26 +179,13 @@ const Header = () => {
           <div
             ref={toggleRef}
             className="menu-toggle"
-            onClick={() => setMenuOpen((prev) => !prev)}
-            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((p) => !p)}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width={24}
-              height={24}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 5h18M3 12h18M3 19h18" />
-            </svg>
+            ☰
           </div>
         </div>
 
-        {/* الروابط الرئيسية */}
+        {/* الروابط */}
         <ul
           id="primary-navigation"
           ref={menuRef}
@@ -247,7 +193,7 @@ const Header = () => {
         >
           {navLinks.map((link, i) => (
             <li key={i}>
-              <NavLink to={link.path} onClick={closeMenu} end={link.path === "/"}>
+              <NavLink to={link.path} onClick={closeMenu}>
                 {link.label}
               </NavLink>
             </li>
@@ -256,32 +202,21 @@ const Header = () => {
 
         {/* أزرار الديسكتوب */}
         <div className="header-button">
-          {/* إضافة البحث في الديسكتوب أيضًا */}
-          {/* <div className="desktop-search">
-            <input 
-              type="search" 
-              placeholder="ابحث هنا..." 
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
-            />
-            <CiSearch className="search_icon" onClick={handleSearchSubmit} />
-          </div> */}
-          
           {token ? (
             <div>
               <Link
-                onClick={() => setDesktopProfileOpen((prev) => !prev)}
+                onClick={() => setDesktopProfileOpen((p) => !p)}
                 className="btn_profile"
                 ref={desktopProfileRef}
               >
                 <span>حسابي</span>
               </Link>
+
               <ProfileCard
                 toggleProfileCard={desktopProfileOpen}
                 userData={userData}
                 removeCookie={removeCookie}
-                onClose={() => setDesktopProfileOpen(false)}
+                cardRef={desktopProfileCardRef}
               />
             </div>
           ) : (
@@ -296,67 +231,65 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Toast */}
-      {token && showToast && (!userData?.area || userData?.area === "") && (
-        <ToastWarning
-          message="الرجاء إضافة الموقع قبل المتابعة."
-          onClose={() => setShowToast(false)}
-        />
-      )}
+      {token && showToast && <ToastWarning onClose={() => setShowToast(false)} />}
     </header>
   );
 };
 
 export default Header;
 
-
-// =======================
-// ProfileCard Component
-// =======================
-export function ProfileCard({ toggleProfileCard, userData, removeCookie, onClose }) {
+/* =======================
+   ProfileCard
+======================= */
+function ProfileCard({ toggleProfileCard, userData, removeCookie, cardRef }) {
   const navigate = useNavigate();
   const [cookies] = useCookies(["token"]);
   const { token } = parseAuthCookie(cookies?.token);
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("https://api.maaashi.com/api/logout", {
+      await fetch("https://api.maaashi.com/api/logout", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (response.ok) {
-        removeCookie("token");
-        navigate("/");
-      }
-    } catch (err) {
-      console.error(err);
-    }
+    } catch {}
+    removeCookie("token");
+    navigate("/");
   };
-
-  const initials = userData?.name
-    ? userData.name
-    : "مستحدم جديد";
 
   return (
     <div
+      ref={cardRef}
       className="profile-card"
       style={{
         height: "280px",
-        opacity: toggleProfileCard ? 1 : 0,
-        transition: "opacity 0.3s"
+        display: toggleProfileCard ? "block" : "none",
       }}
     >
       <div className="user-info">
-{userData?.image_profile ? (
-  <img src={userData.image_profile} alt={userData?.name} className="user_img" />
-) : (
-  <span className="two_char">{initials}</span>
-)}
-
+        {userData?.image_profile ? (
+          <img
+            src={userData.image_profile}
+            alt={userData?.name}
+            className="user_img"
+          />
+        ) : (
+          <span className="two_char">
+            {userData?.name
+              ? userData.name
+                  .split(" ")
+                  .map((w) => w[0])
+                  .slice(0, 2)
+                  .join("")
+                  .toUpperCase()
+              : "US"}
+          </span>
+        )}
         <div>
           <p className="greeting">أهلا</p>
         </div>
       </div>
+
       <Link to="/accountUser" className="show_accountUser">
         عرض الملف الشخصي
       </Link>
@@ -370,57 +303,30 @@ export function ProfileCard({ toggleProfileCard, userData, removeCookie, onClose
   );
 }
 
-// =======================
-// ToastWarning Component
-// =======================
-
+/* =======================
+   ToastWarning
+======================= */
 export function ToastWarning({ onClose }) {
-  const [cookies] = useCookies(["token"]);
-  const { token } = parseAuthCookie(cookies?.token);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    if (!token) return;
+    const timer = setTimeout(() => {
+      setVisible(false);
+      onClose();
+    }, 2000);
 
-    let isMounted = true;
-    const controller = new AbortController();
-
-    const checkUserArea = async () => {
-      try {
-        const res = await fetch("https://api.maaashi.com/api/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal,
-        });
-        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
-        const data = await res.json();
-
-        if (isMounted && (!data?.data?.area || data.data.area === "")) {
-          setVisible(true);
-          // اغلاق التوست تلقائياً بعد ثانيتين
-          setTimeout(() => {
-            setVisible(false);
-            onClose();
-          }, 2000);
-        }
-      } catch (err) {
-        if (err.name !== "AbortError") console.error(err.message);
-      }
-    };
-
-    checkUserArea();
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-    };
-  }, [token, onClose]);
+    return () => clearTimeout(timer);
+  }, [onClose]);
 
   if (!visible) return null;
 
   return (
     <div id="toast-warning" className="toast_warning">
       <div className="toast_container">
-        <div className="toast-message">الرجاء إضافة الموقع من اعدادت الحساب قبل المتابعة.</div>
+        <div className="toast-message">
+          الرجاء إضافة الموقع من إعدادات الحساب قبل المتابعة.
+        </div>
+
         <button
           onClick={() => {
             setVisible(false);
@@ -430,6 +336,7 @@ export function ToastWarning({ onClose }) {
         >
           ×
         </button>
+
         <div className="progress-line" />
       </div>
     </div>
