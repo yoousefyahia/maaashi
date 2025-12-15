@@ -4,65 +4,77 @@ import "./UploadImages.css";
 export default function UploadImages({ formik }) {
     const { values, setFieldValue, errors } = formik;
     const [previewUrls, setPreviewUrls] = useState([]);
+    const [imageError, setImageError] = useState(""); // أي خطأ في الصور
 
-    // توليد preview باستخدام FileReader
-    useEffect(() => {
-        if (!values.images || values.images.length === 0) {
-            setPreviewUrls([]);
-            return;
-        }
-
+    // توليد preview لكل الصور باستخدام FileReader
+    const generatePreview = (files) => {
         const urls = [];
-
-        values.images.forEach((file, i) => {
+        files.forEach((file, i) => {
             if (typeof file === "string") {
                 urls.push(file);
+                setPreviewUrls([...urls]);
             } else {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     urls.push(e.target.result);
-                    setPreviewUrls([...urls]); // تحديث preview بعد كل load
+                    setPreviewUrls([...urls]);
                 };
                 reader.onerror = () => {
-                    alert(`❌ حدثت مشكلة في معاينة الصورة رقم ${i + 1}`);
+                    setImageError(`حدثت مشكلة في معاينة الصورة رقم ${i + 1}`);
                 };
                 reader.readAsDataURL(file);
             }
         });
+    };
+
+    // كل مرة تتغير الصور في formik
+    useEffect(() => {
+        if (!values.images || values.images.length === 0) {
+            setPreviewUrls([]);
+            setImageError("");
+            return;
+        }
+        generatePreview(values.images);
     }, [values.images]);
 
+    // رفع الصور
     const handleImageUpload = (e) => {
+        setImageError(""); // مسح أي خطأ قديم
         const files = Array.from(e.target.files);
 
-        if (files.length === 0) return;
+        if (!files.length) return;
 
         const validFiles = [];
-        for (let file of files) {
+        files.forEach((file) => {
             if (!file.type.startsWith("image/")) {
-                alert("❌ الملف يجب أن يكون صورة فقط");
-                continue;
+                setImageError("الملف يجب أن يكون صورة فقط");
+                return;
             }
             if (file.size > 10 * 1024 * 1024) {
-                alert("❌ حجم الصورة يجب أن يكون أقل من 10MB");
-                continue;
+                setImageError("حجم الصورة يجب أن يكون أقل من 10MB");
+                return;
             }
             validFiles.push(file);
-        }
+        });
 
-        if (validFiles.length === 0) return;
+        if (!validFiles.length) return;
 
         const combinedFiles = [...(values.images || []), ...validFiles];
         if (combinedFiles.length > 10) {
-            alert("❌ يمكن رفع حتى 10 صور فقط");
+            setImageError("يمكن رفع حتى 10 صور فقط");
         }
 
         setFieldValue("images", combinedFiles.slice(0, 10));
+        generatePreview(combinedFiles.slice(0, 10));
     };
 
+    // إزالة صورة
     const handleRemoveImage = (index) => {
         const updatedFiles = [...values.images];
         updatedFiles.splice(index, 1);
         setFieldValue("images", updatedFiles);
+        generatePreview(updatedFiles);
+        setImageError(""); // إعادة مسح أي خطأ بعد إزالة الصورة
     };
 
     return (
@@ -92,8 +104,12 @@ export default function UploadImages({ formik }) {
                 </div>
             </label>
 
-            {/* عرض أي error validation عند الضغط على التالي */}
-            {errors.images && <div className="image_error">{errors.images}</div>}
+            {/* عرض أي أخطاء للمستخدم مباشرة */}
+            {(imageError || errors.images) && (
+                <div className="image_error">
+                    {imageError || errors.images}
+                </div>
+            )}
 
             <div className="preview">
                 {previewUrls.map((src, index) => (
