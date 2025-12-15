@@ -124,11 +124,9 @@ export const validationSchemas = {
         return base;
     },
 
-    3: Yup.object({
-        images: Yup.array()
-            .of(Yup.string())
-            .min(1, "لازم ترفع صورة واحدة على الأقل"),
-    }),
+ 3: Yup.object({
+    images: Yup.array().notRequired(), // الصور مش مطلوبة مؤقتًا
+}),
 
     4: Yup.object({
         seller: Yup.object({
