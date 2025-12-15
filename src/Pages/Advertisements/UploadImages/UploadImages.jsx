@@ -1,99 +1,83 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import "./UploadImages.css";
 
 export default function UploadImages({ formik }) {
-  const { values, setFieldValue, errors } = formik;
-  const [previewUrls, setPreviewUrls] = useState([]);
-  const [uploadError, setUploadError] = useState(""); // أي خطأ مباشر
+    const { values, setFieldValue, errors } = formik;
+    const [previewUrls, setPreviewUrls] = useState([]);
 
-  // توليد preview لكل الصور (جديدة أو روابط)
-  useEffect(() => {
-    const urls = values.images.map((img) => {
-      if (typeof img === "string") return img;
-      return URL.createObjectURL(img);
-    });
-    setPreviewUrls(urls);
+    useEffect(() => {
+        if (values.images && values.images.length > 0) {
+            const urls = values.images.map(file => {
+                return typeof file === "string" ? file : URL.createObjectURL(file);
+            });
+            setPreviewUrls(urls);
 
-    return () => {
-      values.images.forEach((img) => {
-        if (img instanceof File) URL.revokeObjectURL(img);
-      });
+            return () => urls.forEach((url, i) => {
+                if (typeof values.images[i] !== "string") URL.revokeObjectURL(url);
+            });
+        } else {
+            setPreviewUrls([]);
+        }
+    }, [values.images]);
+
+    const handleImageUpload = (e) => {
+        const files = Array.from(e.target.files).filter(f =>
+            f.type === "image/jpeg" || f.type === "image/png"
+        );
+
+        const combinedFiles = [...(values.images || []), ...files]; 
+        setFieldValue("images", combinedFiles.slice(0, 10)); 
+
+        console.log("Uploaded files:", files);
+        console.log("All images now:", combinedFiles.slice(0, 10));
     };
-  }, [values.images]);
 
-  // رفع الصور
-  const handleImageUpload = (e) => {
-    setUploadError("");
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
+    const handleRemoveImage = (index) => {
+        const updatedFiles = [...values.images];
+        updatedFiles.splice(index, 1);
+        setFieldValue("images", updatedFiles);
+        console.log("Removed image index:", index);
+        console.log("Remaining images:", updatedFiles);
+    };
 
-    const validFiles = [];
-    for (let file of files) {
-      if (!file.type.startsWith("image/")) {
-        setUploadError("الملف يجب أن يكون صورة فقط");
-        continue;
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        setUploadError("حجم الصورة يجب أن يكون أقل من 10MB");
-        continue;
-      }
-      validFiles.push(file);
-    }
+    return (
+        <div className="upload_container">
+            <div className="upload_header">
+                <h3>إضافة الصور</h3>
+                <p>أضف صورًا واضحة لزيادة فرص البيع (حتى 10 صور)</p>
+            </div>
 
-    if (!validFiles.length) return;
+            <label className="upload-box">
+                <input
+                    type="file"
+                    accept="image/png, image/jpeg"
+                    multiple
+                    onChange={handleImageUpload}
+                    hidden
+                />
+                <div className="upload-content">
+                    <div className="upload_icon">
+                        <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z" />
+                            <circle cx={12} cy={13} r={3} />
+                        </svg>
+                    </div>
+                    <p>إضافة الصور</p>
+                    <span>PNG, JPG, JPEG حتى 10MB لكل صورة</span>
+                </div>
+                {errors.images && <div className="image_error">{errors.images}</div>}
+            </label>
 
-    const combined = [...(values.images || []), ...validFiles];
-    if (combined.length > 10) {
-      setUploadError("يمكن رفع حتى 10 صور فقط");
-    }
-
-    setFieldValue("images", combined.slice(0, 10));
-  };
-
-  // إزالة صورة
-  const handleRemoveImage = (index) => {
-    const updated = [...values.images];
-    updated.splice(index, 1);
-    setFieldValue("images", updated);
-    setUploadError("");
-  };
-
-  return (
-    <div className="upload_container">
-      <label className="upload-box">
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleImageUpload}
-          hidden
-        />
-        <div className="upload-content">
-          <div className="upload_icon">📷</div>
-          <p>إضافة الصور</p>
-          <span>حتى 10MB لكل صورة</span>
+            <div className="preview">
+                {previewUrls.map((src, index) => (
+                    <div key={index} className="preview-image">
+                        <img src={src} alt={`preview-${index}`} />
+                        <button type="button" className="remove_btn" onClick={() => handleRemoveImage(index)}>
+                            ✖
+                        </button>
+                    </div>
+                ))}
+            </div>
         </div>
-      </label>
-
-      {/* أي خطأ مباشر يظهر هنا */}
-      {(uploadError || errors.images) && (
-        <div className="image_error">{uploadError || errors.images}</div>
-      )}
-
-      <div className="preview">
-        {previewUrls.map((src, i) => (
-          <div key={i} className="preview-image">
-            <img src={src} alt={`preview-${i}`} />
-            <button
-              type="button"
-              className="remove_btn"
-              onClick={() => handleRemoveImage(i)}
-            >
-              ✖
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+    );
 }
