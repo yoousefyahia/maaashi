@@ -4,43 +4,34 @@ import "./UploadImages.css";
 export default function UploadImages({ formik }) {
     const { values, setFieldValue, errors } = formik;
     const [previewUrls, setPreviewUrls] = useState([]);
-    const [imageError, setImageError] = useState(""); // خطأ موحد
 
-    // توليد preview
+    // توليد preview باستخدام FileReader
     useEffect(() => {
-        setPreviewUrls([]);
-        if (!values.images || values.images.length === 0) return;
+        if (!values.images || values.images.length === 0) {
+            setPreviewUrls([]);
+            return;
+        }
 
         const urls = [];
-        let hasError = false;
 
         values.images.forEach((file, i) => {
             if (typeof file === "string") {
                 urls.push(file);
             } else {
-                try {
-                    const url = URL.createObjectURL(file);
-                    urls.push(url);
-                } catch (err) {
-                    hasError = true;
-                    setImageError("حدثت مشكلة في معاينة الصورة رقم " + (i+1));
-                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    urls.push(e.target.result);
+                    setPreviewUrls([...urls]); // تحديث preview بعد كل load
+                };
+                reader.onerror = () => {
+                    alert(`❌ حدثت مشكلة في معاينة الصورة رقم ${i + 1}`);
+                };
+                reader.readAsDataURL(file);
             }
         });
-
-        setPreviewUrls(urls);
-        if (!hasError) setImageError(""); // مسح الخطأ لو كله تمام
-
-        // cleanup
-        return () => {
-            urls.forEach((url, i) => {
-                if (typeof values.images[i] !== "string") URL.revokeObjectURL(url);
-            });
-        };
     }, [values.images]);
 
     const handleImageUpload = (e) => {
-        setImageError(""); // مسح الخطأ القديم
         const files = Array.from(e.target.files);
 
         if (files.length === 0) return;
@@ -48,11 +39,11 @@ export default function UploadImages({ formik }) {
         const validFiles = [];
         for (let file of files) {
             if (!file.type.startsWith("image/")) {
-                setImageError("الملف يجب أن يكون صورة فقط");
+                alert("❌ الملف يجب أن يكون صورة فقط");
                 continue;
             }
             if (file.size > 10 * 1024 * 1024) {
-                setImageError("حجم الصورة يجب أن يكون أقل من 10MB");
+                alert("❌ حجم الصورة يجب أن يكون أقل من 10MB");
                 continue;
             }
             validFiles.push(file);
@@ -62,7 +53,7 @@ export default function UploadImages({ formik }) {
 
         const combinedFiles = [...(values.images || []), ...validFiles];
         if (combinedFiles.length > 10) {
-            setImageError("يمكن رفع حتى 10 صور فقط");
+            alert("❌ يمكن رفع حتى 10 صور فقط");
         }
 
         setFieldValue("images", combinedFiles.slice(0, 10));
@@ -101,8 +92,7 @@ export default function UploadImages({ formik }) {
                 </div>
             </label>
 
-            {/* عرض جميع الأخطاء للـ user */}
-            {imageError && <div className="image_error">{imageError}</div>}
+            {/* عرض أي error validation عند الضغط على التالي */}
             {errors.images && <div className="image_error">{errors.images}</div>}
 
             <div className="preview">
