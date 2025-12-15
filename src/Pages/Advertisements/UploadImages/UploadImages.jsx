@@ -4,40 +4,75 @@ import "./UploadImages.css";
 export default function UploadImages({ formik }) {
     const { values, setFieldValue, errors } = formik;
     const [previewUrls, setPreviewUrls] = useState([]);
+    const [previewError, setPreviewError] = useState(""); // خطأ المعاينة
+    const [uploadError, setUploadError] = useState(""); // خطأ الرفع
 
+    // توليد preview
     useEffect(() => {
+        setPreviewError(""); // مسح خطأ المعاينة
         if (values.images && values.images.length > 0) {
-            const urls = values.images.map(file => {
-                return typeof file === "string" ? file : URL.createObjectURL(file);
-            });
-            setPreviewUrls(urls);
+            const urls = [];
+            let failed = false;
 
-            return () => urls.forEach((url, i) => {
-                if (typeof values.images[i] !== "string") URL.revokeObjectURL(url);
+            values.images.forEach((file, i) => {
+                if (typeof file === "string") {
+                    urls.push(file);
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        setPreviewUrls(prev => [...prev, e.target.result]);
+                    };
+                    reader.onerror = () => {
+                        setPreviewError("حدثت مشكلة في معاينة صورة رقم " + (i+1));
+                        failed = true;
+                    };
+                    reader.readAsDataURL(file);
+                }
             });
+
+            if (!failed) setPreviewError("");
+            setPreviewUrls(urls);
         } else {
             setPreviewUrls([]);
         }
     }, [values.images]);
 
+    // رفع الصور
     const handleImageUpload = (e) => {
-        const files = Array.from(e.target.files).filter(f =>
-            f.type === "image/jpeg" || f.type === "image/png"
-        );
+        setUploadError(""); // مسح الخطأ القديم
+        const files = Array.from(e.target.files);
 
-        const combinedFiles = [...(values.images || []), ...files]; 
-        setFieldValue("images", combinedFiles.slice(0, 10)); 
+        if (files.length === 0) return;
 
-        console.log("Uploaded files:", files);
-        console.log("All images now:", combinedFiles.slice(0, 10));
+        const validImages = [];
+        for (let file of files) {
+            if (!file.type.startsWith("image/")) {
+                setUploadError("الملف يجب أن يكون صورة فقط");
+                continue;
+            }
+            if (file.size > 10 * 1024 * 1024) { // 10MB
+                setUploadError("حجم الصورة يجب أن يكون أقل من 10MB");
+                continue;
+            }
+            validImages.push(file);
+        }
+
+        if (validImages.length === 0) return;
+
+        const combinedFiles = [...(values.images || []), ...validImages];
+        if (combinedFiles.length > 10) {
+            setUploadError("يمكن رفع حتى 10 صور فقط");
+        }
+
+        setFieldValue("images", combinedFiles.slice(0, 10));
+        setPreviewUrls([]); // إعادة توليد preview
     };
 
     const handleRemoveImage = (index) => {
         const updatedFiles = [...values.images];
         updatedFiles.splice(index, 1);
         setFieldValue("images", updatedFiles);
-        console.log("Removed image index:", index);
-        console.log("Remaining images:", updatedFiles);
+        setPreviewUrls([]); // إعادة توليد preview
     };
 
     return (
@@ -50,7 +85,7 @@ export default function UploadImages({ formik }) {
             <label className="upload-box">
                 <input
                     type="file"
-                    accept="image/png, image/jpeg"
+                    accept="image/*"
                     multiple
                     onChange={handleImageUpload}
                     hidden
@@ -63,10 +98,16 @@ export default function UploadImages({ formik }) {
                         </svg>
                     </div>
                     <p>إضافة الصور</p>
-                    <span>PNG, JPG, JPEG حتى 10MB لكل صورة</span>
+                    <span>PNG, JPG, JPEG, GIF, HEIC حتى 10MB لكل صورة</span>
                 </div>
-                {errors.images && <div className="image_error">{errors.images}</div>}
             </label>
+
+            {/* رسائل الخطأ */}
+            {(uploadError || previewError || errors.images) && (
+                <div className="image_error">
+                    {uploadError || previewError || errors.images}
+                </div>
+            )}
 
             <div className="preview">
                 {previewUrls.map((src, index) => (
