@@ -4,75 +4,74 @@ import "./UploadImages.css";
 export default function UploadImages({ formik }) {
     const { values, setFieldValue, errors } = formik;
     const [previewUrls, setPreviewUrls] = useState([]);
-    const [previewError, setPreviewError] = useState(""); // خطأ المعاينة
-    const [uploadError, setUploadError] = useState(""); // خطأ الرفع
+    const [imageError, setImageError] = useState(""); // خطأ موحد
 
     // توليد preview
     useEffect(() => {
-        setPreviewError(""); // مسح خطأ المعاينة
-        if (values.images && values.images.length > 0) {
-            const urls = [];
-            let failed = false;
+        setPreviewUrls([]);
+        if (!values.images || values.images.length === 0) return;
 
-            values.images.forEach((file, i) => {
-                if (typeof file === "string") {
-                    urls.push(file);
-                } else {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        setPreviewUrls(prev => [...prev, e.target.result]);
-                    };
-                    reader.onerror = () => {
-                        setPreviewError("حدثت مشكلة في معاينة صورة رقم " + (i+1));
-                        failed = true;
-                    };
-                    reader.readAsDataURL(file);
+        const urls = [];
+        let hasError = false;
+
+        values.images.forEach((file, i) => {
+            if (typeof file === "string") {
+                urls.push(file);
+            } else {
+                try {
+                    const url = URL.createObjectURL(file);
+                    urls.push(url);
+                } catch (err) {
+                    hasError = true;
+                    setImageError("حدثت مشكلة في معاينة الصورة رقم " + (i+1));
                 }
-            });
+            }
+        });
 
-            if (!failed) setPreviewError("");
-            setPreviewUrls(urls);
-        } else {
-            setPreviewUrls([]);
-        }
+        setPreviewUrls(urls);
+        if (!hasError) setImageError(""); // مسح الخطأ لو كله تمام
+
+        // cleanup
+        return () => {
+            urls.forEach((url, i) => {
+                if (typeof values.images[i] !== "string") URL.revokeObjectURL(url);
+            });
+        };
     }, [values.images]);
 
-    // رفع الصور
     const handleImageUpload = (e) => {
-        setUploadError(""); // مسح الخطأ القديم
+        setImageError(""); // مسح الخطأ القديم
         const files = Array.from(e.target.files);
 
         if (files.length === 0) return;
 
-        const validImages = [];
+        const validFiles = [];
         for (let file of files) {
             if (!file.type.startsWith("image/")) {
-                setUploadError("الملف يجب أن يكون صورة فقط");
+                setImageError("الملف يجب أن يكون صورة فقط");
                 continue;
             }
-            if (file.size > 10 * 1024 * 1024) { // 10MB
-                setUploadError("حجم الصورة يجب أن يكون أقل من 10MB");
+            if (file.size > 10 * 1024 * 1024) {
+                setImageError("حجم الصورة يجب أن يكون أقل من 10MB");
                 continue;
             }
-            validImages.push(file);
+            validFiles.push(file);
         }
 
-        if (validImages.length === 0) return;
+        if (validFiles.length === 0) return;
 
-        const combinedFiles = [...(values.images || []), ...validImages];
+        const combinedFiles = [...(values.images || []), ...validFiles];
         if (combinedFiles.length > 10) {
-            setUploadError("يمكن رفع حتى 10 صور فقط");
+            setImageError("يمكن رفع حتى 10 صور فقط");
         }
 
         setFieldValue("images", combinedFiles.slice(0, 10));
-        setPreviewUrls([]); // إعادة توليد preview
     };
 
     const handleRemoveImage = (index) => {
         const updatedFiles = [...values.images];
         updatedFiles.splice(index, 1);
         setFieldValue("images", updatedFiles);
-        setPreviewUrls([]); // إعادة توليد preview
     };
 
     return (
@@ -102,12 +101,9 @@ export default function UploadImages({ formik }) {
                 </div>
             </label>
 
-            {/* رسائل الخطأ */}
-            {(uploadError || previewError || errors.images) && (
-                <div className="image_error">
-                    {uploadError || previewError || errors.images}
-                </div>
-            )}
+            {/* عرض جميع الأخطاء للـ user */}
+            {imageError && <div className="image_error">{imageError}</div>}
+            {errors.images && <div className="image_error">{errors.images}</div>}
 
             <div className="preview">
                 {previewUrls.map((src, index) => (

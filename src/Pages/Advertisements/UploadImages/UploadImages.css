@@ -9,6 +9,7 @@
     border: 1px solid #DBDBDB;
     color: var(--header-color);
     margin-bottom: 20px;
+    position: relative; /* لجعل absolute children يعملوا بشكل صحيح */
 }
 
 .upload_header h3 {
@@ -111,13 +112,12 @@
 }
 
 .image_error {
-    position: absolute;
-    top: -40px;
-    left: 0px;
+    position: relative; /* بدل absolute */
+    margin-top: 8px; /* أسفل upload box */
     color: red;
     font-size: var(--font-size-sm);
+    text-align: start;
 }
-
 
 /* ----------------loader------------------ */
 .UploadImages_loader {
@@ -155,7 +155,8 @@
     }
     
     .preview {
-        grid-template-columns: repeat(2, 1fr);
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* بدل flex */
         gap: 8px;
     }
     
@@ -172,10 +173,6 @@
 }
 
 @media (max-width: 480px) {
-    .preview {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
     .upload_header h3 {
         font-size: 14px;
     }
@@ -183,8 +180,8 @@
     .upload_header p {
         font-size: 12px;
     }
-    .image_error{
-        top: 200px !important;;
-        left: 40px !important;
+
+    .preview {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
