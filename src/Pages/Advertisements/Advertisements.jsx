@@ -25,6 +25,8 @@ export default function Advertisements() {
     const [errorMessage, setErrorMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState(false);
     const [dynamicCategories, setDynamicCategories] = useState([]);
+    const [adsId, setAds_id] = useState(null);
+    const [categoryName, setCategoryName] = useState("");
 
     const formik = useFormik({
         initialValues: {
@@ -87,10 +89,15 @@ export default function Advertisements() {
                     }
                 );
 
+                // اعتبر 201 حالة نجاح
                 if (response.status === 201) {
+                    const adData = response.data;
                     setSuccessMessage(true);
                     toast.success("تم إضافة الإعلان بنجاح!");
                     formik.resetForm();
+                    // setStep(1);
+
+                    // توجه للهوم بعد 1.5 ثانية
                     setTimeout(() => navigate("/"), 2000);
                 } else {
                     setErrorMessage("❌ Something went wrong while submitting the ad");
@@ -107,32 +114,7 @@ export default function Advertisements() {
         validateOnBlur: true,
     });
 
-    // الانتقال للخطوة التالية
     const nextStep = async () => {
-        // فحص الصور أولًا إذا كانت الخطوة 3
-        if (step === 3) {
-            const images = formik.values.images || [];
-            if (!images.length) {
-                alert("❌ يجب إضافة صورة واحدة على الأقل قبل المتابعة!");
-                return;
-            }
-
-            for (let i = 0; i < images.length; i++) {
-                const file = images[i];
-                if (file instanceof File) {
-                    if (!file.type.startsWith("image/")) {
-                        alert(`❌ الصورة رقم ${i + 1} غير صالحة! يجب أن تكون صورة.`);
-                        return;
-                    }
-                    if (file.size > 10 * 1024 * 1024) {
-                        alert(`❌ حجم الصورة رقم ${i + 1} أكبر من 10MB.`);
-                        return;
-                    }
-                }
-            }
-        }
-
-        // بعد فحص الصور: تحقق من validation الخاص بالخطوة
         try {
             let schema = validationSchemas[step];
             if (typeof schema === "function") schema = schema(formik.values.category);
@@ -144,7 +126,6 @@ export default function Advertisements() {
                     formik.setFieldError(e.path, e.message);
                     formik.setFieldTouched(e.path, true, false);
                 });
-                alert("❌ هناك بعض الحقول غير مكتملة أو بها خطأ. الرجاء التحقق!");
             }
         }
     };
