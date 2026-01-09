@@ -3,29 +3,48 @@
 **Mashie** is a next-generation classified advertisements platform designed to connect buyers and sellers seamlessly. It features a robust, multi-step listing process that ensures high-quality data entry for updated various categories ranging from Real Estate to Jobs.
 
 ## 🚀 Key Features
-
-### 1. Advanced Ad Creation Flow
-Mashie implements a comprehensive, guided wizard for posting advertisements, ensuring users provide necessary details at every step:
-*   **Step 1: Location Selection:** Precise targeting by city and region.
-*   **Step 2: Category Selection:** Intuitive navigation through main categories and subcategories.
-*   **Step 3: Detailed Information:** Dynamic forms that change based on the selected category.
-*   **Step 4: Media Upload:** Drag-and-drop support for high-quality images.
-*   **Step 5: Seller Data:** Verification and contact preference settings.
-*   **Step 6: Confirmation:** Final review before publishing.
-
-### 2. Specialized Category Forms
-Unlike generic listing sites, Mashie provides tailored input fields for specific niches to structured data:
-*   **🚗 Vehicles (CarForm):** Brand, Model, Year, Transmission, Kilometers, Condition.
-*   **🏠 Real Estate (RealestateForm):** Area in sqm, Rooms, Floor, Amenities, Finishing Type.
-*   **🐕 Pets (PetsForm):** Species (Dog/Cat/Bird), Breed, Age, Vaccination Status.
-*   **💼 Jobs (JobsForm):** Job Role, Industry, Salary Range, Experience Level, Requirements.
-*   **🔧 Services (ServicesForm):** Service Type, Availability, Pricing Model.
-*   **Other Categories:** Fashion, Furniture, Food, Electronics, Trips, and more.
-
-### 3. User Experience & Dashboard
-*   **User Dashboard:** A central hub for users to manage active listings, favorites, and account settings.
-*   **Responsive Design:** Fully optimized for Mobile, Tablet, and Desktop devices.
-*   **Interactive UI:** Smooth transitions, toast notifications for feedback, and image sliders.
+### 1. 🔐 Advanced Authentication System
+A secure and complete authentication flow to manage user access.
+*   **Sign Up & Login:** Secure registration and login forms with validation.
+*   **Password Recovery:** Complete flow for "Forgot Password" and "Reset Password" via email.
+*   **Route Protection:** automatic redirection and specific components (`LoginRequiredCard`) to prompt unauthenticated users when trying to access restricted areas like posting ads or viewing the dashboard.
+### 2. 📢 Intelligent Ad Posting Wizard
+The core of Mashie is its granular, step-by-step ad creation process ensuring data quality.
+*   **Step-by-Step Navigation:** Users are guided through Location → Category → Details → Photos → Contact Info → Confirmation.
+*   **Dynamic Progress Tracking:** Visual progress bar (`AddHeader`) showing current status.
+*   **Location Services:** Specific selection for regions (includes specialized Saudi Regions support).
+*   **Seller Data Management:** Ability to review and edit seller contact details before publishing.
+*   **Image Management:** Drag-and-drop capability, image preview, and sliders for multiple photos.
+### 3. 📝 Specialized Category Forms
+Mashie goes beyond generic text boxes. Each category has a dedicated form component with specific fields tailored to that industry:
+*   **🚗 Vehicles (CarForm):** Inputs for specific car brands, models, transmission type, year, kilometers, and condition.
+*   **🏠 Real Estate (RealestateForm):** Fields for property type, area (sqm), number of rooms, bathrooms, floor level, and finishing status.
+*   **💼 Jobs (JobsForm):** Structured data for job titles, salary ranges, experience levels, and job types (full-time/part-time).
+*   **🐕 Pets (PetsForm):** Specifics for pet type, breed, age, and vaccination history.
+*   **📱 Electronics (ElectricForm):** Details for devices, brands, and usage status.
+*   **👗 Fashion (FashionForm):** Attributes for clothing types, sizes, and conditions.
+*   **🛋️ Furniture (FurnitureForm):** Categories for home and office furniture.
+*   **🍔 Food (FoodForm):** Listings for homemade food or catering services.
+*   **✈️ Trips & Tourism (TripsForm):** Details for travel packages and destinations.
+*   **🌻 Gardens (GardensForm):** Landscaping and outdoor specific items.
+*   **🛠️ General Services (ServicesForm):** For freelancers and service providers.
+*   **📜 Anecdotes (AnecdotesForm):** Specialized section for collectibles or specific items.
+### 4. 👤 Comprehensive User Dashboard
+A powerful dashboard for users to manage their entire presence on the platform.
+*   **My Account (`AccountUser`):** Manage profile details, avatar, and personal information.
+*   **My Ads & Offers (`OffersUser`):** View, edit, or delete active listings.
+*   **Favorites (`FavoritesUser`):** Quick access to saved ads for future reference.
+*   **💬 Real-Time Chat (`Chat`):** Integrated messaging system allowing direct communication between buyers and sellers.
+*   **🔔 Notifications (`NotificationsUser`):** Alert center for updates, messages, or ad statuses.
+*   **⚙️ Settings (`SettingsUser`):** Application preferences and additional account configurations.
+*   **Help Center (`HelpUser`):** Access to support and FAQs.
+### 5. 🔍 Browsing & Discovery
+*   **Category-Specific Pages:** dedicated pages for browsing ads within specific niches.
+*   **Advanced Filtering:** (Implied) Filtering capability based on the structured data collected (e.g., filter cars by year).
+*   **Public Profiles:** Ability to view public seller profiles (`ShowAnyUser`).
+### 6. 🌐 Content & Community
+*   **Blog System:** Integrated blog section (`Blog`, `BlogUser`) for news, tips, and platform updates.
+*   **Static Pages:** Fully designed "About Us" and "Contact Us" pages.
 
 ## 🛠️ Tech Stack
 
@@ -75,3 +94,4 @@ src/
 │   └── Home/                   # Landing Page
 ├── Constants/                  # Static constants (Category IDs, Validation rules)
 └── utils/                      # Helper functions
+
