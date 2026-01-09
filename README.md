@@ -1,33 +1,77 @@
-# Mashie
+# Mashie | Classifieds Platform
 
-**Mashie** is a comprehensive classified ads platform designed to facilitate selling, buying, and searching for various services. The platform allows users to post advertisements in diverse categories such as Real Estate, Pets, and General Services, featuring a modern, seamless user interface and a multi-step ad posting experience to ensure data accuracy.
+**Mashie** is a next-generation classified advertisements platform designed to connect buyers and sellers seamlessly. It features a robust, multi-step listing process that ensures high-quality data entry for updated various categories ranging from Real Estate to Jobs.
 
-## 🌟 Key Features
+## 🚀 Key Features
 
-*   **Multi-step Ad Posting:** A structured and easy-to-use flow for posting ads, moving through stages: Category Selection, Location Setting, Details Entry, Image Upload, Seller Info, and Final Confirmation.
-*   **Diverse Categories:** Comprehensive support for various categories (Real Estate, Pets, Services, etc.) with custom input forms tailored for each specific category.
-*   **User Dashboard:** A private area for users to manage their ads, edit their profile, and track their activities.
-*   **Advanced Browsing & Search:** Capabilities to browse and filter ads by category, location, or specific attributes.
-*   **Responsive Design:** Fully responsive layout ensuring a consistent experience across all devices (Mobile, Tablet, Desktop) using modern CSS techniques.
-*   **Image Management:** Seamless image uploading and viewing experience with integrated sliders.
+### 1. Advanced Ad Creation Flow
+Mashie implements a comprehensive, guided wizard for posting advertisements, ensuring users provide necessary details at every step:
+*   **Step 1: Location Selection:** Precise targeting by city and region.
+*   **Step 2: Category Selection:** Intuitive navigation through main categories and subcategories.
+*   **Step 3: Detailed Information:** Dynamic forms that change based on the selected category.
+*   **Step 4: Media Upload:** Drag-and-drop support for high-quality images.
+*   **Step 5: Seller Data:** Verification and contact preference settings.
+*   **Step 6: Confirmation:** Final review before publishing.
+
+### 2. Specialized Category Forms
+Unlike generic listing sites, Mashie provides tailored input fields for specific niches to structured data:
+*   **🚗 Vehicles (CarForm):** Brand, Model, Year, Transmission, Kilometers, Condition.
+*   **🏠 Real Estate (RealestateForm):** Area in sqm, Rooms, Floor, Amenities, Finishing Type.
+*   **🐕 Pets (PetsForm):** Species (Dog/Cat/Bird), Breed, Age, Vaccination Status.
+*   **💼 Jobs (JobsForm):** Job Role, Industry, Salary Range, Experience Level, Requirements.
+*   **🔧 Services (ServicesForm):** Service Type, Availability, Pricing Model.
+*   **Other Categories:** Fashion, Furniture, Food, Electronics, Trips, and more.
+
+### 3. User Experience & Dashboard
+*   **User Dashboard:** A central hub for users to manage active listings, favorites, and account settings.
+*   **Responsive Design:** Fully optimized for Mobile, Tablet, and Desktop devices.
+*   **Interactive UI:** Smooth transitions, toast notifications for feedback, and image sliders.
 
 ## 🛠️ Tech Stack
 
-The project is built using the latest web technologies to ensure high performance and speed:
+This project is built with a modern frontend stack focusing on performance and scalability:
 
-### Frontend
-*   **[React](https://react.dev/) (v19):** The core library for building the user interface.
-*   **[Vite](https://vitejs.dev/):** Fast build tool and development environment.
-*   **[React Router DOM](https://reactrouter.com/) (v7):** For managing navigation and routing within the app.
-*   **[TanStack Query (React Query)](https://tanstack.com/query):** For efficient server state management and data fetching.
-*   **[Axios](https://axios-http.com/):** For making HTTP requests.
-*   **[Formik](https://formik.org/) & [Yup](https://github.com/jquense/yup):** For building forms and handling data validation.
-*   **[React Icons](https://react-icons.github.io/react-icons/):** Comprehensive icon library.
-*   **[React Slick](https://react-slick.neostack.com/):** For image carousels and sliders.
-*   **[React Hot Toast](https://react-hot-toast.com/) / Toastify:** For displaying notifications and user alerts.
+*   **Core Framework:** [React v19](https://react.dev/)
+*   **Build Tool:** [Vite](https://vitejs.dev/)
+*   **State Management & Caching:** [TanStack Query v5](https://tanstack.com/query)
+*   **Routing:** [React Router DOM v7](https://reactrouter.com/)
+*   **Forms Management:** [Formik](https://formik.org/)
+*   **Validation:** [Yup](https://github.com/jquense/yup)
+*   **HTTP Client:** [Axios](https://axios-http.com/)
+*   **UI Components & Icons:**
+    *   [React Icons](https://react-icons.github.io/react-icons/)
+    *   [React Slick](https://react-slick.neostack.com/) (Carousels)
+    *   [React Hot Toast](https://react-hot-toast.com/) (Notifications)
 
 ## 📂 Project Structure
 
-The project is organized to be scalable and easily maintainable:
+The codebase is organized to support modularity and ease of maintenance. Each ad category has its own dedicated component folder.
 
-  src/ ├── api/ # API configuration and endpoints ├── assets/ # Static assets and images ├── Components/ # Reusable components (Forms, Headers, Cards) │ ├── AdvertisementsComponents/ # Specific components for different ad forms │ └── ... ├── Constants/ # Application constants and static values ├── Layouts/ # General page layouts (Header, Footer layouts) ├── LayoutDashboard/ # User dashboard layout ├── Pages/ # Main application pages │ ├── Advertisements/ # Ad creation flow pages (Location, Category, Upload, etc.) │ ├── Auth/ # Login and Sign-up pages │ ├── Home/ # Homepage │ ├── DashboardUser/ # User dashboard pages │ └── ... ├── services/ # Helper functions for external services or business logic ├── Styles/ # Global styling files ├── utils/ # General helper (utility) functions ├── App.jsx # Main App component └── main.jsx # Application entry point
+```plaintext
+src/
+├── api/                        # API endpoints & centralized configuration
+├── assets/                     # Static assets (Images, Global Styles, Fonts)
+├── Components/
+│   ├── AdvertisementsComponents/ # Specialized form components for each category
+│   │   ├── AddHeader/          # Progress bar & header for ad flow
+│   │   ├── CarForm/            # Vehicle specific inputs
+│   │   ├── RealestateForm/     # Property specific inputs
+│   │   ├── PetsForm/           # Pet attributes inputs
+│   │   ├── JobsForm/           # Job details inputs
+│   │   ├── FoodForm/           # Food services inputs
+│   │   ├── TripsForm/          # Tourism & Trips inputs
+│   │   └── ... (Fashion, Furniture, Electric, etc.)
+│   └── ...
+├── Pages/
+│   ├── Advertisements/         # Main Ad Posting Flow Pages
+│   │   ├── Location/           # Step 1: Select City/Area
+│   │   ├── Category/           # Step 2: Choose Main/Sub Category
+│   │   ├── Information/        # Step 3: Dynamic Form container
+│   │   ├── UploadImages/       # Step 4: Media Upload Page
+│   │   ├── SellerData/         # Step 5: Contact Info Page
+│   │   └── ConfirmAd/          # Step 6: Success/Review Page
+│   ├── Auth/                   # Authentication (Login, Register)
+│   ├── DashboardUser/          # User personal area
+│   └── Home/                   # Landing Page
+├── Constants/                  # Static constants (Category IDs, Validation rules)
+└── utils/                      # Helper functions
