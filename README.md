@@ -1,4 +1,4 @@
-# Mashie | Classifieds Platform
+# Mashie
 
 **Mashie** is a next-generation classified advertisements platform designed to connect buyers and sellers seamlessly. It features a robust, multi-step listing process that ensures high-quality data entry for updated various categories ranging from Real Estate to Jobs.
 
@@ -94,4 +94,5 @@ src/
 │   └── Home/                   # Landing Page
 ├── Constants/                  # Static constants (Category IDs, Validation rules)
 └── utils/                      # Helper functions
+
 
