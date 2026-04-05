@@ -1,6 +1,6 @@
-# Mashie
+# Maashi
 
-**Mashie** is a next-generation classified advertisements platform designed to connect buyers and sellers seamlessly. It features a robust, multi-step listing process that ensures high-quality data entry for updated various categories ranging from Real Estate to Jobs.
+**Maashi** is a next-generation classified advertisements platform designed to connect buyers and sellers seamlessly. It features a robust, multi-step listing process that ensures high-quality data entry for updated various categories ranging from Real Estate to Jobs.
 
 ## 🚀 Key Features
 ### 1. 🔐 Advanced Authentication System
